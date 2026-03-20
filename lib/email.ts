@@ -31,7 +31,7 @@ export async function sendOrderEmail({
   ).join('')
 
   await resend.emails.send({
-   from: 'المعضل <onboarding@resend.dev>',
+   from: 'المعضل <orders@send.almu3dl.store>',
     to,
     subject: `تم الطلب بنجاح — المعضل #${orderId.slice(0, 8)}`,
     html: `
