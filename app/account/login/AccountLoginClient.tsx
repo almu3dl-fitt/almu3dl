@@ -129,7 +129,7 @@ export default function AccountLoginClient() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState(
     initialState.step === 'otp' && initialState.deliveryEmail
-      ? `أرسلنا رمز الدخول إلى ${initialState.deliveryEmail}. أدخل الرمز المكوّن من 6 أرقام واستخدم آخر رمز تم إرساله فقط.`
+      ? `أدخل رمز التحقق المرسل إلى ${initialState.deliveryEmail}.`
       : '',
   )
   const [sendingCode, setSendingCode] = useState(false)
@@ -216,8 +216,8 @@ export default function AccountLoginClient() {
       moveToOtpStep(normalizedEmail)
       setNotice(
         mode === 'initial'
-          ? `أرسلنا رمز الدخول إلى ${normalizedEmail}. أدخل الرمز المكوّن من 6 أرقام واستخدم آخر رمز تم إرساله فقط.`
-          : `أرسلنا رمزًا جديدًا إلى ${normalizedEmail}. استخدم آخر رمز تم إرساله فقط.`,
+          ? `أرسلنا الرمز إلى ${normalizedEmail}.`
+          : `أرسلنا رمزًا جديدًا إلى ${normalizedEmail}.`,
       )
     } catch {
       setError('حدث خطأ أثناء تسجيل الدخول، حاول مرة أخرى.')
@@ -234,7 +234,7 @@ export default function AccountLoginClient() {
     if (cooldownSeconds > 0 && normalizedEmail && normalizedEmail === deliveryEmail) {
       setError('')
       setNotice(
-        `أرسلنا رمز الدخول إلى ${normalizedEmail} بالفعل. انتظر ${cooldownSeconds} ثانية قبل طلب رمز جديد.`,
+        `أرسلنا الرمز إلى ${normalizedEmail} بالفعل. انتظر ${cooldownSeconds} ثانية قبل إعادة الإرسال.`,
       )
       updateLoginStep({
         deliveryEmail: normalizedEmail,
@@ -465,46 +465,8 @@ export default function AccountLoginClient() {
           line-height: 1.8;
         }
 
-        .account-login-steps {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 0.7rem;
-          margin-top: 1.1rem;
-        }
-
-        .account-login-step {
-          padding: 0.78rem 0.85rem;
-          border-radius: 16px;
-          border: 1px solid #ececec;
-          background: #fff;
-        }
-
-        .account-login-step strong {
-          display: block;
-          margin-bottom: 0.2rem;
-          font-size: 0.9rem;
-          font-weight: 900;
-          color: #1a1a1a;
-        }
-
-        .account-login-step span {
-          color: #8a8a8a;
-          font-size: 0.78rem;
-          line-height: 1.7;
-        }
-
-        .account-login-step.is-active {
-          border-color: #f0ddb0;
-          background: #fff8e7;
-        }
-
-        .account-login-step.is-active strong,
-        .account-login-step.is-active span {
-          color: #8f6a14;
-        }
-
         .account-login-panel {
-          margin-top: 1rem;
+          margin-top: 1.15rem;
           padding: 1rem;
           border-radius: 20px;
           border: 1px solid rgba(184, 145, 46, 0.12);
@@ -524,7 +486,6 @@ export default function AccountLoginClient() {
           line-height: 1.8;
         }
 
-        .account-login-note,
         .account-login-success,
         .account-login-error {
           margin-top: 1rem;
@@ -532,12 +493,6 @@ export default function AccountLoginClient() {
           border-radius: 16px;
           font-size: 0.86rem;
           line-height: 1.8;
-        }
-
-        .account-login-note {
-          border: 1px solid #f0ddb0;
-          background: #fff8e7;
-          color: #8f6a14;
         }
 
         .account-login-success {
@@ -586,7 +541,6 @@ export default function AccountLoginClient() {
 
         .account-login-otp-group {
           display: grid;
-          grid-template-columns: repeat(6, minmax(0, 1fr));
           gap: 0.55rem;
           direction: ltr;
         }
@@ -680,13 +634,6 @@ export default function AccountLoginClient() {
           gap: 0.7rem;
         }
 
-        .account-login-help {
-          margin-top: 1rem;
-          color: #969696;
-          font-size: 0.8rem;
-          text-align: center;
-        }
-
         @media (max-width: 640px) {
           .account-login-nav {
             gap: 0.6rem;
@@ -714,10 +661,6 @@ export default function AccountLoginClient() {
             font-size: 0.9rem;
           }
 
-          .account-login-steps {
-            grid-template-columns: 1fr;
-          }
-
           .account-login-otp-group {
             gap: 0.4rem;
           }
@@ -743,36 +686,16 @@ export default function AccountLoginClient() {
       <main className="account-login-main">
         <section className="account-login-card">
           <span className="account-login-eyebrow">حساب العميل</span>
-          <h1>ادخل إلى مشترياتك السابقة</h1>
-          <p>
-            استخدم نفس البريد الإلكتروني الذي طلبت به من قبل، وسنرسل لك رمز دخول
-            لمرة واحدة بدل الاعتماد على روابط البريد.
-          </p>
-
-          <div className="account-login-steps">
-            <div className={`account-login-step ${step === 'email' ? 'is-active' : ''}`}>
-              <strong>1. إدخال البريد</strong>
-              <span>أدخل بريدك لنرسل لك رمز الدخول.</span>
-            </div>
-            <div className={`account-login-step ${step === 'otp' ? 'is-active' : ''}`}>
-              <strong>2. إدخال الرمز</strong>
-              <span>أدخل الرمز المكوّن من 6 أرقام لإكمال تسجيل الدخول.</span>
-            </div>
-          </div>
-
-          <div className="account-login-note">
-            ربط الطلبات في هذه المرحلة يعتمد على تطابق البريد الإلكتروني مع
-            <strong> customer_email </strong>
-            الموجود في الطلبات السابقة.
-          </div>
+          <h1>تسجيل الدخول إلى حسابك</h1>
+          <p>أدخل بريدك الإلكتروني لإرسال رمز الدخول.</p>
 
           {notice && <div className="account-login-success">{notice}</div>}
           {error && <div className="account-login-error">{error}</div>}
 
           {step === 'email' ? (
             <div className="account-login-panel">
-              <h2>أدخل بريدك الإلكتروني</h2>
-              <p>سنرسل لك رمزًا مكوّنًا من 6 أرقام لتسجيل الدخول إلى حسابك.</p>
+              <h2>تسجيل الدخول</h2>
+              <p>أدخل بريدك الإلكتروني وسنرسل لك رمز التحقق.</p>
 
               <form className="account-login-form" onSubmit={handleEmailSubmit}>
                 <div className="account-login-field">
@@ -795,14 +718,14 @@ export default function AccountLoginClient() {
                   disabled={sendingCode || verifyingCode}
                   className="account-login-submit"
                 >
-                  {sendingCode ? '⏳ جاري إرسال الرمز...' : 'أرسل رمز الدخول'}
+                  {sendingCode ? 'جاري إرسال الرمز...' : 'إرسال الرمز'}
                 </button>
               </form>
             </div>
           ) : (
             <div className="account-login-panel">
-              <h2>أدخل رمز الدخول</h2>
-              <p>أرسلنا رمزًا إلى بريدك الإلكتروني. أدخل الرمز لإكمال تسجيل الدخول.</p>
+              <h2>أدخل رمز التحقق</h2>
+              <p>أرسلنا الرمز إلى بريدك الإلكتروني.</p>
 
               <div className="account-login-meta">
                 <strong>{deliveryEmail}</strong>
@@ -816,8 +739,11 @@ export default function AccountLoginClient() {
 
               <form className="account-login-form" onSubmit={handleVerifyOtp}>
                 <div className="account-login-field">
-                  <label htmlFor="otp-0">رمز الدخول</label>
-                  <div className="account-login-otp-group">
+                  <label htmlFor="otp-0">رمز التحقق</label>
+                  <div
+                    className="account-login-otp-group"
+                    style={{ gridTemplateColumns: `repeat(${OTP_LENGTH}, minmax(0, 1fr))` }}
+                  >
                     {otpDigits.map((digit, index) => (
                       <input
                         key={index}
@@ -846,7 +772,7 @@ export default function AccountLoginClient() {
                     disabled={sendingCode || verifyingCode}
                     className="account-login-submit"
                   >
-                    {verifyingCode ? '⏳ جاري التحقق من الرمز...' : 'تأكيد الدخول'}
+                    {verifyingCode ? 'جاري التحقق...' : 'تأكيد'}
                   </button>
 
                   <button
@@ -858,7 +784,7 @@ export default function AccountLoginClient() {
                     {cooldownSeconds > 0
                       ? `إعادة إرسال الرمز خلال ${cooldownSeconds} ثانية`
                       : sendingCode
-                        ? '⏳ جاري إرسال الرمز...'
+                        ? 'جاري إرسال الرمز...'
                         : 'إعادة إرسال الرمز'}
                   </button>
 
@@ -874,10 +800,6 @@ export default function AccountLoginClient() {
             </div>
           )}
 
-          <p className="account-login-help">
-            إذا طلبت أكثر من رمز، استخدم آخر رمز تم إرساله فقط. وإذا كنت قد استخدمت
-            أكثر من بريد في الطلبات، فكل بريد سيعرض مشترياته الخاصة فقط.
-          </p>
         </section>
       </main>
     </div>
