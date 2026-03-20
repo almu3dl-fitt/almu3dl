@@ -39,7 +39,7 @@ export default async function AdminPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '1rem' }}>
         <Link href="/admin/products" style={{
           padding: '1.25rem',
           backgroundColor: '#fff',
@@ -65,6 +65,19 @@ export default async function AdminPage() {
           <p style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>🧾</p>
           <p style={{ fontWeight: 700 }}>الطلبات</p>
           <p style={{ fontSize: '0.8rem', color: '#999' }}>عرض وإدارة الطلبات</p>
+        </Link>
+        <Link href="/admin/reviews" style={{
+          padding: '1.25rem',
+          backgroundColor: '#fff',
+          border: '1px solid #eee',
+          borderRadius: '10px',
+          textDecoration: 'none',
+          color: '#1a1a1a',
+          display: 'block',
+        }}>
+          <p style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>⭐</p>
+          <p style={{ fontWeight: 700 }}>التقييمات</p>
+          <p style={{ fontSize: '0.8rem', color: '#999' }}>مراجعة تقييمات المشترين</p>
         </Link>
       </div>
     </div>

@@ -1,5 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import AccountNavLink from '@/app/components/AccountNavLink'
+import SuccessCartCleanup from '@/app/components/SuccessCartCleanup'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 
 type SuccessOrder = {
@@ -96,6 +98,8 @@ export default async function SuccessPage({
     >
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');`}</style>
 
+      {isPaid && <SuccessCartCleanup />}
+
       <nav
         style={{
           display: 'flex',
@@ -135,13 +139,39 @@ export default async function SuccessPage({
           </span>
         </Link>
 
-        <Link
-          href="/store"
-          style={{ color: '#555', textDecoration: 'none', fontSize: '0.95rem' }}
-        >
-          ← المتجر
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', flexWrap: 'wrap' }}>
+          <AccountNavLink className="success-nav-link" />
+          <Link
+            href="/store"
+            className="success-nav-link"
+          >
+            ← المتجر
+          </Link>
+        </div>
       </nav>
+
+      <style>{`
+        .success-nav-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 40px;
+          padding: 0.55rem 0.85rem;
+          border-radius: 12px;
+          border: 1px solid #ececec;
+          background: rgba(255, 255, 255, 0.9);
+          color: #555;
+          text-decoration: none;
+          font-size: 0.88rem;
+          font-weight: 700;
+        }
+
+        @media (max-width: 640px) {
+          .success-nav-link {
+            font-size: 0.82rem;
+          }
+        }
+      `}</style>
 
       <div
         style={{
@@ -363,7 +393,8 @@ export default async function SuccessPage({
             </h1>
 
             <p style={{ color: '#999', marginBottom: '2rem' }}>
-              لو دفعت بالفعل، حدّث الصفحة بعد لحظات
+              جاري تأكيد الدفع وتجهيز ملفاتك. لا تغلق الصفحة، وإذا دفعت بالفعل
+              فسيظهر المحتوى الكامل هنا خلال لحظات.
             </p>
 
             <Link

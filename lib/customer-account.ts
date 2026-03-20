@@ -1,15 +1,18 @@
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 type OrderProductRelation = {
+  id: string
   title: string
   slug: string
 } | {
+  id: string
   title: string
   slug: string
 }[] | null
 
 type AccountOrderItemRow = {
   id: string
+  product_id: string
   price_paid: number | null
   products: OrderProductRelation
 }
@@ -18,6 +21,8 @@ type AccountOrderRow = {
   id: string
   amount: number | null
   status: string | null
+  customer_name: string | null
+  customer_email: string | null
   created_at: string
   order_items: AccountOrderItemRow[] | null
 }
@@ -46,6 +51,7 @@ export type CustomerDownload = {
 
 export type CustomerOrderProduct = {
   id: string
+  productId: string
   title: string
   slug: string | null
   pricePaid: number
@@ -61,42 +67,42 @@ export type CustomerOrder = {
   products: CustomerOrderProduct[]
 }
 
-export async function getCustomerAccountByEmail(email: string) {
-  const { data: orders, error: ordersError } = await supabaseAdmin
-    .from('orders')
-    .select(`
-      id,
-      amount,
-      status,
-      created_at,
-      order_items (
-        id,
-        price_paid,
-        products ( title, slug )
-      )
-    `)
-    .ilike('customer_email', email.trim())
-    .order('created_at', { ascending: false })
+export type CustomerOrderReview = {
+  id: string
+  rating: number
+  comment: string
+  status: string
+  createdAt: string
+}
 
-  if (ordersError) {
-    console.error('Customer account orders error:', ordersError)
-  }
+export type CustomerOrderDetailProduct = CustomerOrderProduct & {
+  review: CustomerOrderReview | null
+}
 
-  const safeOrders = (orders as AccountOrderRow[] | null) ?? []
-  const orderItemIds = safeOrders.flatMap(order => order.order_items?.map(item => item.id) ?? [])
+export type CustomerOrderDetail = Omit<CustomerOrder, 'products'> & {
+  customerName: string | null
+  customerEmail: string | null
+  products: CustomerOrderDetailProduct[]
+}
 
-  const { data: downloads, error: downloadsError } = orderItemIds.length
-    ? await supabaseAdmin
-        .from('downloads')
-        .select('id, token, order_item_id, product_files(file_name)')
-        .in('order_item_id', orderItemIds)
-    : { data: [] as AccountDownloadRow[] }
+type ReviewRow = {
+  id: string
+  product_id: string
+  rating: number
+  comment: string | null
+  status: string
+  created_at: string
+}
 
-  if (downloadsError) {
-    console.error('Customer account downloads error:', downloadsError)
-  }
+function normalizeProductRelation(productRelation: OrderProductRelation) {
+  return Array.isArray(productRelation) ? productRelation[0] : productRelation
+}
 
-  const safeDownloads = (downloads as AccountDownloadRow[] | null) ?? []
+function mapOrders(
+  safeOrders: AccountOrderRow[],
+  safeDownloads: AccountDownloadRow[],
+  reviewMap?: Map<string, ReviewRow>,
+): CustomerOrderDetail[] {
   const downloadsByItem = new Map<string, AccountDownloadRow[]>()
 
   safeDownloads.forEach(download => {
@@ -105,14 +111,16 @@ export async function getCustomerAccountByEmail(email: string) {
     downloadsByItem.set(download.order_item_id, existing)
   })
 
-  const mappedOrders: CustomerOrder[] = safeOrders.map(order => ({
+  return safeOrders.map(order => ({
     id: order.id,
     shortId: order.id.slice(0, 8),
     createdAt: order.created_at,
     status: order.status || 'pending',
     amount: Number(order.amount ?? 0),
+    customerName: order.customer_name?.trim() || null,
+    customerEmail: order.customer_email?.trim() || null,
     products: (order.order_items ?? []).map(item => {
-      const product = Array.isArray(item.products) ? item.products[0] : item.products
+      const product = normalizeProductRelation(item.products)
       const itemDownloads = (downloadsByItem.get(item.id) ?? []).map(download => {
         const file = Array.isArray(download.product_files)
           ? download.product_files[0]
@@ -135,22 +143,157 @@ export async function getCustomerAccountByEmail(email: string) {
         }
       })
 
+      const review = reviewMap?.get(item.product_id) ?? null
+
       return {
         id: item.id,
+        productId: item.product_id,
         title: product?.title || 'منتج رقمي',
         slug: product?.slug || null,
         pricePaid: Number(item.price_paid ?? 0),
         downloads: itemDownloads,
+        review: review
+          ? {
+              id: review.id,
+              rating: Number(review.rating ?? 0),
+              comment: review.comment?.trim() || '',
+              status: review.status,
+              createdAt: review.created_at,
+            }
+          : null,
       }
     }),
   }))
+}
+
+async function getOrdersByEmail(email: string) {
+  return supabaseAdmin
+    .from('orders')
+    .select(`
+      id,
+      amount,
+      status,
+      customer_name,
+      customer_email,
+      created_at,
+      order_items (
+        id,
+        product_id,
+        price_paid,
+        products ( id, title, slug )
+      )
+    `)
+    .ilike('customer_email', email.trim())
+    .order('created_at', { ascending: false })
+}
+
+async function getDownloadsByOrderItemIds(orderItemIds: string[]) {
+  if (!orderItemIds.length) {
+    return { data: [] as AccountDownloadRow[], error: null }
+  }
+
+  return supabaseAdmin
+    .from('downloads')
+    .select('id, token, order_item_id, product_files(file_name)')
+    .in('order_item_id', orderItemIds)
+}
+
+export async function getCustomerAccountByEmail(email: string) {
+  const { data: orders, error: ordersError } = await getOrdersByEmail(email)
+
+  if (ordersError) {
+    console.error('Customer account orders error:', ordersError)
+  }
+
+  const safeOrders = (orders as AccountOrderRow[] | null) ?? []
+  const orderItemIds = safeOrders.flatMap(order => order.order_items?.map(item => item.id) ?? [])
+
+  const { data: downloads, error: downloadsError } = await getDownloadsByOrderItemIds(orderItemIds)
+
+  if (downloadsError) {
+    console.error('Customer account downloads error:', downloadsError)
+  }
+
+  const safeDownloads = (downloads as AccountDownloadRow[] | null) ?? []
+  const mappedOrders = mapOrders(safeOrders, safeDownloads)
 
   const downloadsList = mappedOrders.flatMap(order =>
     order.products.flatMap(product => product.downloads),
   )
 
+  const customerName =
+    mappedOrders.find(order => order.customerName)?.customerName?.trim() || null
+
   return {
-    orders: mappedOrders,
+    customerName,
+    orders: mappedOrders as CustomerOrder[],
     downloads: downloadsList,
   }
+}
+
+export async function getCustomerOrderById(email: string, orderId: string) {
+  const { data: order, error: orderError } = await supabaseAdmin
+    .from('orders')
+    .select(`
+      id,
+      amount,
+      status,
+      customer_name,
+      customer_email,
+      created_at,
+      order_items (
+        id,
+        product_id,
+        price_paid,
+        products ( id, title, slug )
+      )
+    `)
+    .eq('id', orderId)
+    .ilike('customer_email', email.trim())
+    .single()
+
+  if (orderError) {
+    console.error('Customer order detail error:', orderError)
+    return null
+  }
+
+  const safeOrder = (order as AccountOrderRow | null) ?? null
+
+  if (!safeOrder) {
+    return null
+  }
+
+  const orderItemIds = safeOrder.order_items?.map(item => item.id) ?? []
+  const productIds = safeOrder.order_items?.map(item => item.product_id) ?? []
+
+  const [{ data: downloads, error: downloadsError }, { data: reviews, error: reviewsError }] =
+    await Promise.all([
+      getDownloadsByOrderItemIds(orderItemIds),
+      productIds.length
+        ? supabaseAdmin
+            .from('product_reviews')
+            .select('id, product_id, rating, comment, status, created_at')
+            .in('product_id', productIds)
+            .ilike('customer_email', email.trim())
+        : Promise.resolve({ data: [] as ReviewRow[], error: null }),
+    ])
+
+  if (downloadsError) {
+    console.error('Customer order downloads error:', downloadsError)
+  }
+
+  if (reviewsError) {
+    if (reviewsError.code !== 'PGRST205') {
+      console.error('Customer order reviews error:', reviewsError)
+    }
+  }
+
+  const reviewMap = new Map<string, ReviewRow>()
+
+  ;((reviews as ReviewRow[] | null) ?? []).forEach(review => {
+    reviewMap.set(review.product_id, review)
+  })
+
+  const [mappedOrder] = mapOrders([safeOrder], (downloads as AccountDownloadRow[] | null) ?? [], reviewMap)
+  return mappedOrder ?? null
 }

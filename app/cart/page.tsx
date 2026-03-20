@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import AccountNavLink from '@/app/components/AccountNavLink'
 import { getCart, removeFromCart, getCartTotal, type CartItem } from '@/lib/cart'
 
 const categoryLabels: Record<string, string> = {
@@ -99,10 +100,25 @@ export default function CartPage() {
         }
 
         .cart-nav-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 40px;
+          padding: 0.55rem 0.85rem;
+          border-radius: 12px;
+          border: 1px solid #ececec;
+          background: rgba(255, 255, 255, 0.9);
           color: #555;
           text-decoration: none;
-          font-size: 0.9rem;
+          font-size: 0.86rem;
           font-weight: 700;
+        }
+
+        .cart-nav-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.7rem;
+          flex-wrap: wrap;
         }
 
         .cart-main {
@@ -514,9 +530,12 @@ export default function CartPage() {
           <span>المعضل</span>
         </Link>
 
-        <Link href="/store" className="cart-nav-link">
-          ← المتجر
-        </Link>
+        <div className="cart-nav-actions">
+          <AccountNavLink className="cart-nav-link" />
+          <Link href="/store" className="cart-nav-link">
+            ← المتجر
+          </Link>
+        </div>
       </nav>
 
       <main className="cart-main">

@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import AccountNavLink from '@/app/components/AccountNavLink'
 import SignOutButton from '@/app/account/SignOutButton'
 import { getCustomerAccountByEmail } from '@/lib/customer-account'
 import { requireCustomerUser } from '@/lib/account-auth'
@@ -22,16 +23,24 @@ export default async function AccountPage() {
 
   let orders = [] as Awaited<ReturnType<typeof getCustomerAccountByEmail>>['orders']
   let downloads = [] as Awaited<ReturnType<typeof getCustomerAccountByEmail>>['downloads']
+  let customerName: string | null = null
   let hasLoadError = false
 
   try {
     const accountData = await getCustomerAccountByEmail(user.email)
+    customerName = accountData.customerName
     orders = accountData.orders
     downloads = accountData.downloads
   } catch (error) {
     hasLoadError = true
     console.error('Account page load error:', error)
   }
+
+  const displayName =
+    customerName?.trim() ||
+    user.user_metadata?.full_name ||
+    user.user_metadata?.name ||
+    user.email.split('@')[0]
 
   const totalSpent = orders.reduce((sum, order) => sum + order.amount, 0)
 
@@ -94,10 +103,25 @@ export default async function AccountPage() {
           -webkit-text-fill-color: transparent;
         }
 
+        .account-nav-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.7rem;
+          flex-wrap: wrap;
+        }
+
         .account-nav-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 40px;
+          padding: 0.55rem 0.85rem;
+          border-radius: 12px;
+          border: 1px solid #ececec;
+          background: rgba(255, 255, 255, 0.9);
           color: #555;
           text-decoration: none;
-          font-size: 0.92rem;
+          font-size: 0.86rem;
           font-weight: 700;
         }
 
@@ -133,6 +157,10 @@ export default async function AccountPage() {
           line-height: 1.2;
         }
 
+        .account-title strong {
+          color: #b8912e;
+        }
+
         .account-subtitle {
           max-width: 680px;
           margin: 0;
@@ -151,11 +179,18 @@ export default async function AccountPage() {
         }
 
         .account-summary-email {
-          margin: 0 0 0.8rem;
+          margin: 0 0 0.35rem;
           color: #555;
           font-size: 0.9rem;
           font-weight: 700;
           word-break: break-word;
+        }
+
+        .account-summary-name {
+          margin: 0 0 0.8rem;
+          color: #1a1a1a;
+          font-size: 1.04rem;
+          font-weight: 900;
         }
 
         .account-summary-grid {
@@ -353,6 +388,30 @@ export default async function AccountPage() {
           padding: 0.95rem 1rem 1rem;
         }
 
+        .account-order-actions {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 0.7rem;
+          padding: 0 1rem 1rem;
+          flex-wrap: wrap;
+        }
+
+        .account-order-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 42px;
+          padding: 0.68rem 0.95rem;
+          border-radius: 12px;
+          border: 1px solid #e7e7e7;
+          background: #fff;
+          color: #444;
+          text-decoration: none;
+          font-size: 0.84rem;
+          font-weight: 800;
+        }
+
         .account-product-card {
           padding: 0.95rem;
           border-radius: 18px;
@@ -503,6 +562,15 @@ export default async function AccountPage() {
             flex-direction: column;
           }
 
+          .account-order-actions {
+            flex-direction: column;
+            align-items: stretch;
+          }
+
+          .account-order-link {
+            width: 100%;
+          }
+
           .account-download-grid {
             grid-template-columns: 1fr;
           }
@@ -519,23 +587,29 @@ export default async function AccountPage() {
           <span>المعضل</span>
         </Link>
 
-        <Link href="/store" className="account-nav-link">
-          ← المتجر
-        </Link>
+        <div className="account-nav-actions">
+          <AccountNavLink className="account-nav-link" />
+          <Link href="/store" className="account-nav-link">
+            ← المتجر
+          </Link>
+        </div>
       </nav>
 
       <main className="account-main">
         <section className="account-hero">
           <div>
             <span className="account-eyebrow">حسابي</span>
-            <h1 className="account-title">مشترياتك وتنزيلاتك في مكان واحد</h1>
+            <h1 className="account-title">
+              أهلاً <strong>{displayName}</strong>
+            </h1>
             <p className="account-subtitle">
-              جمعنا الطلبات السابقة والملفات الجاهزة للتحميل في صفحة واحدة،
-              بالاعتماد على نفس البريد الإلكتروني الذي استخدمته عند الطلب.
+              جمعنا آخر الطلبات، التنزيلات، وروابط الوصول في مكان واحد بالاعتماد
+              على نفس البريد الإلكتروني الذي استخدمته عند الطلب.
             </p>
           </div>
 
           <div className="account-summary">
+            <p className="account-summary-name">{displayName}</p>
             <p className="account-summary-email">{user.email}</p>
 
             <div className="account-summary-grid">
@@ -557,11 +631,11 @@ export default async function AccountPage() {
           </div>
         </section>
 
-        <section className="account-section">
+        <section className="account-section" id="orders">
           <div className="account-section-head">
             <div>
               <h2>مشترياتي</h2>
-              <p>كل الطلبات المرتبطة بالبريد الحالي، مع المنتجات وروابط التحميل.</p>
+              <p>طلباتك السابقة مع حالة كل طلب وروابط التحميل وصفحة تفاصيل مستقلة.</p>
             </div>
             <p>{formattedOrders.length} طلب</p>
           </div>
@@ -662,6 +736,15 @@ export default async function AccountPage() {
                         ))}
                       </div>
                     </details>
+
+                    <div className="account-order-actions">
+                      <span className="account-order-date">
+                        يمكنك إدارة التحميلات والتقييمات من صفحة هذا الطلب.
+                      </span>
+                      <Link href={`/account/orders/${order.id}`} className="account-order-link">
+                        فتح صفحة الطلب
+                      </Link>
+                    </div>
                   </article>
                 )
               })}

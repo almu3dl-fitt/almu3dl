@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import AccountNavLink from '@/app/components/AccountNavLink'
 import CartIcon from '@/app/components/CartIcon'
 import AddToCartButton from '@/app/components/AddToCartButton'
+import { getApprovedProductReviews } from '@/lib/customer-reviews'
 import { supabase } from '@/lib/supabase'
 import { siteConfig, truncateText } from '@/lib/site'
 
@@ -153,6 +154,7 @@ export default async function ProductPage({
     .split(/\n+/)
     .map(block => block.trim())
     .filter(Boolean)
+  const reviewSummary = await getApprovedProductReviews(product.id)
 
   const trustItems = [
     { icon: '⚡', title: 'وصول فوري', text: 'تنتقل مباشرة إلى السلة ثم صفحة الإتمام بدون خطوات إضافية.' },
@@ -555,6 +557,96 @@ export default async function ProductPage({
           font-weight: 800;
         }
 
+        .product-reviews-section {
+          margin-top: 1rem;
+        }
+
+        .product-review-summary {
+          display: grid;
+          grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+          gap: 1rem;
+          padding: 1rem;
+          border: 1px solid rgba(17, 17, 17, 0.06);
+          border-radius: 24px;
+          background: linear-gradient(180deg, #fff, #fcfbf8);
+          box-shadow: 0 14px 26px rgba(17, 17, 17, 0.04);
+        }
+
+        .product-review-score {
+          display: grid;
+          gap: 0.35rem;
+          align-content: start;
+        }
+
+        .product-review-score strong {
+          color: #1a1a1a;
+          font-size: 2.2rem;
+          font-weight: 900;
+          line-height: 1;
+        }
+
+        .product-review-score span {
+          color: #7b7b7b;
+          font-size: 0.86rem;
+          line-height: 1.8;
+        }
+
+        .product-review-stars {
+          color: #b8912e;
+          letter-spacing: 0.16rem;
+          font-size: 1.08rem;
+          font-weight: 900;
+        }
+
+        .product-review-list {
+          display: grid;
+          gap: 0.8rem;
+        }
+
+        .product-review-card {
+          padding: 0.95rem;
+          border-radius: 18px;
+          border: 1px solid #efefef;
+          background: #fff;
+        }
+
+        .product-review-card h3 {
+          margin: 0;
+          font-size: 0.95rem;
+          font-weight: 900;
+        }
+
+        .product-review-card p {
+          margin: 0.4rem 0 0;
+          color: #6f6f6f;
+          font-size: 0.88rem;
+          line-height: 1.9;
+        }
+
+        .product-review-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 0.6rem;
+          flex-wrap: wrap;
+          margin-bottom: 0.45rem;
+        }
+
+        .product-review-date {
+          color: #9a9a9a;
+          font-size: 0.76rem;
+          font-weight: 700;
+        }
+
+        .product-review-empty {
+          padding: 1rem;
+          border-radius: 18px;
+          border: 1px dashed #ddd;
+          background: rgba(255, 255, 255, 0.9);
+          color: #8b8b8b;
+          line-height: 1.8;
+        }
+
         .product-footer {
           padding: 1.8rem 1.25rem;
           border-top: 1px solid #eee;
@@ -650,6 +742,10 @@ export default async function ProductPage({
 
           .product-price-block strong {
             font-size: 1.72rem;
+          }
+
+          .product-review-summary {
+            grid-template-columns: 1fr;
           }
         }
       `}</style>
@@ -791,6 +887,51 @@ export default async function ProductPage({
                 ))}
               </div>
             )}
+          </article>
+        </section>
+
+        <section className="product-reviews-section">
+          <article className="product-review-summary">
+            <div className="product-review-score">
+              <span>آراء المشترين</span>
+              <strong>
+                {reviewSummary.reviewsCount > 0 ? reviewSummary.averageRating.toFixed(1) : '—'}
+              </strong>
+              <div className="product-review-stars" aria-hidden="true">
+                {'★'.repeat(Math.round(reviewSummary.averageRating || 0)).padEnd(5, '☆')}
+              </div>
+              <span>
+                {reviewSummary.reviewsCount > 0
+                  ? `${reviewSummary.reviewsCount} تقييمات معتمدة من مشترين حقيقيين`
+                  : 'لا توجد تقييمات معتمدة لهذا المنتج بعد.'}
+              </span>
+            </div>
+
+            <div className="product-review-list">
+              {reviewSummary.reviewsCount === 0 ? (
+                <div className="product-review-empty">
+                  أول تقييم سيظهر هنا بعد أن يشتري عميل المنتج ويرسل تقييمه ويتم
+                  اعتماده من الإدارة.
+                </div>
+              ) : (
+                reviewSummary.reviews.slice(0, 4).map(review => (
+                  <article key={review.id} className="product-review-card">
+                    <div className="product-review-meta">
+                      <h3>{review.customerName}</h3>
+                      <span className="product-review-date">
+                        {new Intl.DateTimeFormat('ar-SA', {
+                          dateStyle: 'medium',
+                        }).format(new Date(review.createdAt))}
+                      </span>
+                    </div>
+                    <div className="product-review-stars" aria-hidden="true">
+                      {'★'.repeat(review.rating).padEnd(5, '☆')}
+                    </div>
+                    <p>{review.comment || 'تجربة موثقة بدون تعليق نصي إضافي.'}</p>
+                  </article>
+                ))
+              )}
+            </div>
           </article>
         </section>
       </main>

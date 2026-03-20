@@ -3,13 +3,43 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { getCart, getCartTotal, clearCart, type CartItem } from '@/lib/cart'
+import AccountNavLink from '@/app/components/AccountNavLink'
+import { getCart, getCartTotal, type CartItem } from '@/lib/cart'
+import { supabaseBrowser } from '@/lib/supabase-browser'
+
+const CHECKOUT_PROCESSING_KEY = 'almu3dl_checkout_processing'
 
 export default function CheckoutPage() {
   const [cart, setCart] = useState<CartItem[]>([])
   const [hydrated, setHydrated] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [hasDismissedRouteError, setHasDismissedRouteError] = useState(false)
+  const [processingState, setProcessingState] = useState<'idle' | 'free' | 'paypal'>(() => {
+    if (typeof window === 'undefined') {
+      return 'idle'
+    }
+
+    const persistedState = window.sessionStorage.getItem(CHECKOUT_PROCESSING_KEY)
+    return persistedState === 'free' || persistedState === 'paypal'
+      ? persistedState
+      : 'idle'
+  })
+  const [routeState] = useState(() => {
+    if (typeof window === 'undefined') {
+      return {
+        cancelled: false,
+        errorCode: '',
+      }
+    }
+
+    const params = new URLSearchParams(window.location.search)
+
+    return {
+      cancelled: params.get('cancelled') === 'true',
+      errorCode: params.get('error') || '',
+    }
+  })
   const [form, setForm] = useState({
     full_name: '',
     email: '',
@@ -36,8 +66,57 @@ export default function CheckoutPage() {
     }
   }, [])
 
+  useEffect(() => {
+    const hydrateCustomer = async () => {
+      const {
+        data: { user },
+      } = await supabaseBrowser.auth.getUser()
+
+      if (!user?.email) {
+        return
+      }
+
+      setForm(current => ({
+        full_name:
+          current.full_name ||
+          user.user_metadata?.full_name ||
+          user.user_metadata?.name ||
+          '',
+        email: current.email || user.email || '',
+        phone: current.phone,
+      }))
+    }
+
+    void hydrateCustomer()
+  }, [])
+
+  useEffect(() => {
+    if (!routeState.cancelled && !routeState.errorCode) {
+      return
+    }
+
+    window.sessionStorage.removeItem(CHECKOUT_PROCESSING_KEY)
+  }, [routeState.cancelled, routeState.errorCode])
+
   const total = getCartTotal(cart)
   const totalLabel = total === 0 ? 'مجاني' : `${total} ريال`
+  const cancelled = routeState.cancelled
+  const errorCode = routeState.errorCode
+  const routeErrorMessages: Record<string, string> = {
+    missing_order: 'تعذر العثور على الطلب المطلوب لإكمال الدفع.',
+    invalid_order: 'تعذر التحقق من الطلب الحالي. حاول إنشاء طلب جديد.',
+    payment_failed: 'لم يكتمل الدفع بنجاح. يمكنك المحاولة مرة أخرى.',
+    unknown: 'حدث خطأ غير متوقع أثناء تأكيد الطلب. حاول مرة أخرى.',
+  }
+  const routeError =
+    cancelled
+      ? 'تم إلغاء الدفع قبل الإتمام. سلتك ما زالت محفوظة ويمكنك المحاولة مرة أخرى.'
+      : errorCode
+        ? routeErrorMessages[errorCode] || 'تعذر إكمال الطلب الآن. حاول مرة أخرى.'
+        : ''
+  const activeRouteError = hasDismissedRouteError ? '' : routeError
+  const effectiveError = error || activeRouteError
+  const isProcessing = processingState !== 'idle' && !activeRouteError
 
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)
@@ -46,6 +125,7 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setHasDismissedRouteError(true)
 
     if (!form.full_name.trim()) {
       setError('ادخل اسمك الكامل')
@@ -56,7 +136,10 @@ export default function CheckoutPage() {
       return
     }
 
+    const nextState = total === 0 ? 'free' : 'paypal'
     setLoading(true)
+    setProcessingState(nextState)
+    window.sessionStorage.setItem(CHECKOUT_PROCESSING_KEY, nextState)
 
     // لو كل المنتجات مجانية
     if (total === 0) {
@@ -74,14 +157,18 @@ export default function CheckoutPage() {
         const data = await res.json()
         if (!res.ok) {
           setError(data.error || 'حصل خطأ')
+          window.sessionStorage.removeItem(CHECKOUT_PROCESSING_KEY)
+          setProcessingState('idle')
           setLoading(false)
           return
         }
-        clearCart()
         window.location.href = `/success?order=${data.orderId}`
+        return
       } catch {
         setError('حصل خطأ، حاول مرة ثانية')
       }
+      window.sessionStorage.removeItem(CHECKOUT_PROCESSING_KEY)
+      setProcessingState('idle')
       setLoading(false)
       return
     }
@@ -102,15 +189,21 @@ export default function CheckoutPage() {
       const data = await res.json()
       if (!res.ok) {
         setError(data.error || 'حصل خطأ')
+        window.sessionStorage.removeItem(CHECKOUT_PROCESSING_KEY)
+        setProcessingState('idle')
         setLoading(false)
         return
       }
       if (data.approvalUrl) {
         window.location.href = data.approvalUrl
+        return
       }
+      setError('تعذر بدء الدفع الآن. حاول مرة أخرى.')
     } catch {
       setError('حصل خطأ، حاول مرة ثانية')
     }
+    window.sessionStorage.removeItem(CHECKOUT_PROCESSING_KEY)
+    setProcessingState('idle')
     setLoading(false)
   }
 
@@ -124,6 +217,90 @@ export default function CheckoutPage() {
     direction: 'rtl' as const,
     outline: 'none',
     backgroundColor: '#fff',
+  }
+
+  if (isProcessing) {
+    const isFreeFlow = processingState === 'free'
+
+    return (
+      <div className="checkout-page-shell checkout-empty-state">
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
+
+          .checkout-page-shell {
+            min-height: 100vh;
+            background:
+              radial-gradient(circle at top right, rgba(212, 168, 67, 0.08), transparent 30%),
+              #fafafa;
+            font-family: 'Tajawal', 'Arial', sans-serif;
+            direction: rtl;
+            color: #1a1a1a;
+          }
+
+          .checkout-empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+          }
+
+          .checkout-empty-card {
+            width: min(100%, 500px);
+            padding: 1.9rem 1.25rem;
+            border: 1px solid rgba(17, 17, 17, 0.07);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.95);
+            text-align: center;
+            box-shadow: 0 18px 32px rgba(17, 17, 17, 0.05);
+          }
+
+          .checkout-empty-card p {
+            margin: 0;
+          }
+
+          .checkout-empty-card .checkout-empty-icon {
+            font-size: 2.8rem;
+            margin-bottom: 0.75rem;
+          }
+
+          .checkout-empty-card .checkout-empty-title {
+            margin-bottom: 0.45rem;
+            font-size: 1.28rem;
+            font-weight: 900;
+          }
+
+          .checkout-empty-card .checkout-empty-copy {
+            color: #777;
+            line-height: 1.9;
+          }
+
+          .checkout-empty-note {
+            margin-top: 1rem;
+            padding: 0.8rem 0.95rem;
+            border-radius: 16px;
+            background: #fff8e7;
+            border: 1px solid #f0ddb0;
+            color: #8f6a14;
+            font-size: 0.84rem;
+            font-weight: 800;
+            line-height: 1.8;
+          }
+        `}</style>
+
+        <div className="checkout-empty-card">
+          <p className="checkout-empty-icon">{isFreeFlow ? '⏳' : '🔐'}</p>
+          <p className="checkout-empty-title">جاري معالجة طلبك...</p>
+          <p className="checkout-empty-copy">
+            {isFreeFlow
+              ? 'جاري تأكيد طلبك المجاني وتجهيز ملفاتك للتحميل. لا تغلق الصفحة حتى ننقلك إلى صفحة النجاح.'
+              : 'جاري تجهيز طلبك وتحويلك إلى بوابة الدفع الآمنة لتأكيد العملية وتجهيز ملفاتك.'}
+          </p>
+          <div className="checkout-empty-note">
+            لا تغلق الصفحة الآن. سنكمل الخطوة التالية تلقائيًا بمجرد تأكيد العملية.
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (hydrated && cart.length === 0) {
@@ -254,10 +431,25 @@ export default function CheckoutPage() {
         }
 
         .checkout-nav-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 40px;
+          padding: 0.55rem 0.85rem;
+          border-radius: 12px;
+          border: 1px solid #ececec;
+          background: rgba(255, 255, 255, 0.9);
           color: #555;
           text-decoration: none;
           font-size: 0.86rem;
           font-weight: 700;
+        }
+
+        .checkout-nav-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.7rem;
+          flex-wrap: wrap;
         }
 
         .checkout-main {
@@ -604,9 +796,12 @@ export default function CheckoutPage() {
           <Image src="/logo.png" alt="المعضل" width={48} height={48} />
           <span>المعضل</span>
         </Link>
-        <Link href="/cart" className="checkout-nav-link">
-          ← السلة
-        </Link>
+        <div className="checkout-nav-actions">
+          <AccountNavLink className="checkout-nav-link" />
+          <Link href="/cart" className="checkout-nav-link">
+            ← السلة
+          </Link>
+        </div>
       </nav>
 
       <main className="checkout-main">
@@ -638,7 +833,7 @@ export default function CheckoutPage() {
                 <p>أدخل بياناتك مرة واحدة، وسنرسل الفاتورة ورابط الوصول مباشرة إلى بريدك.</p>
               </div>
 
-              {error && <div className="checkout-error">{error}</div>}
+          {effectiveError && <div className="checkout-error">{effectiveError}</div>}
 
               <form onSubmit={handleSubmit} className="checkout-form">
                 <div className="checkout-field">
