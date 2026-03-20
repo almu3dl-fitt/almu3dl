@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
 export default async function AdminProductsPage() {
@@ -10,13 +11,13 @@ export default async function AdminProductsPage() {
     <div style={{ padding: '2rem', fontFamily: 'Arial', direction: 'rtl' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>المنتجات</h1>
-        <a href="/admin/products/new" style={{
+        <Link href="/admin/products/new" style={{
           background: '#000', color: '#fff',
           padding: '0.5rem 1rem', borderRadius: '8px',
           textDecoration: 'none'
         }}>
           + إضافة منتج
-        </a>
+        </Link>
       </div>
 
       {products?.length === 0 && (
@@ -29,7 +30,7 @@ export default async function AdminProductsPage() {
             <th style={{ textAlign: 'right', padding: '0.75rem' }}>الاسم</th>
             <th style={{ textAlign: 'right', padding: '0.75rem' }}>السعر</th>
             <th style={{ textAlign: 'right', padding: '0.75rem' }}>المستوى</th>
-            <th style={{ textAlign: 'right', padding: '0.75rem' }}>الحالة</th>
+            <th style={{ textAlign: 'right', padding: '0.75rem' }}></th>
           </tr>
         </thead>
         <tbody>
@@ -39,6 +40,14 @@ export default async function AdminProductsPage() {
               <td style={{ padding: '0.75rem' }}>{product.is_free ? 'مجاني' : `${product.price} ريال`}</td>
               <td style={{ padding: '0.75rem' }}>{product.level}</td>
               <td style={{ padding: '0.75rem' }}>{product.is_active ? '✅ نشط' : '❌ مخفي'}</td>
+              <td style={{ padding: '0.75rem' }}>
+                <Link href={`/admin/products/${product.id}`} style={{
+                  color: '#B8912E',
+                  textDecoration: 'none',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                }}>تعديل ←</Link>
+              </td>
             </tr>
           ))}
         </tbody>
