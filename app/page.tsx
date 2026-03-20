@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import AccountNavLink from '@/app/components/AccountNavLink'
 import CartIcon from '@/app/components/CartIcon'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
@@ -103,6 +104,21 @@ export default async function Home() {
           border-radius: 12px;
           background: linear-gradient(135deg, #d4a843, #b8912e);
           color: #fff;
+          text-decoration: none;
+          font-size: 0.9rem;
+          font-weight: 800;
+        }
+
+        .home-nav-account {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 42px;
+          padding: 0.65rem 1rem;
+          border-radius: 12px;
+          border: 1px solid #f0ddb0;
+          background: #fff8e7;
+          color: #8f6a14;
           text-decoration: none;
           font-size: 0.9rem;
           font-weight: 800;
@@ -395,6 +411,12 @@ export default async function Home() {
             font-size: 0.84rem;
           }
 
+          .home-nav-account {
+            min-height: 38px;
+            padding-inline: 0.85rem;
+            font-size: 0.84rem;
+          }
+
           .home-hero {
             padding: 3.15rem 0.95rem 2.5rem;
           }
@@ -435,6 +457,7 @@ export default async function Home() {
 
         <div className="home-nav-actions">
           <CartIcon />
+          <AccountNavLink className="home-nav-account" />
           <Link href="/store" className="home-nav-link">
             المتجر
           </Link>

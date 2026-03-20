@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-export function proxy(req: NextRequest) {
+function handleAdminAuth(req: NextRequest) {
   if (!req.nextUrl.pathname.startsWith('/admin')) {
-    return NextResponse.next()
+    return null
   }
 
   const auth = req.headers.get('authorization')
@@ -24,6 +24,16 @@ export function proxy(req: NextRequest) {
       'WWW-Authenticate': 'Basic realm="Admin Panel"',
     },
   })
+}
+
+export function proxy(req: NextRequest) {
+  const adminResponse = handleAdminAuth(req)
+
+  if (adminResponse) {
+    return adminResponse
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {

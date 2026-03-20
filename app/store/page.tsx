@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
+import AccountNavLink from '@/app/components/AccountNavLink'
 import CartIcon from '@/app/components/CartIcon'
 import { supabase } from '@/lib/supabase'
 import { siteConfig } from '@/lib/site'
@@ -187,6 +188,21 @@ export default async function StorePage({
           text-decoration: none;
           font-size: 0.92rem;
           font-weight: 600;
+        }
+
+        .store-nav-account {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 40px;
+          padding: 0.6rem 0.9rem;
+          border-radius: 12px;
+          border: 1px solid #f0ddb0;
+          background: #fff8e7;
+          color: #8f6a14;
+          text-decoration: none;
+          font-size: 0.84rem;
+          font-weight: 800;
         }
 
         .store-main {
@@ -590,6 +606,12 @@ export default async function StorePage({
             font-size: 0.82rem;
           }
 
+          .store-nav-account {
+            min-height: 36px;
+            padding: 0.5rem 0.78rem;
+            font-size: 0.78rem;
+          }
+
           .store-main {
             padding: 0.95rem 0.8rem 2.8rem;
           }
@@ -674,6 +696,7 @@ export default async function StorePage({
 
         <div className="store-nav-actions">
           <CartIcon />
+          <AccountNavLink className="store-nav-account" />
           <Link href="/" className="store-nav-link">
             الرئيسية
           </Link>

@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { cache } from 'react'
 import { notFound } from 'next/navigation'
+import AccountNavLink from '@/app/components/AccountNavLink'
 import CartIcon from '@/app/components/CartIcon'
 import AddToCartButton from '@/app/components/AddToCartButton'
 import { supabase } from '@/lib/supabase'
@@ -229,6 +230,21 @@ export default async function ProductPage({
           text-decoration: none;
           font-size: 0.92rem;
           font-weight: 700;
+        }
+
+        .product-nav-account {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 40px;
+          padding: 0.6rem 0.9rem;
+          border-radius: 12px;
+          border: 1px solid #f0ddb0;
+          background: #fff8e7;
+          color: #8f6a14;
+          text-decoration: none;
+          font-size: 0.84rem;
+          font-weight: 800;
         }
 
         .product-main {
@@ -584,6 +600,12 @@ export default async function ProductPage({
             font-size: 0.82rem;
           }
 
+          .product-nav-account {
+            min-height: 36px;
+            padding: 0.5rem 0.78rem;
+            font-size: 0.78rem;
+          }
+
           .product-main {
             padding: 0.95rem 0.8rem 2.8rem;
           }
@@ -640,6 +662,7 @@ export default async function ProductPage({
 
         <div className="product-nav-actions">
           <CartIcon />
+          <AccountNavLink className="product-nav-account" />
           <Link href="/store" className="product-nav-link">
             ← المتجر
           </Link>
