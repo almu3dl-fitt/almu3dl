@@ -19,6 +19,7 @@ export default function NewProductPage() {
   const [loading, setLoading] = useState(false)
   const [notice, setNotice] = useState<NoticeState>(null)
   const [files, setFiles] = useState<FileList | null>(null)
+  const [images, setImages] = useState<FileList | null>(null)
   const [categories, setCategories] = useState<AdminCategory[]>([])
   const [form, setForm] = useState({
     title: '',
@@ -82,13 +83,19 @@ export default function NewProductPage() {
       })
     }
 
+    if (images?.length) {
+      Array.from(images).forEach(file => {
+        formData.append('images', file)
+      })
+    }
+
     try {
       const response = await fetch('/api/admin/products', {
         method: 'POST',
         body: formData,
       })
 
-      const data = (await response.json()) as { error?: string; id?: string }
+      const data = (await response.json()) as { error?: string; id?: string; warning?: string }
 
       if (!response.ok || !data.id) {
         setNotice({
@@ -98,7 +105,11 @@ export default function NewProductPage() {
         return
       }
 
-      router.push(`/admin/products/${data.id}`)
+      const noticeQuery = data.warning
+        ? `?notice=${encodeURIComponent(data.warning)}&noticeType=warning`
+        : ''
+
+      router.push(`/admin/products/${data.id}${noticeQuery}`)
       router.refresh()
     } catch (error) {
       const message = error instanceof Error ? error.message : 'خطأ في حفظ المنتج.'
@@ -232,6 +243,27 @@ export default function NewProductPage() {
           <label style={labelStyle}>التاقز (مفصولة بفاصلة)</label>
           <input style={inputStyle} value={form.tags} placeholder="تمارين, غذاء, متوسط"
             onChange={event => setForm({ ...form, tags: event.target.value })} />
+        </div>
+
+        <div>
+          <label style={labelStyle}>صور المنتج (اختياري - يمكن اختيار أكثر من صورة)</label>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={event => setImages(event.target.files)}
+            style={{ ...inputStyle, padding: '0.4rem' }}
+          />
+          <div style={{ marginTop: '0.35rem', fontSize: '13px', color: '#777' }}>
+            أول صورة ستظهر كمصغّرة في المتجر.
+          </div>
+          {images && images.length > 0 && (
+            <div style={{ marginTop: '0.5rem', fontSize: '13px', color: '#555' }}>
+              {Array.from(images).map((image, index) => (
+                <div key={index}>🖼️ {image.name}</div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>

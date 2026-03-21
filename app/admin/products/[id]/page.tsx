@@ -2,7 +2,8 @@
 
 import { use, useEffect, useEffectEvent, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 type AdminCategory = {
   id: string
@@ -13,6 +14,13 @@ type AdminProductFile = {
   id: string
   file_name: string
   storage_path: string
+}
+
+type AdminProductImage = {
+  path: string
+  url: string
+  fileName: string
+  isLegacy: boolean
 }
 
 type EditableProduct = {
@@ -31,6 +39,7 @@ type ProductDetailsResponse = {
   error?: string
   product?: EditableProduct
   files?: AdminProductFile[]
+  images?: AdminProductImage[]
 }
 
 type CategoriesResponse = {
@@ -46,13 +55,16 @@ type NoticeState = {
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [notice, setNotice] = useState<NoticeState>(null)
   const [categories, setCategories] = useState<AdminCategory[]>([])
   const [files, setFiles] = useState<AdminProductFile[]>([])
+  const [images, setImages] = useState<AdminProductImage[]>([])
   const [newFiles, setNewFiles] = useState<FileList | null>(null)
+  const [newImages, setNewImages] = useState<FileList | null>(null)
   const [form, setForm] = useState({
     title: '',
     slug: '',
@@ -97,7 +109,9 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     const product = data.product
 
     setFiles(data.files ?? [])
+    setImages(data.images ?? [])
     setNewFiles(null)
+    setNewImages(null)
     setForm({
       title: product.title || '',
       slug: product.slug || '',
@@ -149,6 +163,22 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     return () => window.cancelAnimationFrame(frame)
   }, [id])
 
+  useEffect(() => {
+    const noticeText = searchParams.get('notice')
+    const noticeType = searchParams.get('noticeType')
+
+    if (!noticeText) {
+      return
+    }
+
+    setNotice({
+      type: noticeType === 'error' || noticeType === 'warning' || noticeType === 'success'
+        ? noticeType
+        : 'warning',
+      text: noticeText,
+    })
+  }, [searchParams])
+
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault()
     setSaving(true)
@@ -168,6 +198,12 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     if (newFiles?.length) {
       Array.from(newFiles).forEach(file => {
         formData.append('files', file)
+      })
+    }
+
+    if (newImages?.length) {
+      Array.from(newImages).forEach(file => {
+        formData.append('images', file)
       })
     }
 
@@ -230,6 +266,46 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'تعذر حذف الملف الآن.'
+      setNotice({
+        type: 'error',
+        text: message,
+      })
+    }
+  }
+
+  const handleDeleteImage = async (imagePath: string) => {
+    if (!confirm('هل تريد حذف هذه الصورة؟')) return
+
+    try {
+      const response = await fetch('/api/admin/product-images', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId: id,
+          imagePath,
+        }),
+      })
+
+      const data = (await response.json()) as { error?: string }
+
+      if (!response.ok) {
+        setNotice({
+          type: 'error',
+          text: data.error || 'تعذر حذف الصورة الآن.',
+        })
+        return
+      }
+
+      setImages(current => current.filter(image => image.path !== imagePath))
+      router.refresh()
+      setNotice({
+        type: 'success',
+        text: 'تم حذف الصورة بنجاح.',
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'تعذر حذف الصورة الآن.'
       setNotice({
         type: 'error',
         text: message,
@@ -396,6 +472,89 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           <label style={labelStyle}>التاقز (مفصولة بفاصلة)</label>
           <input style={inputStyle} value={form.tags} placeholder="غذاء, تنحيف, مبتدئ"
             onChange={event => setForm({ ...form, tags: event.target.value })} />
+        </div>
+
+        <div style={{
+          backgroundColor: '#f9f9f9',
+          border: '1px solid #eee',
+          borderRadius: '8px',
+          padding: '1rem',
+        }}>
+          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.75rem' }}>
+            🖼️ صور المنتج ({images.length})
+          </h3>
+
+          <p style={{ margin: '0 0 0.75rem', color: '#777', fontSize: '0.82rem', lineHeight: 1.8 }}>
+            أول صورة تظهر كمصغّرة في المتجر، ويمكنك رفع صورة واحدة أو عدة صور بشكل اختياري.
+          </p>
+
+          {images.length === 0 ? (
+            <p style={{ color: '#999', fontSize: '0.85rem' }}>لا توجد صور مضافة لهذا المنتج.</p>
+          ) : (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+              gap: '0.75rem',
+            }}>
+              {images.map((image, index) => (
+                <div key={image.path} style={{
+                  overflow: 'hidden',
+                  border: '1px solid #eee',
+                  borderRadius: '12px',
+                  backgroundColor: '#fff',
+                }}>
+                  <div style={{ position: 'relative', aspectRatio: '1 / 1', backgroundColor: '#f3f3f3' }}>
+                    <Image
+                      src={image.url}
+                      alt={`صورة ${index + 1} للمنتج`}
+                      fill
+                      sizes="180px"
+                      style={{ objectFit: 'cover' }}
+                    />
+                  </div>
+                  <div style={{ padding: '0.65rem', display: 'grid', gap: '0.45rem' }}>
+                    <div style={{ color: '#666', fontSize: '0.78rem', fontWeight: 700 }}>
+                      {index === 0 ? 'الصورة المصغّرة الحالية' : `صورة إضافية ${index + 1}`}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteImage(image.path)}
+                      style={{
+                        background: 'none',
+                        border: '1px solid #fecaca',
+                        color: '#dc2626',
+                        borderRadius: '6px',
+                        padding: '0.35rem 0.55rem',
+                        cursor: 'pointer',
+                        fontSize: '0.78rem',
+                        fontFamily: "'Tajawal', Arial",
+                      }}
+                    >
+                      حذف الصورة
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ marginTop: '0.85rem' }}>
+            <label style={{ ...labelStyle, fontSize: '0.85rem' }}>إضافة صور جديدة</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={event => setNewImages(event.target.files)}
+              style={{ fontSize: '0.85rem' }}
+            />
+            {newImages && newImages.length > 0 && (
+              <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: '#555' }}>
+                {Array.from(newImages).map((image, index) => (
+                  <div key={index}>🖼️ {image.name}</div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div style={{

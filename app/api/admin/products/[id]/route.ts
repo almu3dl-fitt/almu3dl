@@ -1,6 +1,7 @@
 import { revalidatePath } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminApiSession } from '@/lib/admin-auth'
+import { getAdminProductImages, uploadProductImages } from '@/lib/product-images'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const PRODUCT_DOWNLOAD_BUCKET = 'products'
@@ -64,7 +65,16 @@ function parseFiles(formData: FormData) {
     .filter((value): value is File => value instanceof File && value.size > 0)
 }
 
-function buildStoragePath(productId: string, fileName: string) {
+function parseImages(formData: FormData) {
+  return formData
+    .getAll('images')
+    .filter(
+      (value): value is File =>
+        value instanceof File && value.size > 0 && value.type.startsWith('image/'),
+    )
+}
+
+function buildDownloadStoragePath(productId: string, fileName: string) {
   const extensionMatch = fileName.match(/\.([^.]+)$/)
   const extension = extensionMatch?.[1]?.toLowerCase().replace(/[^a-z0-9]+/g, '') || ''
   const baseName = fileName.replace(/\.[^.]+$/, '')
@@ -96,7 +106,7 @@ async function uploadProductFiles(productId: string, files: File[]) {
 
   for (let index = 0; index < files.length; index += 1) {
     const file = files[index]
-    const storagePath = buildStoragePath(productId, file.name)
+    const storagePath = buildDownloadStoragePath(productId, file.name)
     const fileBuffer = Buffer.from(await file.arrayBuffer())
 
     const { error: uploadError } = await supabaseAdmin.storage
@@ -168,6 +178,7 @@ export async function GET(
   return NextResponse.json({
     product: product as AdminEditableProduct,
     files: (files as AdminProductFileRow[] | null) ?? [],
+    images: await getAdminProductImages(id, (product as AdminEditableProduct).slug),
   })
 }
 
@@ -194,6 +205,7 @@ export async function PUT(
     const isActive = parseBooleanValue(formData.get('is_active'))
     const tags = parseTagsValue(formData.get('tags'))
     const files = parseFiles(formData)
+    const images = parseImages(formData)
     const priceValue = Number(formData.get('price') || 0)
 
     if (!title) {
@@ -241,9 +253,14 @@ export async function PUT(
     }
 
     const uploadFailures = files.length > 0 ? await uploadProductFiles(id, files) : []
+    const imageUploadFailures = images.length > 0 ? await uploadProductImages(id, images) : []
 
     if (uploadFailures.length > 0) {
       console.error('Admin update product partial upload failures:', uploadFailures)
+    }
+
+    if (imageUploadFailures.length > 0) {
+      console.error('Admin update product partial image upload failures:', imageUploadFailures)
     }
 
     revalidatePath('/admin')
@@ -252,15 +269,24 @@ export async function PUT(
     revalidatePath(`/store/${currentProduct.slug}`)
     revalidatePath(`/store/${slug}`)
 
+    const warningParts: string[] = []
+
+    if (uploadFailures.length > 0) {
+      warningParts.push(
+        `تعذر رفع الملفات التالية: ${uploadFailures.map(file => file.fileName).join('، ')}`,
+      )
+    }
+
+    if (imageUploadFailures.length > 0) {
+      warningParts.push(
+        `تعذر رفع الصور التالية: ${imageUploadFailures.map(file => file.fileName).join('، ')}`,
+      )
+    }
+
     return NextResponse.json({
       ok: true,
       slug,
-      warning:
-        uploadFailures.length > 0
-          ? `تم حفظ بيانات المنتج، لكن تعذر رفع الملفات التالية: ${uploadFailures
-              .map(file => file.fileName)
-              .join('، ')}.`
-          : null,
+      warning: warningParts.length > 0 ? `تم حفظ بيانات المنتج، لكن ${warningParts.join('، ')}.` : null,
     })
   } catch (error) {
     console.error('Admin update product route error:', error)

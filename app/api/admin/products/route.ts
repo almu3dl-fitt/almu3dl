@@ -1,6 +1,7 @@
 import { revalidatePath } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminApiSession } from '@/lib/admin-auth'
+import { uploadProductImages } from '@/lib/product-images'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const PRODUCT_DOWNLOAD_BUCKET = 'products'
@@ -35,7 +36,16 @@ function parseFiles(formData: FormData) {
     .filter((value): value is File => value instanceof File && value.size > 0)
 }
 
-function buildStoragePath(productId: string, fileName: string) {
+function parseImages(formData: FormData) {
+  return formData
+    .getAll('images')
+    .filter(
+      (value): value is File =>
+        value instanceof File && value.size > 0 && value.type.startsWith('image/'),
+    )
+}
+
+function buildDownloadStoragePath(productId: string, fileName: string) {
   const extensionMatch = fileName.match(/\.([^.]+)$/)
   const extension = extensionMatch?.[1]?.toLowerCase().replace(/[^a-z0-9]+/g, '') || ''
   const baseName = fileName.replace(/\.[^.]+$/, '')
@@ -53,7 +63,7 @@ function buildStoragePath(productId: string, fileName: string) {
 async function uploadProductFiles(productId: string, files: File[], startSortOrder = 0) {
   for (let index = 0; index < files.length; index += 1) {
     const file = files[index]
-    const storagePath = buildStoragePath(productId, file.name)
+    const storagePath = buildDownloadStoragePath(productId, file.name)
     const fileBuffer = Buffer.from(await file.arrayBuffer())
 
     const { error: uploadError } = await supabaseAdmin.storage
@@ -98,6 +108,7 @@ export async function POST(req: NextRequest) {
     const isActive = parseBooleanValue(formData.get('is_active'))
     const tags = parseTagsValue(formData.get('tags'))
     const files = parseFiles(formData)
+    const images = parseImages(formData)
     const priceValue = Number(formData.get('price') || 0)
 
     if (!title) {
@@ -150,12 +161,27 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const imageUploadFailures = images.length > 0 ? await uploadProductImages(product.id, images) : []
+
+    if (imageUploadFailures.length > 0) {
+      console.error('Admin create product partial image upload failures:', imageUploadFailures)
+    }
+
     revalidatePath('/admin')
     revalidatePath('/admin/products')
     revalidatePath('/store')
     revalidatePath(`/store/${product.slug}`)
 
-    return NextResponse.json({ id: product.id, slug: product.slug })
+    return NextResponse.json({
+      id: product.id,
+      slug: product.slug,
+      warning:
+        imageUploadFailures.length > 0
+          ? `تم إنشاء المنتج، لكن تعذر رفع الصور التالية: ${imageUploadFailures
+              .map(file => file.fileName)
+              .join('، ')}.`
+          : null,
+    })
   } catch (error) {
     console.error('Admin create product route error:', error)
     return NextResponse.json({ error: 'حدث خطأ أثناء إنشاء المنتج.' }, { status: 500 })

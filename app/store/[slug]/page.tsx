@@ -9,7 +9,7 @@ import AddToCartButton from '@/app/components/AddToCartButton'
 import ProductReviewForm from '@/app/components/ProductReviewForm'
 import { getCustomerUser } from '@/lib/account-auth'
 import { getApprovedProductReviews, getProductReviewAccess } from '@/lib/customer-reviews'
-import { getProductImageUrl } from '@/lib/product-images'
+import { getProductImages } from '@/lib/product-images'
 import { supabase } from '@/lib/supabase'
 import { siteConfig, truncateText } from '@/lib/site'
 
@@ -162,7 +162,8 @@ export default async function ProductPage({
   const reviewAccess = customerUser?.email
     ? await getProductReviewAccess(product.id, customerUser.email)
     : null
-  const productImageUrl = await getProductImageUrl(product.slug)
+  const productImages = await getProductImages(product.id, product.slug)
+  const productImageUrl = productImages[0]?.url ?? null
 
   const trustItems = [
     { icon: '⚡', title: 'وصول فوري', text: 'تنتقل مباشرة إلى السلة ثم صفحة الإتمام بدون خطوات إضافية.' },
@@ -368,6 +369,26 @@ export default async function ProductPage({
           display: grid;
           gap: 0.9rem;
           padding: 1.35rem;
+        }
+
+        .product-gallery {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          gap: 0.75rem;
+          padding: 0 1.35rem 1.35rem;
+        }
+
+        .product-gallery-item {
+          position: relative;
+          aspect-ratio: 1 / 1;
+          overflow: hidden;
+          border-radius: 16px;
+          border: 1px solid rgba(17, 17, 17, 0.08);
+          background: #f4f4f4;
+        }
+
+        .product-gallery-item img {
+          object-fit: cover;
         }
 
         .product-eyebrow {
@@ -773,6 +794,11 @@ export default async function ProductPage({
             padding: 0.95rem 0.9rem;
           }
 
+          .product-gallery {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            padding: 0 0.9rem 0.95rem;
+          }
+
           .product-title {
             font-size: 1.65rem;
           }
@@ -872,6 +898,21 @@ export default async function ProductPage({
                   ))}
                 </div>
               </div>
+
+              {productImages.length > 1 && (
+                <div className="product-gallery">
+                  {productImages.slice(1).map((image, index) => (
+                    <div key={image.path} className="product-gallery-item">
+                      <Image
+                        src={image.url}
+                        alt={`${product.title} - صورة ${index + 2}`}
+                        fill
+                        sizes="(max-width: 640px) 50vw, 180px"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </article>
           </div>
 

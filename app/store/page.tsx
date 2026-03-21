@@ -97,7 +97,18 @@ export default async function StorePage({
     .select('*')
     .order('name')
 
-  const categories = (categoryData ?? []) as StoreCategory[]
+  const categories = ((categoryData ?? []) as StoreCategory[]).filter(
+    category => category.slug !== 'bundles',
+  )
+  const normalizedParams: StoreSearchParams = {
+    category: categories.some(category => category.slug === params.category)
+      ? params.category
+      : undefined,
+    level: ['beginner', 'intermediate', 'all'].includes(params.level ?? '')
+      ? params.level
+      : undefined,
+    free: params.free === 'true' ? 'true' : undefined,
+  }
 
   let query = supabase
     .from('products')
@@ -105,27 +116,34 @@ export default async function StorePage({
     .eq('is_active', true)
     .order('created_at', { ascending: false })
 
-  if (params.category) {
-    const selectedCategory = categories.find(category => category.slug === params.category)
+  if (normalizedParams.category) {
+    const selectedCategory = categories.find(category => category.slug === normalizedParams.category)
     if (selectedCategory) query = query.eq('category_id', selectedCategory.id)
   }
 
-  if (params.level && ['beginner', 'intermediate', 'all'].includes(params.level)) {
-    query = query.eq('level', params.level)
+  if (normalizedParams.level) {
+    query = query.eq('level', normalizedParams.level)
   }
 
-  if (params.free === 'true') {
+  if (normalizedParams.free === 'true') {
     query = query.eq('is_free', true)
   }
 
   const { data: productData } = await query
-  const products = (productData ?? []) as StoreProduct[]
-  const productImageUrls = await getProductImageUrls(products.map(product => product.slug))
+  const products = ((productData ?? []) as StoreProduct[]).filter(
+    product => product.categories?.slug !== 'bundles',
+  )
+  const productImageUrls = await getProductImageUrls(
+    products.map(product => ({
+      id: product.id,
+      slug: product.slug,
+    })),
+  )
 
   const activeFilterCount = [
-    Boolean(params.category),
-    Boolean(params.level),
-    params.free === 'true',
+    Boolean(normalizedParams.category),
+    Boolean(normalizedParams.level),
+    normalizedParams.free === 'true',
   ].filter(Boolean).length
 
   return (
@@ -758,16 +776,16 @@ export default async function StorePage({
             <span className="store-filter-label">الفئة</span>
             <div className="store-filter-row">
               <Link
-                href={buildStoreHref(params, { category: undefined })}
-                className={`store-filter-pill ${!params.category ? 'is-active' : ''}`}
+                href={buildStoreHref(normalizedParams, { category: undefined })}
+                className={`store-filter-pill ${!normalizedParams.category ? 'is-active' : ''}`}
               >
                 الكل
               </Link>
               {categories.map(category => (
                 <Link
                   key={category.id}
-                  href={buildStoreHref(params, { category: category.slug })}
-                  className={`store-filter-pill ${params.category === category.slug ? 'is-active' : ''}`}
+                  href={buildStoreHref(normalizedParams, { category: category.slug })}
+                  className={`store-filter-pill ${normalizedParams.category === category.slug ? 'is-active' : ''}`}
                 >
                   {category.name}
                 </Link>
@@ -779,23 +797,25 @@ export default async function StorePage({
             <span className="store-filter-label">المستوى ونوع العرض</span>
             <div className="store-filter-row">
               <Link
-                href={buildStoreHref(params, { level: undefined })}
-                className={`store-filter-pill ${!params.level ? 'is-active' : ''}`}
+                href={buildStoreHref(normalizedParams, { level: undefined })}
+                className={`store-filter-pill ${!normalizedParams.level ? 'is-active' : ''}`}
               >
                 كل المستويات
               </Link>
               {Object.entries(levelLabels).map(([value, label]) => (
                 <Link
                   key={value}
-                  href={buildStoreHref(params, { level: value })}
-                  className={`store-filter-pill ${params.level === value ? 'is-active' : ''}`}
+                  href={buildStoreHref(normalizedParams, { level: value })}
+                  className={`store-filter-pill ${normalizedParams.level === value ? 'is-active' : ''}`}
                 >
                   {label}
                 </Link>
               ))}
               <Link
-                href={buildStoreHref(params, { free: params.free === 'true' ? undefined : 'true' })}
-                className={`store-filter-pill is-highlighted ${params.free === 'true' ? 'is-active' : ''}`}
+                href={buildStoreHref(normalizedParams, {
+                  free: normalizedParams.free === 'true' ? undefined : 'true',
+                })}
+                className={`store-filter-pill is-highlighted ${normalizedParams.free === 'true' ? 'is-active' : ''}`}
               >
                 مجانية فقط
               </Link>
@@ -827,7 +847,7 @@ export default async function StorePage({
                       gradient: 'linear-gradient(135deg, #22c55e, #16a34a)',
                     }
                   : categoryThemes[product.categories?.slug ?? 'bundles'] ?? categoryThemes.bundles
-                const productImageUrl = productImageUrls.get(product.slug) ?? null
+                const productImageUrl = productImageUrls.get(product.id) ?? null
 
                 return (
                   <Link key={product.id} href={`/store/${product.slug}`} className="store-card">
