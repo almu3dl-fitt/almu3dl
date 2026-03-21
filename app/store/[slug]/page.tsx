@@ -9,6 +9,7 @@ import AddToCartButton from '@/app/components/AddToCartButton'
 import ProductReviewForm from '@/app/components/ProductReviewForm'
 import { getCustomerUser } from '@/lib/account-auth'
 import { getApprovedProductReviews, getProductReviewAccess } from '@/lib/customer-reviews'
+import { getProductImageUrl } from '@/lib/product-images'
 import { supabase } from '@/lib/supabase'
 import { siteConfig, truncateText } from '@/lib/site'
 
@@ -161,6 +162,7 @@ export default async function ProductPage({
   const reviewAccess = customerUser?.email
     ? await getProductReviewAccess(product.id, customerUser.email)
     : null
+  const productImageUrl = await getProductImageUrl(product.slug)
 
   const trustItems = [
     { icon: '⚡', title: 'وصول فوري', text: 'تنتقل مباشرة إلى السلة ثم صفحة الإتمام بدون خطوات إضافية.' },
@@ -312,6 +314,14 @@ export default async function ProductPage({
           color: #fff;
         }
 
+        .product-visual.has-image {
+          align-items: flex-start;
+          justify-content: flex-end;
+          min-height: 420px;
+          padding: 1rem;
+          background: #111 !important;
+        }
+
         .product-visual::after {
           content: '';
           position: absolute;
@@ -324,6 +334,15 @@ export default async function ProductPage({
             rgba(255, 255, 255, 0.07) 23px
           );
           pointer-events: none;
+        }
+
+        .product-visual.has-image::after {
+          background:
+            linear-gradient(180deg, rgba(17, 17, 17, 0.08), rgba(17, 17, 17, 0.5));
+        }
+
+        .product-hero-image {
+          object-fit: cover;
         }
 
         .product-visual-icon,
@@ -735,6 +754,11 @@ export default async function ProductPage({
             padding: 1rem;
           }
 
+          .product-visual.has-image {
+            min-height: 300px;
+            padding: 0.82rem;
+          }
+
           .product-visual-icon {
             font-size: 3.2rem;
           }
@@ -806,8 +830,22 @@ export default async function ProductPage({
         <section className="product-overview">
           <div className="product-content">
             <article className="product-hero-card">
-              <div className="product-visual" style={{ background: theme.gradient }}>
-                <span className="product-visual-icon">{theme.icon}</span>
+              <div
+                className={`product-visual ${productImageUrl ? 'has-image' : ''}`}
+                style={{ background: theme.gradient }}
+              >
+                {productImageUrl ? (
+                  <Image
+                    src={productImageUrl}
+                    alt={product.title}
+                    fill
+                    priority
+                    sizes="(max-width: 960px) 100vw, 60vw"
+                    className="product-hero-image"
+                  />
+                ) : (
+                  <span className="product-visual-icon">{theme.icon}</span>
+                )}
                 <span className="product-visual-chip">
                   {product.is_free ? 'إضافة مجانية' : 'تحميل فوري بعد الدفع'}
                 </span>

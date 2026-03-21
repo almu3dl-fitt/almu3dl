@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import AccountNavLink from '@/app/components/AccountNavLink'
 import CartIcon from '@/app/components/CartIcon'
+import { getProductImageUrls } from '@/lib/product-images'
 import { supabase } from '@/lib/supabase'
 import { siteConfig } from '@/lib/site'
 
@@ -119,6 +120,7 @@ export default async function StorePage({
 
   const { data: productData } = await query
   const products = (productData ?? []) as StoreProduct[]
+  const productImageUrls = await getProductImageUrls(products.map(product => product.slug))
 
   const activeFilterCount = [
     Boolean(params.category),
@@ -422,6 +424,12 @@ export default async function StorePage({
           color: #fff;
         }
 
+        .store-card-visual.has-image {
+          min-height: 230px;
+          padding: 0.78rem;
+          background: #111 !important;
+        }
+
         .store-card-visual::after {
           content: '';
           position: absolute;
@@ -434,6 +442,15 @@ export default async function StorePage({
             rgba(255, 255, 255, 0.07) 19px
           );
           pointer-events: none;
+        }
+
+        .store-card-visual.has-image::after {
+          background:
+            linear-gradient(180deg, rgba(17, 17, 17, 0.06), rgba(17, 17, 17, 0.46));
+        }
+
+        .store-card-image {
+          object-fit: cover;
         }
 
         .store-card-icon,
@@ -668,6 +685,11 @@ export default async function StorePage({
             padding: 0.72rem 0.78rem 0.65rem;
           }
 
+          .store-card-visual.has-image {
+            min-height: 200px;
+            padding: 0.7rem;
+          }
+
           .store-card-body {
             gap: 0.62rem;
             padding: 0.82rem 0.82rem 0.9rem;
@@ -805,14 +827,25 @@ export default async function StorePage({
                       gradient: 'linear-gradient(135deg, #22c55e, #16a34a)',
                     }
                   : categoryThemes[product.categories?.slug ?? 'bundles'] ?? categoryThemes.bundles
+                const productImageUrl = productImageUrls.get(product.slug) ?? null
 
                 return (
                   <Link key={product.id} href={`/store/${product.slug}`} className="store-card">
                     <div
-                      className="store-card-visual"
+                      className={`store-card-visual ${productImageUrl ? 'has-image' : ''}`}
                       style={{ background: theme.gradient }}
                     >
-                      <span className="store-card-icon">{theme.icon}</span>
+                      {productImageUrl ? (
+                        <Image
+                          src={productImageUrl}
+                          alt={product.title}
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1120px) 50vw, 33vw"
+                          className="store-card-image"
+                        />
+                      ) : (
+                        <span className="store-card-icon">{theme.icon}</span>
+                      )}
                       <span className="store-card-price-chip">
                         {product.is_free ? 'مجاني' : 'وصول فوري'}
                       </span>
