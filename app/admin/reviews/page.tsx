@@ -50,6 +50,7 @@ export default async function AdminReviewsPage() {
     order: normalizeRelation(review.orders),
   }))
 
+  const pendingReviews = reviews.filter(review => review.status === 'pending')
   const pendingCount = reviews.filter(review => review.status === 'pending').length
   const approvedCount = reviews.filter(review => review.status === 'approved').length
 
@@ -80,14 +81,20 @@ export default async function AdminReviewsPage() {
         </div>
       </div>
 
-      {reviews.length === 0 ? (
+      {pendingReviews.length === 0 ? (
         <div style={{ padding: '1.25rem', border: '1px dashed #ddd', borderRadius: '16px', background: '#fff', color: '#888', textAlign: 'center', lineHeight: 1.8 }}>
-          لا توجد تقييمات بعد. إذا كانت الميزة مفعلة في الواجهة ولم تظهر هنا، فتأكد من
-          تطبيق migration الخاصة بجدول <code>product_reviews</code>.
+          {reviews.length === 0
+            ? (
+              <>
+                لا توجد تقييمات بعد. إذا كانت الميزة مفعلة في الواجهة ولم تظهر هنا، فتأكد من
+                تطبيق migration الخاصة بجدول <code>product_reviews</code>.
+              </>
+            )
+            : 'لا توجد تقييمات بانتظار المراجعة الآن.'}
         </div>
       ) : (
         <div style={{ display: 'grid', gap: '1rem' }}>
-          {reviews.map(review => {
+          {pendingReviews.map(review => {
             const status = statusTheme[review.status] || statusTheme.pending
 
             return (
