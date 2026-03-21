@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 type InitialReview = {
@@ -27,22 +27,6 @@ export default function ProductReviewForm({
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
-
-  const helperText = useMemo(() => {
-    if (!initialReview) {
-      return 'سيُرسل التقييم للمراجعة قبل ظهوره في صفحة المنتج.'
-    }
-
-    if (initialReview.status === 'approved') {
-      return 'يمكنك تحديث تقييمك، وسيعود للمراجعة قبل تحديثه في صفحة المنتج.'
-    }
-
-    if (initialReview.status === 'hidden') {
-      return 'يمكنك تعديل التقييم وإرساله مجددًا للمراجعة.'
-    }
-
-    return 'تقييمك الحالي قيد المراجعة، ويمكنك تحديثه إذا رغبت.'
-  }, [initialReview])
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -99,13 +83,10 @@ export default function ProductReviewForm({
         background: '#fff',
       }}
     >
-      <div style={{ display: 'grid', gap: '0.2rem' }}>
+      <div>
         <strong style={{ fontSize: '0.95rem', color: '#1a1a1a' }}>
           قيّم {productTitle}
         </strong>
-        <span style={{ color: '#7a7a7a', fontSize: '0.8rem', lineHeight: 1.7 }}>
-          {helperText}
-        </span>
       </div>
 
       <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>

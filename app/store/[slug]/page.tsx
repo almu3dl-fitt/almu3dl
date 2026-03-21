@@ -670,26 +670,6 @@ export default async function ProductPage({
           font-weight: 900;
         }
 
-        .product-review-action p {
-          margin: 0;
-          color: #787878;
-          font-size: 0.88rem;
-          line-height: 1.9;
-        }
-
-        .product-review-action a {
-          color: #8f6a14;
-          font-weight: 800;
-          text-decoration: none;
-        }
-
-        .product-review-note {
-          padding: 0.95rem;
-          border-radius: 18px;
-          border: 1px solid #efefef;
-          background: #fff;
-        }
-
         .product-footer {
           padding: 1.8rem 1.25rem;
           border-top: 1px solid #eee;
@@ -977,34 +957,17 @@ export default async function ProductPage({
             </div>
           </article>
 
-          <article className="product-review-action">
-            <div>
+          {reviewAccess && reviewAccess.initialReview?.status !== 'approved' && (
+            <article className="product-review-action">
               <h2>تقييمك لهذا المنتج</h2>
-              <p>
-                إذا كنت اشتريت هذا المنتج من قبل، يمكنك إرسال تقييمك من هنا وسيظهر
-                بعد مراجعته واعتماده.
-              </p>
-            </div>
-
-            {reviewAccess ? (
               <ProductReviewForm
                 orderId={reviewAccess.orderId}
                 productId={product.id}
                 productTitle={product.title}
                 initialReview={reviewAccess.initialReview}
               />
-            ) : customerUser?.email ? (
-              <div className="product-review-note">
-                هذا الحساب لا يملك طلبًا مدفوعًا لهذا المنتج حتى الآن، لذلك لن يظهر
-                نموذج التقييم إلا بعد الشراء من نفس البريد.
-              </div>
-            ) : (
-              <div className="product-review-note">
-                إذا كنت اشتريت هذا المنتج سابقًا، <Link href="/account/login">سجّل الدخول</Link>{' '}
-                بنفس بريد الطلب وسيظهر لك نموذج التقييم هنا مباشرة.
-              </div>
-            )}
-          </article>
+            </article>
+          )}
         </section>
       </main>
 
