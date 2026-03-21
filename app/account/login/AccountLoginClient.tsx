@@ -7,7 +7,7 @@ import { supabaseBrowser } from '@/lib/supabase-browser'
 
 const LOGIN_STORAGE_KEY = 'almu3dl_account_login_state'
 const COOLDOWN_MS = 60_000
-const OTP_LENGTH = 6
+const OTP_LENGTH = 8
 const OTP_VALIDITY_MINUTES = 60
 const OTP_VALIDITY_MS = OTP_VALIDITY_MINUTES * 60_000
 
@@ -498,7 +498,7 @@ export default function AccountLoginClient() {
     const normalizedCode = otpCode.replace(/\D/g, '').slice(0, OTP_LENGTH)
 
     if (normalizedCode.length !== OTP_LENGTH) {
-      setOtpError('أدخل الرمز المكوّن من 6 أرقام.')
+      setOtpError('أدخل الرمز المكوّن من 8 أرقام.')
       return
     }
 
