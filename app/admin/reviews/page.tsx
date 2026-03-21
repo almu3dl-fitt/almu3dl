@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { deleteReviewAction, updateReviewStatusAction } from '@/app/admin/reviews/actions'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
+export const dynamic = 'force-dynamic'
+
 type AdminReviewRow = {
   id: string
   rating: number

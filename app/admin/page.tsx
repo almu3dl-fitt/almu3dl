@@ -1,16 +1,18 @@
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+
+export const dynamic = 'force-dynamic'
 
 export default async function AdminPage() {
-  const { count: productsCount } = await supabase
+  const { count: productsCount } = await supabaseAdmin
     .from('products')
     .select('*', { count: 'exact', head: true })
 
-  const { count: ordersCount } = await supabase
+  const { count: ordersCount } = await supabaseAdmin
     .from('orders')
     .select('*', { count: 'exact', head: true })
 
-  const { data: revenueData } = await supabase
+  const { data: revenueData } = await supabaseAdmin
     .from('orders')
     .select('amount')
     .eq('status', 'paid')

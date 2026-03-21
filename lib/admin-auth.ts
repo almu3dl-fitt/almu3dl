@@ -1,3 +1,5 @@
+import { NextRequest, NextResponse } from 'next/server'
+
 export const ADMIN_USERNAME = 'admin'
 export const ADMIN_LOGIN_PATH = '/admin/login'
 export const ADMIN_SESSION_COOKIE_NAME = 'almu3dl_admin_session'
@@ -60,4 +62,14 @@ export function getSafeAdminRedirectPath(rawValue: string | null | undefined) {
   }
 
   return rawValue
+}
+
+export async function requireAdminApiSession(req: NextRequest) {
+  const adminSessionToken = req.cookies.get(ADMIN_SESSION_COOKIE_NAME)?.value
+
+  if (await isValidAdminSessionToken(adminSessionToken)) {
+    return null
+  }
+
+  return NextResponse.json({ error: 'غير مصرح لك بهذا الإجراء.' }, { status: 401 })
 }

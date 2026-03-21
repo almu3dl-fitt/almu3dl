@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, use, useEffectEvent } from 'react'
+import { use, useEffect, useEffectEvent, useState } from 'react'
 import Link from 'next/link'
-import { supabaseBrowser } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
 type AdminCategory = {
@@ -28,6 +27,17 @@ type EditableProduct = {
   tags: string[] | null
 }
 
+type ProductDetailsResponse = {
+  error?: string
+  product?: EditableProduct
+  files?: AdminProductFile[]
+}
+
+type CategoriesResponse = {
+  error?: string
+  categories?: AdminCategory[]
+}
+
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
@@ -49,137 +59,6 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     tags: '',
   })
 
-  const loadProduct = useEffectEvent(async () => {
-    const { data } = await supabaseBrowser
-      .from('products')
-      .select('*')
-      .eq('id', id)
-      .single()
-
-    const product = data as EditableProduct | null
-
-    if (product) {
-      setForm({
-        title: product.title || '',
-        slug: product.slug || '',
-        description: product.description || '',
-        price: product.price?.toString() || '0',
-        is_free: product.is_free || false,
-        level: product.level || 'beginner',
-        category_id: product.category_id || '',
-        is_active: product.is_active ?? true,
-        tags: product.tags?.join(', ') || '',
-      })
-    }
-    setLoading(false)
-  })
-
-  const loadCategories = useEffectEvent(async () => {
-    const { data } = await supabaseBrowser.from('categories').select('*').order('name')
-    setCategories((data as AdminCategory[] | null) || [])
-  })
-
-  async function refreshFiles() {
-    const { data } = await supabaseBrowser
-      .from('product_files')
-      .select('*')
-      .eq('product_id', id)
-      .order('sort_order')
-    setFiles((data as AdminProductFile[] | null) || [])
-  }
-
-  const loadFilesEffect = useEffectEvent(async () => {
-    await refreshFiles()
-  })
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      void loadProduct()
-      void loadCategories()
-      void loadFilesEffect()
-    })
-
-    return () => window.cancelAnimationFrame(frame)
-  }, [id])
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-
-    const tags = form.tags.split(',').map(t => t.trim()).filter(Boolean)
-
-    const { error } = await supabaseBrowser
-      .from('products')
-      .update({
-        title: form.title,
-        slug: form.slug,
-        description: form.description,
-        price: form.is_free ? 0 : Number(form.price),
-        is_free: form.is_free,
-        level: form.level,
-        category_id: form.category_id || null,
-        is_active: form.is_active,
-        tags,
-      })
-      .eq('id', id)
-
-    if (error) {
-      alert('خطأ في الحفظ: ' + error.message)
-      setSaving(false)
-      return
-    }
-
-    // رفع ملفات جديدة لو موجودة
-    if (newFiles && newFiles.length > 0) {
-      const currentMax = files.length
-      for (let i = 0; i < newFiles.length; i++) {
-        const file = newFiles[i]
-        const filePath = `product ID/${file.name}`
-
-        await supabaseBrowser.storage.from('products').upload(filePath, file, { upsert: true })
-
-        await supabaseBrowser.from('product_files').insert({
-          product_id: id,
-          file_name: file.name,
-          storage_path: filePath,
-          sort_order: currentMax + i,
-        })
-      }
-      setNewFiles(null)
-      refreshFiles()
-    }
-
-    alert('تم الحفظ بنجاح ✅')
-    setSaving(false)
-  }
-
-  const handleDeleteFile = async (fileId: string) => {
-    if (!confirm('هل تريد حذف هذا الملف؟')) return
-
-    await supabaseBrowser.from('product_files').delete().eq('id', fileId)
-    setFiles(current => current.filter(file => file.id !== fileId))
-  }
-
-  const handleDeleteProduct = async () => {
-    if (!confirm('هل أنت متأكد من حذف هذا المنتج نهائياً؟')) return
-    if (!confirm('الحذف نهائي ولا يمكن التراجع — متأكد؟')) return
-
-    setDeleting(true)
-
-    // حذف الملفات أولاً
-    await supabaseBrowser.from('product_files').delete().eq('product_id', id)
-    // حذف المنتج
-    const { error } = await supabaseBrowser.from('products').delete().eq('id', id)
-
-    if (error) {
-      alert('خطأ في الحذف: ' + error.message)
-      setDeleting(false)
-      return
-    }
-
-    router.push('/admin/products')
-  }
-
   const inputStyle = {
     width: '100%',
     padding: '0.6rem 0.75rem',
@@ -196,6 +75,165 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     fontWeight: 'bold' as const,
     fontSize: '0.9rem',
     color: '#333',
+  }
+
+  const loadProduct = async () => {
+    const response = await fetch(`/api/admin/products/${id}`, {
+      cache: 'no-store',
+    })
+
+    const data = (await response.json()) as ProductDetailsResponse
+
+    if (!response.ok || !data.product) {
+      throw new Error(data.error || 'تعذر تحميل بيانات المنتج.')
+    }
+
+    const product = data.product
+
+    setFiles(data.files ?? [])
+    setNewFiles(null)
+    setForm({
+      title: product.title || '',
+      slug: product.slug || '',
+      description: product.description || '',
+      price: product.price?.toString() || '0',
+      is_free: product.is_free || false,
+      level: product.level || 'beginner',
+      category_id: product.category_id || '',
+      is_active: product.is_active ?? true,
+      tags: product.tags?.join(', ') || '',
+    })
+  }
+
+  const loadCategories = async () => {
+    const response = await fetch('/api/admin/categories', {
+      cache: 'no-store',
+    })
+
+    const data = (await response.json()) as CategoriesResponse
+
+    if (!response.ok) {
+      throw new Error(data.error || 'تعذر تحميل الفئات.')
+    }
+
+    setCategories(data.categories ?? [])
+  }
+
+  const loadInitialData = useEffectEvent(async () => {
+    setLoading(true)
+
+    try {
+      await Promise.all([loadProduct(), loadCategories()])
+    } finally {
+      setLoading(false)
+    }
+  })
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      void loadInitialData().catch(error => {
+        const message = error instanceof Error ? error.message : 'تعذر تحميل بيانات المنتج.'
+        alert(message)
+      })
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [id])
+
+  const handleSave = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setSaving(true)
+
+    const formData = new FormData()
+    formData.set('title', form.title)
+    formData.set('slug', form.slug)
+    formData.set('description', form.description)
+    formData.set('price', form.price || '0')
+    formData.set('is_free', String(form.is_free))
+    formData.set('level', form.level)
+    formData.set('category_id', form.category_id)
+    formData.set('is_active', String(form.is_active))
+    formData.set('tags', form.tags)
+
+    if (newFiles?.length) {
+      Array.from(newFiles).forEach(file => {
+        formData.append('files', file)
+      })
+    }
+
+    try {
+      const response = await fetch(`/api/admin/products/${id}`, {
+        method: 'PUT',
+        body: formData,
+      })
+
+      const data = (await response.json()) as { error?: string }
+
+      if (!response.ok) {
+        alert(data.error || 'تعذر حفظ التعديلات الآن.')
+        return
+      }
+
+      await loadProduct()
+      router.refresh()
+      alert('تم الحفظ بنجاح ✅')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'تعذر حفظ التعديلات الآن.'
+      alert(message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDeleteFile = async (fileId: string) => {
+    if (!confirm('هل تريد حذف هذا الملف؟')) return
+
+    try {
+      const response = await fetch(`/api/admin/product-files/${fileId}`, {
+        method: 'DELETE',
+      })
+
+      const data = (await response.json()) as { error?: string }
+
+      if (!response.ok) {
+        alert(data.error || 'تعذر حذف الملف الآن.')
+        return
+      }
+
+      setFiles(current => current.filter(file => file.id !== fileId))
+      router.refresh()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'تعذر حذف الملف الآن.'
+      alert(message)
+    }
+  }
+
+  const handleDeleteProduct = async () => {
+    if (!confirm('هل أنت متأكد من حذف هذا المنتج نهائياً؟')) return
+    if (!confirm('الحذف نهائي ولا يمكن التراجع — متأكد؟')) return
+
+    setDeleting(true)
+
+    try {
+      const response = await fetch(`/api/admin/products/${id}`, {
+        method: 'DELETE',
+      })
+
+      const data = (await response.json()) as { error?: string }
+
+      if (!response.ok) {
+        alert(data.error || 'تعذر حذف المنتج الآن.')
+        return
+      }
+
+      router.push('/admin/products')
+      router.refresh()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'تعذر حذف المنتج الآن.'
+      alert(message)
+    } finally {
+      setDeleting(false)
+    }
   }
 
   if (loading) {
@@ -216,8 +254,6 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       </div>
 
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-        {/* الحالة */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -229,82 +265,73 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
             <input type="checkbox" checked={form.is_active}
-              onChange={e => setForm({ ...form, is_active: e.target.checked })} />
+              onChange={event => setForm({ ...form, is_active: event.target.checked })} />
             {form.is_active ? '✅ المنتج نشط ومرئي في المتجر' : '❌ المنتج مخفي من المتجر'}
           </label>
         </div>
 
-        {/* اسم المنتج */}
         <div>
           <label style={labelStyle}>اسم المنتج *</label>
           <input style={inputStyle} required value={form.title}
-            onChange={e => setForm({ ...form, title: e.target.value })} />
+            onChange={event => setForm({ ...form, title: event.target.value })} />
         </div>
 
-        {/* Slug */}
         <div>
           <label style={labelStyle}>Slug (رابط المنتج)</label>
           <input style={{ ...inputStyle, direction: 'ltr', textAlign: 'right' }} value={form.slug}
-            onChange={e => setForm({ ...form, slug: e.target.value })} />
+            onChange={event => setForm({ ...form, slug: event.target.value })} />
         </div>
 
-        {/* الوصف */}
         <div>
           <label style={labelStyle}>الوصف</label>
           <textarea style={{ ...inputStyle, height: '100px', resize: 'vertical' }}
             value={form.description}
-            onChange={e => setForm({ ...form, description: e.target.value })} />
+            onChange={event => setForm({ ...form, description: event.target.value })} />
         </div>
 
-        {/* الفئة */}
         <div>
           <label style={labelStyle}>الفئة</label>
           <select style={inputStyle} value={form.category_id}
-            onChange={e => setForm({ ...form, category_id: e.target.value })}>
+            onChange={event => setForm({ ...form, category_id: event.target.value })}>
             <option value="">— بدون فئة —</option>
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            {categories.map(category => (
+              <option key={category.id} value={category.id}>{category.name}</option>
             ))}
           </select>
         </div>
 
-        {/* المستوى */}
         <div>
           <label style={labelStyle}>المستوى</label>
           <select style={inputStyle} value={form.level}
-            onChange={e => setForm({ ...form, level: e.target.value })}>
+            onChange={event => setForm({ ...form, level: event.target.value })}>
             <option value="beginner">مبتدئ</option>
             <option value="intermediate">متوسط</option>
             <option value="all">الكل</option>
           </select>
         </div>
 
-        {/* مجاني */}
         <div>
           <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <input type="checkbox" checked={form.is_free}
-              onChange={e => setForm({ ...form, is_free: e.target.checked })} />
+              onChange={event => setForm({ ...form, is_free: event.target.checked })} />
             منتج مجاني
           </label>
         </div>
 
-        {/* السعر */}
         {!form.is_free && (
           <div>
             <label style={labelStyle}>السعر (ريال) *</label>
             <input style={inputStyle} type="number" min="0" value={form.price}
-              onChange={e => setForm({ ...form, price: e.target.value })} />
+              onChange={event => setForm({ ...form, price: event.target.value })} />
           </div>
         )}
 
-        {/* التاقز */}
         <div>
           <label style={labelStyle}>التاقز (مفصولة بفاصلة)</label>
           <input style={inputStyle} value={form.tags} placeholder="غذاء, تنحيف, مبتدئ"
-            onChange={e => setForm({ ...form, tags: e.target.value })} />
+            onChange={event => setForm({ ...form, tags: event.target.value })} />
         </div>
 
-        {/* === الملفات الحالية === */}
         <div style={{
           backgroundColor: '#f9f9f9',
           border: '1px solid #eee',
@@ -314,6 +341,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.75rem' }}>
             📁 الملفات المرفقة ({files.length})
           </h3>
+
           {files.length === 0 ? (
             <p style={{ color: '#999', fontSize: '0.85rem' }}>لا توجد ملفات</p>
           ) : (
@@ -340,29 +368,29 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                       cursor: 'pointer',
                       fontSize: '0.75rem',
                       fontFamily: "'Tajawal', Arial",
-                    }}>حذف</button>
+                    }}>
+                    حذف
+                  </button>
                 </div>
               ))}
             </div>
           )}
 
-          {/* رفع ملفات جديدة */}
           <div style={{ marginTop: '0.75rem' }}>
             <label style={{ ...labelStyle, fontSize: '0.85rem' }}>إضافة ملفات جديدة</label>
             <input type="file" accept=".pdf,.mp4,.zip" multiple
-              onChange={e => setNewFiles(e.target.files)}
+              onChange={event => setNewFiles(event.target.files)}
               style={{ fontSize: '0.85rem' }} />
             {newFiles && newFiles.length > 0 && (
               <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: '#555' }}>
-                {Array.from(newFiles).map((f, i) => (
-                  <div key={i}>📎 {f.name}</div>
+                {Array.from(newFiles).map((file, index) => (
+                  <div key={index}>📎 {file.name}</div>
                 ))}
               </div>
             )}
           </div>
         </div>
 
-        {/* أزرار */}
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
           <button type="submit" disabled={saving} style={{
             flex: 1,

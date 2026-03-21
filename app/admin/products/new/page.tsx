@@ -1,14 +1,19 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useEffect, useEffectEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
+
+type AdminCategory = {
+  id: string
+  name: string
+}
 
 export default function NewProductPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [files, setFiles] = useState<FileList | null>(null)
+  const [categories, setCategories] = useState<AdminCategory[]>([])
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -16,69 +21,95 @@ export default function NewProductPage() {
     is_free: false,
     level: 'beginner',
     slug: '',
+    category_id: '',
+    is_active: true,
+    tags: '',
   })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const loadCategories = useEffectEvent(async () => {
+    const response = await fetch('/api/admin/categories', {
+      cache: 'no-store',
+    })
+
+    const data = (await response.json()) as { error?: string; categories?: AdminCategory[] }
+
+    if (!response.ok) {
+      throw new Error(data.error || 'تعذر تحميل الفئات.')
+    }
+
+    setCategories(data.categories ?? [])
+  })
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      void loadCategories().catch(error => {
+        const message = error instanceof Error ? error.message : 'تعذر تحميل الفئات.'
+        alert(message)
+      })
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
     setLoading(true)
 
-    // 1. أضف المنتج
-    const slug = form.slug || form.title.replace(/\s+/g, '-').replace(/[^\w-]/g, '')
-    const { data: product, error: productError } = await supabase
-      .from('products')
-      .insert({
-        title: form.title,
-        description: form.description,
-        price: form.is_free ? 0 : Number(form.price),
-        is_free: form.is_free,
-        level: form.level,
-        slug,
-        is_active: true,
+    const formData = new FormData()
+    formData.set('title', form.title)
+    formData.set('description', form.description)
+    formData.set('price', form.price || '0')
+    formData.set('is_free', String(form.is_free))
+    formData.set('level', form.level)
+    formData.set('slug', form.slug)
+    formData.set('category_id', form.category_id)
+    formData.set('is_active', String(form.is_active))
+    formData.set('tags', form.tags)
+
+    if (files?.length) {
+      Array.from(files).forEach(file => {
+        formData.append('files', file)
       })
-      .select()
-      .single()
-
-    if (productError) {
-      alert('خطأ في حفظ المنتج: ' + productError.message)
-      setLoading(false)
-      return
     }
 
-    // 2. ارفع الملفات إن وجدت
-    if (files && files.length > 0) {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
-        const filePath = `${product.id}/${file.name}`
+    try {
+      const response = await fetch('/api/admin/products', {
+        method: 'POST',
+        body: formData,
+      })
 
-        const { error: uploadError } = await supabase.storage
-          .from('products')
-          .upload(filePath, file)
+      const data = (await response.json()) as { error?: string; id?: string }
 
-        if (uploadError) {
-          alert('خطأ في رفع الملف: ' + uploadError.message)
-          continue
-        }
-
-        // 3. سجّل الملف في جدول product_files
-        await supabase.from('product_files').insert({
-          product_id: product.id,
-          file_name: file.name,
-          storage_path: filePath,
-          sort_order: i,
-        })
+      if (!response.ok || !data.id) {
+        alert(data.error || 'خطأ في حفظ المنتج.')
+        return
       }
-    }
 
-    router.push('/admin/products')
-    setLoading(false)
+      router.push(`/admin/products/${data.id}`)
+      router.refresh()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'خطأ في حفظ المنتج.'
+      alert(message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const inputStyle = {
-    width: '100%', padding: '0.5rem', fontSize: '1rem',
-    border: '1px solid #ddd', borderRadius: '6px',
-    fontFamily: 'Arial', direction: 'rtl' as const
+    width: '100%',
+    padding: '0.5rem',
+    fontSize: '1rem',
+    border: '1px solid #ddd',
+    borderRadius: '6px',
+    fontFamily: 'Arial',
+    direction: 'rtl' as const,
   }
-  const labelStyle = { display: 'block', marginBottom: '0.25rem', fontWeight: 'bold' as const }
+
+  const labelStyle = {
+    display: 'block',
+    marginBottom: '0.25rem',
+    fontWeight: 'bold' as const,
+  }
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'Arial', direction: 'rtl', maxWidth: '600px' }}>
@@ -89,20 +120,31 @@ export default function NewProductPage() {
         <div>
           <label style={labelStyle}>اسم المنتج *</label>
           <input style={inputStyle} required value={form.title}
-            onChange={e => setForm({ ...form, title: e.target.value })} />
+            onChange={event => setForm({ ...form, title: event.target.value })} />
         </div>
 
         <div>
           <label style={labelStyle}>الوصف</label>
           <textarea style={{ ...inputStyle, height: '100px', resize: 'vertical' }}
             value={form.description}
-            onChange={e => setForm({ ...form, description: e.target.value })} />
+            onChange={event => setForm({ ...form, description: event.target.value })} />
+        </div>
+
+        <div>
+          <label style={labelStyle}>الفئة</label>
+          <select style={inputStyle} value={form.category_id}
+            onChange={event => setForm({ ...form, category_id: event.target.value })}>
+            <option value="">— بدون فئة —</option>
+            {categories.map(category => (
+              <option key={category.id} value={category.id}>{category.name}</option>
+            ))}
+          </select>
         </div>
 
         <div>
           <label style={labelStyle}>المستوى</label>
           <select style={inputStyle} value={form.level}
-            onChange={e => setForm({ ...form, level: e.target.value })}>
+            onChange={event => setForm({ ...form, level: event.target.value })}>
             <option value="beginner">مبتدئ</option>
             <option value="intermediate">متوسط</option>
             <option value="all">الكل</option>
@@ -112,8 +154,16 @@ export default function NewProductPage() {
         <div>
           <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <input type="checkbox" checked={form.is_free}
-              onChange={e => setForm({ ...form, is_free: e.target.checked })} />
+              onChange={event => setForm({ ...form, is_free: event.target.checked })} />
             منتج مجاني
+          </label>
+        </div>
+
+        <div>
+          <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <input type="checkbox" checked={form.is_active}
+              onChange={event => setForm({ ...form, is_active: event.target.checked })} />
+            المنتج ظاهر في المتجر
           </label>
         </div>
 
@@ -121,38 +171,49 @@ export default function NewProductPage() {
           <div>
             <label style={labelStyle}>السعر (ريال) *</label>
             <input style={inputStyle} type="number" min="0" value={form.price}
-              onChange={e => setForm({ ...form, price: e.target.value })} />
+              onChange={event => setForm({ ...form, price: event.target.value })} />
           </div>
         )}
 
         <div>
           <label style={labelStyle}>Slug (اختياري)</label>
           <input style={inputStyle} value={form.slug} placeholder="beginner-program-4-days"
-            onChange={e => setForm({ ...form, slug: e.target.value })} />
+            onChange={event => setForm({ ...form, slug: event.target.value })} />
         </div>
 
         <div>
-          <label style={labelStyle}>ملفات PDF (يمكن اختيار أكثر من ملف)</label>
+          <label style={labelStyle}>التاقز (مفصولة بفاصلة)</label>
+          <input style={inputStyle} value={form.tags} placeholder="تمارين, غذاء, متوسط"
+            onChange={event => setForm({ ...form, tags: event.target.value })} />
+        </div>
+
+        <div>
+          <label style={labelStyle}>ملفات المنتج (يمكن اختيار أكثر من ملف)</label>
           <input
             type="file"
             accept=".pdf,.mp4,.zip"
             multiple
-            onChange={e => setFiles(e.target.files)}
+            onChange={event => setFiles(event.target.files)}
             style={{ ...inputStyle, padding: '0.4rem' }}
           />
           {files && files.length > 0 && (
             <div style={{ marginTop: '0.5rem', fontSize: '13px', color: '#555' }}>
-              {Array.from(files).map((f, i) => (
-                <div key={i}>📄 {f.name}</div>
+              {Array.from(files).map((file, index) => (
+                <div key={index}>📄 {file.name}</div>
               ))}
             </div>
           )}
         </div>
 
         <button type="submit" disabled={loading} style={{
-          background: '#000', color: '#fff', padding: '0.75rem',
-          border: 'none', borderRadius: '8px', fontSize: '1rem',
-          cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1
+          background: '#000',
+          color: '#fff',
+          padding: '0.75rem',
+          border: 'none',
+          borderRadius: '8px',
+          fontSize: '1rem',
+          cursor: loading ? 'not-allowed' : 'pointer',
+          opacity: loading ? 0.7 : 1,
         }}>
           {loading ? '⏳ جاري الحفظ والرفع...' : 'حفظ المنتج'}
         </button>

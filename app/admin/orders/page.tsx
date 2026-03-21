@@ -1,5 +1,7 @@
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+
+export const dynamic = 'force-dynamic'
 
 type AdminOrderItem = {
   id: string
@@ -20,7 +22,7 @@ type AdminOrder = {
 }
 
 export default async function AdminOrdersPage() {
-  const { data: orders } = await supabase
+  const { data: orders } = await supabaseAdmin
     .from('orders')
     .select(`
       id,

@@ -1,8 +1,10 @@
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+
+export const dynamic = 'force-dynamic'
 
 export default async function AdminProductsPage() {
-  const { data: products } = await supabase
+  const { data: products } = await supabaseAdmin
     .from('products')
     .select('*')
     .order('created_at', { ascending: false })
@@ -30,6 +32,7 @@ export default async function AdminProductsPage() {
             <th style={{ textAlign: 'right', padding: '0.75rem' }}>الاسم</th>
             <th style={{ textAlign: 'right', padding: '0.75rem' }}>السعر</th>
             <th style={{ textAlign: 'right', padding: '0.75rem' }}>المستوى</th>
+            <th style={{ textAlign: 'right', padding: '0.75rem' }}>الحالة</th>
             <th style={{ textAlign: 'right', padding: '0.75rem' }}></th>
           </tr>
         </thead>
