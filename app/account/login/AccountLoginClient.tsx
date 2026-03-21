@@ -111,7 +111,19 @@ function persistLoginState(nextState: StoredLoginState) {
     return
   }
 
-  window.sessionStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify(nextState))
+  window.sessionStorage.setItem(
+    LOGIN_STORAGE_KEY,
+    JSON.stringify({
+      deliveryEmail: nextState.deliveryEmail,
+      step: 'otp',
+      cooldownByEmail: {
+        [nextState.deliveryEmail]: getEmailCooldown(
+          nextState.cooldownByEmail,
+          nextState.deliveryEmail,
+        ),
+      },
+    } satisfies StoredLoginState),
+  )
 }
 
 function clearLoginState() {
@@ -168,7 +180,7 @@ function mapAuthError(
 
 export default function AccountLoginClient() {
   const [initialState] = useState<StoredLoginState>(() => getInitialLoginState())
-  const [emailInput, setEmailInput] = useState(initialState.step === 'otp' ? initialState.deliveryEmail : '')
+  const [emailInput, setEmailInput] = useState('')
   const [deliveryEmail, setDeliveryEmail] = useState(initialState.deliveryEmail)
   const [step, setStep] = useState<LoginStep>(initialState.step)
   const [cooldownByEmail, setCooldownByEmail] = useState<CooldownByEmail>(
@@ -189,8 +201,8 @@ export default function AccountLoginClient() {
   const flowVersionRef = useRef(0)
 
   const activeEmail = useMemo(() => {
-    return step === 'otp' ? deliveryEmail : normalizeEmail(emailInput)
-  }, [deliveryEmail, emailInput, step])
+    return step === 'otp' ? deliveryEmail : ''
+  }, [deliveryEmail, step])
 
   const activeCooldownUntil = useMemo(() => {
     return getEmailCooldown(cooldownByEmail, activeEmail)
@@ -296,16 +308,15 @@ export default function AccountLoginClient() {
             [normalizedEmail]: Date.now() + COOLDOWN_MS,
           }
 
+          setEmailInput(normalizedEmail)
+          setOtpCode('')
           setCooldownByEmail(nextCooldownByEmail)
           setNow(Date.now())
-
-          if (step === 'otp' && deliveryEmail === normalizedEmail) {
-            persistLoginState({
-              deliveryEmail: normalizedEmail,
-              step: 'otp',
-              cooldownByEmail: nextCooldownByEmail,
-            })
-          }
+          syncLoginState({
+            deliveryEmail: normalizedEmail,
+            step: 'otp',
+            cooldownByEmail: nextCooldownByEmail,
+          })
         }
 
         setError(mapAuthError(sendError, 'send'))
@@ -338,7 +349,7 @@ export default function AccountLoginClient() {
     const emailCooldownUntil = getEmailCooldown(cooldownByEmail, normalizedEmail)
     const emailCooldownSeconds = Math.max(0, Math.ceil((emailCooldownUntil - Date.now()) / 1000))
 
-    if (emailCooldownSeconds > 0 && normalizedEmail && normalizedEmail === deliveryEmail) {
+    if (emailCooldownSeconds > 0) {
       setError('')
       setNotice(
         `أرسلنا الرمز إلى ${normalizedEmail} بالفعل. انتظر ${emailCooldownSeconds} ثانية قبل إعادة الإرسال.`,
@@ -348,12 +359,6 @@ export default function AccountLoginClient() {
         step: 'otp',
         cooldownByEmail,
       })
-      return
-    }
-
-    if (emailCooldownSeconds > 0) {
-      setNotice('')
-      setError(`يمكنك طلب رمز جديد لهذا البريد بعد ${emailCooldownSeconds} ثانية.`)
       return
     }
 
@@ -812,12 +817,19 @@ export default function AccountLoginClient() {
                   <input
                     ref={emailInputRef}
                     id="email"
+                    name="customer_email"
                     type="email"
                     required
-                    autoComplete="email"
+                    autoComplete="section-account-login email"
+                    autoCapitalize="none"
+                    spellCheck={false}
                     placeholder="example@email.com"
                     value={emailInput}
-                    onChange={event => setEmailInput(event.target.value)}
+                    onChange={event => {
+                      setEmailInput(event.target.value)
+                      setError('')
+                      setNotice('')
+                    }}
                     className="account-login-input"
                   />
                 </div>
