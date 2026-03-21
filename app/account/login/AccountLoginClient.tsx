@@ -16,7 +16,6 @@ type OtpBannerTone = 'success' | 'notice'
 
 type OtpChallenge = {
   email: string
-  sentAt: number
   resendAvailableAt: number
   expiresAt: number
 }
@@ -44,10 +43,16 @@ function isRateLimitError(error: { code?: string; status?: number } | null) {
     return false
   }
 
+  const message = String((error as { message?: string }).message || '').toLowerCase()
+
   return (
     error.status === 429 ||
     error.code === 'over_request_rate_limit' ||
-    error.code === 'over_email_send_rate_limit'
+    error.code === 'over_email_send_rate_limit' ||
+    message.includes('too many requests') ||
+    message.includes('max frequency') ||
+    message.includes('rate limit') ||
+    message.includes('email rate limit exceeded')
   )
 }
 
@@ -61,8 +66,6 @@ function isValidChallenge(rawValue: unknown, now = Date.now()): rawValue is OtpC
   return (
     typeof challenge.email === 'string' &&
     challenge.email.length > 0 &&
-    typeof challenge.sentAt === 'number' &&
-    Number.isFinite(challenge.sentAt) &&
     typeof challenge.resendAvailableAt === 'number' &&
     Number.isFinite(challenge.resendAvailableAt) &&
     typeof challenge.expiresAt === 'number' &&
@@ -121,7 +124,6 @@ function clearStoredChallenge() {
 function createChallenge(email: string, baseTime = Date.now()): OtpChallenge {
   return {
     email,
-    sentAt: baseTime,
     resendAvailableAt: baseTime + COOLDOWN_MS,
     expiresAt: baseTime + OTP_VALIDITY_MS,
   }
@@ -331,19 +333,15 @@ export default function AccountLoginClient() {
 
       if (sendError) {
         if (isRateLimitError(sendError)) {
-          if (sameEmailChallenge) {
-            const nextChallenge = extendChallengeCooldown(sameEmailChallenge)
-            const waitSeconds = getSecondsUntil(nextChallenge.resendAvailableAt)
+          const nextChallenge = extendChallengeCooldown(
+            sameEmailChallenge ?? createChallenge(normalizedEmail),
+          )
+          const waitSeconds = getSecondsUntil(nextChallenge.resendAvailableAt)
 
-            openOtpChallenge(nextChallenge, {
-              tone: 'notice',
-              message: `سبق إرسال رمز إلى هذا البريد. استخدم آخر رمز أو أعد الإرسال بعد ${waitSeconds} ثانية.`,
-            })
-            return
-          }
-
-          setLoginState('EMAIL_ENTRY')
-          setEmailError('تم تجاوز الحد المؤقت لإرسال الرمز لهذا البريد. حاول بعد قليل.')
+          openOtpChallenge(nextChallenge, {
+            tone: 'notice',
+            message: `سبق إرسال رمز إلى هذا البريد. استخدم آخر رمز تم إرساله، أو أعد الإرسال بعد ${waitSeconds} ثانية.`,
+          })
           return
         }
 
