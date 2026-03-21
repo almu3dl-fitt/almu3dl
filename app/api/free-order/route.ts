@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { sendOrderEmail } from '@/lib/email'
+import { ensureCustomerAuthUser } from '@/lib/customer-auth'
 import { randomUUID } from 'crypto'
 
 type FreeOrderItem = {
@@ -95,7 +96,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 5. إرسال الإيميل
+    // 5. تجهيز حساب العميل في Auth بعد نجاح أول طلب
+    try {
+      await ensureCustomerAuthUser({
+        email,
+        fullName: full_name,
+        phone,
+      })
+    } catch (authErr) {
+      console.error('Customer auth ensure error (free order):', authErr)
+    }
+
+    // 6. إرسال الإيميل
     try {
       const itemIds = safeInsertedItems.map(item => item.id)
 

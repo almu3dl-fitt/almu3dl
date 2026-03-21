@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { sendOrderEmail } from '@/lib/email'
+import { ensureCustomerAuthUser } from '@/lib/customer-auth'
 import { randomUUID } from 'crypto'
 
 type PayPalAuthResponse = {
@@ -84,7 +85,20 @@ export async function GET(req: NextRequest) {
     // 3. حدّث حالة الطلب
     await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId)
 
-    // 4. جلب order_items
+    // 4. تجهيز حساب العميل في Auth بعد نجاح الدفع
+    try {
+      if (order.customer_email) {
+        await ensureCustomerAuthUser({
+          email: order.customer_email,
+          fullName: order.customer_name,
+          phone: order.customer_phone,
+        })
+      }
+    } catch (authErr) {
+      console.error('Customer auth ensure error (capture order):', authErr)
+    }
+
+    // 5. جلب order_items
     const { data: orderItems } = await supabase
       .from('order_items')
       .select('id, product_id')
@@ -94,12 +108,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(new URL(`/success?order=${orderId}`, req.url))
     }
 
-    // 5. حذف downloads قديمة
+    // 6. حذف downloads قديمة
     const safeOrderItems = (orderItems as OrderItem[] | null) ?? []
     const itemIds = safeOrderItems.map(item => item.id)
     await supabase.from('downloads').delete().in('order_item_id', itemIds)
 
-    // 6. إنشاء download لكل ملف
+    // 7. إنشاء download لكل ملف
     for (const item of safeOrderItems) {
       const { data: files } = await supabase
         .from('product_files')
@@ -120,7 +134,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 7. إرسال الإيميل
+    // 8. إرسال الإيميل
     try {
       const { data: allDownloads } = await supabase
         .from('downloads')
@@ -162,7 +176,7 @@ export async function GET(req: NextRequest) {
       console.error('Email error:', emailErr)
     }
 
-    // 8. وجّه لصفحة النجاح
+    // 9. وجّه لصفحة النجاح
     return NextResponse.redirect(new URL(`/success?order=${orderId}`, req.url))
 
   } catch (err) {
