@@ -26,6 +26,11 @@ type OtpBanner = {
   message: string
 }
 
+type RequestCodeResponse = {
+  ok?: boolean
+  error?: string
+}
+
 function normalizeEmail(value: string) {
   return value.trim().toLowerCase()
 }
@@ -284,10 +289,39 @@ export default function AccountLoginClient() {
     setLoginState('SENDING_CODE')
 
     try {
+      if (mode === 'initial') {
+        const readyResponse = await fetch('/api/account/login/request-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: normalizedEmail }),
+        })
+
+        if (requestVersion !== flowVersionRef.current) {
+          return
+        }
+
+        if (!readyResponse.ok) {
+          const payload = (await readyResponse.json().catch(() => null)) as RequestCodeResponse | null
+
+          setChallenge(null)
+          setOtpCode('')
+          setOtpBanner(null)
+          setOtpError('')
+          setLoginState('EMAIL_ENTRY')
+          clearStoredChallenge()
+          setEmailError(
+            payload?.error || 'حدث خطأ أثناء تجهيز تسجيل الدخول، حاول مرة أخرى.',
+          )
+          return
+        }
+      }
+
       const { error: sendError } = await supabaseBrowser.auth.signInWithOtp({
         email: normalizedEmail,
         options: {
-          shouldCreateUser: true,
+          shouldCreateUser: false,
         },
       })
 
