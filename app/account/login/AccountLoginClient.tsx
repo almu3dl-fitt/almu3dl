@@ -9,52 +9,29 @@ const LOGIN_STORAGE_KEY = 'almu3dl_account_login_state'
 const COOLDOWN_MS = 60_000
 const OTP_LENGTH = 6
 const OTP_VALIDITY_MINUTES = 60
+const OTP_VALIDITY_MS = OTP_VALIDITY_MINUTES * 60_000
 
-type LoginStep = 'email' | 'otp'
-type CooldownByEmail = Record<string, number>
+type LoginState = 'EMAIL_ENTRY' | 'SENDING_CODE' | 'OTP_ACTIVE' | 'VERIFYING_OTP'
+type OtpBannerTone = 'success' | 'notice'
 
-type StoredLoginState = {
-  deliveryEmail: string
-  step: LoginStep
-  cooldownByEmail: CooldownByEmail
+type OtpChallenge = {
+  email: string
+  sentAt: number
+  resendAvailableAt: number
+  expiresAt: number
 }
 
-function getEmptyLoginState(): StoredLoginState {
-  return {
-    deliveryEmail: '',
-    step: 'email',
-    cooldownByEmail: {},
-  }
+type OtpBanner = {
+  tone: OtpBannerTone
+  message: string
 }
 
 function normalizeEmail(value: string) {
   return value.trim().toLowerCase()
 }
 
-function getCooldownByEmail(rawValue: unknown) {
-  if (!rawValue || typeof rawValue !== 'object') {
-    return {}
-  }
-
-  const nextCooldownByEmail: CooldownByEmail = {}
-
-  for (const [email, cooldownUntil] of Object.entries(rawValue)) {
-    if (typeof cooldownUntil !== 'number' || !Number.isFinite(cooldownUntil) || cooldownUntil <= 0) {
-      continue
-    }
-
-    nextCooldownByEmail[email] = cooldownUntil
-  }
-
-  return nextCooldownByEmail
-}
-
-function getEmailCooldown(cooldownByEmail: CooldownByEmail, email: string) {
-  if (!email) {
-    return 0
-  }
-
-  return cooldownByEmail[email] ?? 0
+function getSecondsUntil(timestamp: number, baseTime = Date.now()) {
+  return Math.max(0, Math.ceil((timestamp - baseTime) / 1000))
 }
 
 function isRateLimitError(error: { code?: string; status?: number } | null) {
@@ -69,64 +46,66 @@ function isRateLimitError(error: { code?: string; status?: number } | null) {
   )
 }
 
-function getInitialLoginState(): StoredLoginState {
-  if (typeof window === 'undefined') {
-    return getEmptyLoginState()
+function isValidChallenge(rawValue: unknown, now = Date.now()): rawValue is OtpChallenge {
+  if (!rawValue || typeof rawValue !== 'object') {
+    return false
   }
 
-  try {
-    const rawState = window.sessionStorage.getItem(LOGIN_STORAGE_KEY)
+  const challenge = rawValue as Partial<OtpChallenge>
 
-    if (!rawState) {
-      return getEmptyLoginState()
-    }
-
-    const parsedState = JSON.parse(rawState) as Partial<StoredLoginState>
-    const deliveryEmail =
-      typeof parsedState.deliveryEmail === 'string' ? parsedState.deliveryEmail : ''
-    const step = parsedState.step === 'otp' && deliveryEmail ? 'otp' : 'email'
-    const cooldownByEmail = getCooldownByEmail(parsedState.cooldownByEmail)
-
-    if (step !== 'otp') {
-      return getEmptyLoginState()
-    }
-
-    return {
-      deliveryEmail,
-      step,
-      cooldownByEmail,
-    }
-  } catch {
-    return getEmptyLoginState()
-  }
-}
-
-function persistLoginState(nextState: StoredLoginState) {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  if (nextState.step !== 'otp' || !nextState.deliveryEmail) {
-    clearLoginState()
-    return
-  }
-
-  window.sessionStorage.setItem(
-    LOGIN_STORAGE_KEY,
-    JSON.stringify({
-      deliveryEmail: nextState.deliveryEmail,
-      step: 'otp',
-      cooldownByEmail: {
-        [nextState.deliveryEmail]: getEmailCooldown(
-          nextState.cooldownByEmail,
-          nextState.deliveryEmail,
-        ),
-      },
-    } satisfies StoredLoginState),
+  return (
+    typeof challenge.email === 'string' &&
+    challenge.email.length > 0 &&
+    typeof challenge.sentAt === 'number' &&
+    Number.isFinite(challenge.sentAt) &&
+    typeof challenge.resendAvailableAt === 'number' &&
+    Number.isFinite(challenge.resendAvailableAt) &&
+    typeof challenge.expiresAt === 'number' &&
+    Number.isFinite(challenge.expiresAt) &&
+    challenge.expiresAt > now
   )
 }
 
-function clearLoginState() {
+function getStoredChallenge() {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  try {
+    const rawValue = window.sessionStorage.getItem(LOGIN_STORAGE_KEY)
+
+    if (!rawValue) {
+      return null
+    }
+
+    const parsedValue = JSON.parse(rawValue) as unknown
+
+    if (!isValidChallenge(parsedValue)) {
+      window.sessionStorage.removeItem(LOGIN_STORAGE_KEY)
+      return null
+    }
+
+    return parsedValue
+  } catch {
+    window.sessionStorage.removeItem(LOGIN_STORAGE_KEY)
+    return null
+  }
+}
+
+function persistChallenge(challenge: OtpChallenge | null) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  if (!challenge) {
+    window.sessionStorage.removeItem(LOGIN_STORAGE_KEY)
+    return
+  }
+
+  window.sessionStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify(challenge))
+}
+
+function clearStoredChallenge() {
   if (typeof window === 'undefined') {
     return
   }
@@ -134,10 +113,46 @@ function clearLoginState() {
   window.sessionStorage.removeItem(LOGIN_STORAGE_KEY)
 }
 
-function mapAuthError(
-  error: { code?: string; status?: number; message?: string } | null,
-  phase: 'send' | 'verify',
-) {
+function createChallenge(email: string, baseTime = Date.now()): OtpChallenge {
+  return {
+    email,
+    sentAt: baseTime,
+    resendAvailableAt: baseTime + COOLDOWN_MS,
+    expiresAt: baseTime + OTP_VALIDITY_MS,
+  }
+}
+
+function extendChallengeCooldown(challenge: OtpChallenge, baseTime = Date.now()): OtpChallenge {
+  return {
+    ...challenge,
+    resendAvailableAt: baseTime + COOLDOWN_MS,
+  }
+}
+
+function mapSendError(error: { code?: string; message?: string } | null) {
+  if (!error) {
+    return 'حدث خطأ أثناء إرسال الرمز، حاول مرة أخرى.'
+  }
+
+  const code = error.code || ''
+  const message = (error.message || '').toLowerCase()
+
+  if (code === 'email_address_invalid' || message.includes('email')) {
+    return 'تعذر إرسال الرمز إلى هذا البريد. تأكد من كتابته بشكل صحيح.'
+  }
+
+  if (code === 'email_provider_disabled') {
+    return 'تسجيل الدخول عبر البريد غير مفعّل حاليًا في إعدادات المشروع.'
+  }
+
+  if (isRateLimitError(error)) {
+    return 'تم تجاوز الحد المؤقت لإرسال الرمز لهذا البريد. حاول بعد قليل.'
+  }
+
+  return 'حدث خطأ أثناء إرسال الرمز، حاول مرة أخرى.'
+}
+
+function mapVerifyError(error: { code?: string; status?: number; message?: string } | null) {
   if (!error) {
     return 'حدث خطأ أثناء تسجيل الدخول، حاول مرة أخرى.'
   }
@@ -146,70 +161,65 @@ function mapAuthError(
   const message = (error.message || '').toLowerCase()
 
   if (
-    error.status === 429 ||
-    code === 'over_request_rate_limit' ||
-    code === 'over_email_send_rate_limit'
+    code === 'otp_expired' ||
+    code === 'invalid_credentials' ||
+    message.includes('expired') ||
+    message.includes('invalid') ||
+    message.includes('token')
   ) {
-    return 'تم تجاوز الحد المؤقت لإرسال الرموز، حاول بعد 60 ثانية تقريبًا.'
+    return 'الرمز غير صحيح أو انتهت صلاحيته. اطلب رمزًا جديدًا ثم حاول مرة أخرى.'
   }
 
-  if (phase === 'send') {
-    if (code === 'email_address_invalid' || message.includes('email')) {
-      return 'تعذر إرسال الرمز إلى هذا البريد. تأكد من كتابته بشكل صحيح.'
-    }
-
-    if (code === 'email_provider_disabled') {
-      return 'تسجيل الدخول عبر البريد غير مفعّل حاليًا في إعدادات المشروع.'
-    }
-  }
-
-  if (phase === 'verify') {
-    if (
-      code === 'otp_expired' ||
-      code === 'invalid_credentials' ||
-      message.includes('expired') ||
-      message.includes('invalid') ||
-      message.includes('token')
-    ) {
-      return 'الرمز غير صحيح أو انتهت صلاحيته. اطلب رمزًا جديدًا ثم حاول مرة أخرى.'
-    }
+  if (isRateLimitError(error)) {
+    return 'تم تجاوز الحد المؤقت مؤقتًا، حاول بعد قليل.'
   }
 
   return 'حدث خطأ أثناء تسجيل الدخول، حاول مرة أخرى.'
 }
 
 export default function AccountLoginClient() {
-  const [initialState] = useState<StoredLoginState>(() => getInitialLoginState())
+  const [restoredChallenge] = useState<OtpChallenge | null>(() => getStoredChallenge())
+  const [loginState, setLoginState] = useState<LoginState>(
+    restoredChallenge ? 'OTP_ACTIVE' : 'EMAIL_ENTRY',
+  )
+  const [challenge, setChallenge] = useState<OtpChallenge | null>(restoredChallenge)
   const [emailInput, setEmailInput] = useState('')
-  const [deliveryEmail, setDeliveryEmail] = useState(initialState.deliveryEmail)
-  const [step, setStep] = useState<LoginStep>(initialState.step)
-  const [cooldownByEmail, setCooldownByEmail] = useState<CooldownByEmail>(
-    initialState.cooldownByEmail,
-  )
   const [otpCode, setOtpCode] = useState('')
-  const [error, setError] = useState('')
-  const [notice, setNotice] = useState(
-    initialState.step === 'otp' && initialState.deliveryEmail
-      ? `أدخل رمز التحقق المرسل إلى ${initialState.deliveryEmail}.`
-      : '',
+  const [emailError, setEmailError] = useState('')
+  const [otpBanner, setOtpBanner] = useState<OtpBanner | null>(
+    restoredChallenge
+      ? {
+          tone: 'notice',
+          message: `أدخل رمز التحقق المرسل إلى ${restoredChallenge.email}.`,
+        }
+      : null,
   )
-  const [sendingCode, setSendingCode] = useState(false)
-  const [verifyingCode, setVerifyingCode] = useState(false)
+  const [otpError, setOtpError] = useState('')
   const [now, setNow] = useState(() => Date.now())
   const emailInputRef = useRef<HTMLInputElement | null>(null)
   const otpInputRefs = useRef<Array<HTMLInputElement | null>>([])
   const flowVersionRef = useRef(0)
 
-  const activeEmail = useMemo(() => {
-    return step === 'otp' ? deliveryEmail : ''
-  }, [deliveryEmail, step])
+  const activeChallenge = useMemo(() => {
+    return challenge && isValidChallenge(challenge, now) ? challenge : null
+  }, [challenge, now])
 
-  const activeCooldownUntil = useMemo(() => {
-    return getEmailCooldown(cooldownByEmail, activeEmail)
-  }, [activeEmail, cooldownByEmail])
+  const showOtpStep = activeChallenge !== null
+  const cooldownSeconds = useMemo(() => {
+    if (!activeChallenge) {
+      return 0
+    }
+
+    return getSecondsUntil(activeChallenge.resendAvailableAt, now)
+  }, [activeChallenge, now])
+
+  const otpDigits = Array.from({ length: OTP_LENGTH }, (_, index) => otpCode[index] || '')
+  const isSendingCode = loginState === 'SENDING_CODE'
+  const isVerifyingOtp = loginState === 'VERIFYING_OTP'
+  const canResend = showOtpStep && loginState === 'OTP_ACTIVE' && cooldownSeconds === 0
 
   useEffect(() => {
-    if (activeCooldownUntil <= now) {
+    if (!activeChallenge || activeChallenge.resendAvailableAt <= now) {
       return
     }
 
@@ -220,10 +230,10 @@ export default function AccountLoginClient() {
     return () => {
       window.clearInterval(intervalId)
     }
-  }, [activeCooldownUntil, now])
+  }, [activeChallenge, now])
 
   useEffect(() => {
-    if (step === 'email') {
+    if (!showOtpStep) {
       emailInputRef.current?.focus()
       return
     }
@@ -233,61 +243,45 @@ export default function AccountLoginClient() {
     window.requestAnimationFrame(() => {
       otpInputRefs.current[focusIndex]?.focus()
     })
-  }, [otpCode.length, step])
+  }, [otpCode.length, showOtpStep])
 
-  const cooldownSeconds = useMemo(() => {
-    return Math.max(0, Math.ceil((activeCooldownUntil - now) / 1000))
-  }, [activeCooldownUntil, now])
-
-  const canResend = step === 'otp' && cooldownSeconds === 0 && !sendingCode && !verifyingCode
-  const otpDigits = Array.from({ length: OTP_LENGTH }, (_, index) => otpCode[index] || '')
-
-  const syncLoginState = (nextState: StoredLoginState) => {
-    setDeliveryEmail(nextState.deliveryEmail)
-    setStep(nextState.step)
-    setCooldownByEmail(nextState.cooldownByEmail)
-    persistLoginState(nextState)
-  }
-
-  const resetLoginFlow = () => {
+  const resetToEmailEntry = () => {
     flowVersionRef.current += 1
+    setLoginState('EMAIL_ENTRY')
+    setChallenge(null)
     setEmailInput('')
-    setDeliveryEmail('')
-    setStep('email')
-    setCooldownByEmail({})
     setOtpCode('')
-    setError('')
-    setNotice('')
-    setSendingCode(false)
-    setVerifyingCode(false)
+    setEmailError('')
+    setOtpBanner(null)
+    setOtpError('')
     setNow(Date.now())
     otpInputRefs.current = []
-    clearLoginState()
+    clearStoredChallenge()
   }
 
-  const moveToOtpStep = (normalizedEmail: string) => {
-    const nextState = {
-      deliveryEmail: normalizedEmail,
-      step: 'otp' as const,
-      cooldownByEmail: {
-        ...cooldownByEmail,
-        [normalizedEmail]: Date.now() + COOLDOWN_MS,
-      },
-    }
-
-    setEmailInput(normalizedEmail)
+  const openOtpChallenge = (nextChallenge: OtpChallenge, nextBanner: OtpBanner | null) => {
+    setChallenge(nextChallenge)
+    setLoginState('OTP_ACTIVE')
     setOtpCode('')
+    setEmailError('')
+    setOtpError('')
+    setOtpBanner(nextBanner)
     setNow(Date.now())
-    syncLoginState(nextState)
+    persistChallenge(nextChallenge)
   }
 
-  const sendOtpCode = async (requestedEmail: string, mode: 'initial' | 'resend') => {
-    setError('')
-    setNotice('')
-    setSendingCode(true)
-
+  const requestCode = async (requestedEmail: string, mode: 'initial' | 'resend') => {
     const normalizedEmail = normalizeEmail(requestedEmail)
     const requestVersion = flowVersionRef.current
+    const sameEmailChallenge =
+      challenge && isValidChallenge(challenge, Date.now()) && challenge.email === normalizedEmail
+        ? challenge
+        : null
+
+    setEmailError('')
+    setOtpError('')
+    setOtpBanner(null)
+    setLoginState('SENDING_CODE')
 
     try {
       const { error: sendError } = await supabaseBrowser.auth.signInWithOtp({
@@ -303,42 +297,61 @@ export default function AccountLoginClient() {
 
       if (sendError) {
         if (isRateLimitError(sendError)) {
-          const nextCooldownByEmail = {
-            ...cooldownByEmail,
-            [normalizedEmail]: Date.now() + COOLDOWN_MS,
+          if (sameEmailChallenge) {
+            const nextChallenge = extendChallengeCooldown(sameEmailChallenge)
+            const waitSeconds = getSecondsUntil(nextChallenge.resendAvailableAt)
+
+            openOtpChallenge(nextChallenge, {
+              tone: 'notice',
+              message: `سبق إرسال رمز إلى هذا البريد. استخدم آخر رمز أو أعد الإرسال بعد ${waitSeconds} ثانية.`,
+            })
+            return
           }
 
-          setEmailInput(normalizedEmail)
-          setOtpCode('')
-          setCooldownByEmail(nextCooldownByEmail)
-          setNow(Date.now())
-          syncLoginState({
-            deliveryEmail: normalizedEmail,
-            step: 'otp',
-            cooldownByEmail: nextCooldownByEmail,
-          })
+          setLoginState('EMAIL_ENTRY')
+          setEmailError('تم تجاوز الحد المؤقت لإرسال الرمز لهذا البريد. حاول بعد قليل.')
+          return
         }
 
-        setError(mapAuthError(sendError, 'send'))
+        if (sameEmailChallenge) {
+          setLoginState('OTP_ACTIVE')
+          setOtpBanner(null)
+          setOtpError(
+            mode === 'resend'
+              ? 'تعذر إرسال رمز جديد الآن. حاول مرة أخرى بعد قليل.'
+              : mapSendError(sendError),
+          )
+          return
+        }
+
+        setLoginState('EMAIL_ENTRY')
+        setEmailError(mapSendError(sendError))
         return
       }
 
-      moveToOtpStep(normalizedEmail)
-      setNotice(
-        mode === 'initial'
-          ? `أرسلنا الرمز إلى ${normalizedEmail}.`
-          : `أرسلنا رمزًا جديدًا إلى ${normalizedEmail}.`,
-      )
+      const nextChallenge = createChallenge(normalizedEmail)
+
+      openOtpChallenge(nextChallenge, {
+        tone: 'success',
+        message:
+          mode === 'initial'
+            ? `أرسلنا الرمز إلى ${normalizedEmail}.`
+            : `أرسلنا رمزًا جديدًا إلى ${normalizedEmail}.`,
+      })
     } catch {
       if (requestVersion !== flowVersionRef.current) {
         return
       }
 
-      setError('حدث خطأ أثناء تسجيل الدخول، حاول مرة أخرى.')
-    } finally {
-      if (requestVersion === flowVersionRef.current) {
-        setSendingCode(false)
+      if (sameEmailChallenge) {
+        setLoginState('OTP_ACTIVE')
+        setOtpBanner(null)
+        setOtpError('حدث خطأ أثناء إرسال الرمز، حاول مرة أخرى.')
+        return
       }
+
+      setLoginState('EMAIL_ENTRY')
+      setEmailError('حدث خطأ أثناء إرسال الرمز، حاول مرة أخرى.')
     }
   }
 
@@ -346,33 +359,22 @@ export default function AccountLoginClient() {
     event.preventDefault()
 
     const normalizedEmail = normalizeEmail(emailInput)
-    const emailCooldownUntil = getEmailCooldown(cooldownByEmail, normalizedEmail)
-    const emailCooldownSeconds = Math.max(0, Math.ceil((emailCooldownUntil - Date.now()) / 1000))
 
-    if (emailCooldownSeconds > 0) {
-      setError('')
-      setNotice(
-        `أرسلنا الرمز إلى ${normalizedEmail} بالفعل. انتظر ${emailCooldownSeconds} ثانية قبل إعادة الإرسال.`,
-      )
-      syncLoginState({
-        deliveryEmail: normalizedEmail,
-        step: 'otp',
-        cooldownByEmail,
-      })
+    if (!normalizedEmail) {
+      setEmailError('أدخل بريدك الإلكتروني بشكل صحيح.')
       return
     }
 
-    await sendOtpCode(emailInput, 'initial')
+    await requestCode(normalizedEmail, 'initial')
   }
 
   const handleOtpDigitChange = (index: number, rawValue: string) => {
     const digit = rawValue.replace(/\D/g, '').slice(-1)
     const digits = [...otpDigits]
     digits[index] = digit
-    const nextCode = digits.join('')
 
-    setOtpCode(nextCode)
-    setError('')
+    setOtpCode(digits.join(''))
+    setOtpError('')
 
     if (digit && index < OTP_LENGTH - 1) {
       otpInputRefs.current[index + 1]?.focus()
@@ -408,7 +410,7 @@ export default function AccountLoginClient() {
     }
 
     setOtpCode(pastedCode)
-    setError('')
+    setOtpError('')
 
     const focusIndex = Math.min(pastedCode.length, OTP_LENGTH - 1)
     otpInputRefs.current[focusIndex]?.focus()
@@ -416,23 +418,24 @@ export default function AccountLoginClient() {
 
   const handleVerifyOtp = async (event: React.FormEvent) => {
     event.preventDefault()
-    setError('')
-    setNotice('')
 
-    const normalizedEmail = deliveryEmail.trim().toLowerCase()
+    const currentChallenge =
+      challenge && isValidChallenge(challenge, Date.now()) ? challenge : null
+
+    if (!currentChallenge) {
+      resetToEmailEntry()
+      return
+    }
+
     const normalizedCode = otpCode.replace(/\D/g, '').slice(0, OTP_LENGTH)
 
-    if (!normalizedEmail) {
-      resetLoginFlow()
-      return
-    }
-
     if (normalizedCode.length !== OTP_LENGTH) {
-      setError('أدخل الرمز المكوّن من 6 أرقام.')
+      setOtpError('أدخل الرمز المكوّن من 6 أرقام.')
       return
     }
 
-    setVerifyingCode(true)
+    setOtpError('')
+    setLoginState('VERIFYING_OTP')
     const requestVersion = flowVersionRef.current
 
     try {
@@ -440,7 +443,7 @@ export default function AccountLoginClient() {
         data: { session },
         error: verifyError,
       } = await supabaseBrowser.auth.verifyOtp({
-        email: normalizedEmail,
+        email: currentChallenge.email,
         token: normalizedCode,
         type: 'email',
       })
@@ -450,41 +453,42 @@ export default function AccountLoginClient() {
       }
 
       if (verifyError) {
-        setError(mapAuthError(verifyError, 'verify'))
+        setLoginState('OTP_ACTIVE')
+        setOtpError(mapVerifyError(verifyError))
         return
       }
 
       if (!session) {
-        setError('تعذر إنشاء الجلسة الآن. حاول مرة أخرى.')
+        setLoginState('OTP_ACTIVE')
+        setOtpError('تعذر إنشاء الجلسة الآن. حاول مرة أخرى.')
         return
       }
 
-      clearLoginState()
+      clearStoredChallenge()
       window.location.assign('/account')
-      return
     } catch {
       if (requestVersion !== flowVersionRef.current) {
         return
       }
 
-      setError('حدث خطأ أثناء تسجيل الدخول، حاول مرة أخرى.')
-    } finally {
-      if (requestVersion === flowVersionRef.current) {
-        setVerifyingCode(false)
-      }
+      setLoginState('OTP_ACTIVE')
+      setOtpError('حدث خطأ أثناء تسجيل الدخول، حاول مرة أخرى.')
     }
-  }
-
-  const handleChangeEmail = () => {
-    resetLoginFlow()
   }
 
   const handleResendCode = async () => {
-    if (!canResend) {
+    const currentChallenge =
+      challenge && isValidChallenge(challenge, Date.now()) ? challenge : null
+
+    if (!currentChallenge || !canResend) {
       return
     }
 
-    await sendOtpCode(deliveryEmail, 'resend')
+    await requestCode(currentChallenge.email, 'resend')
+  }
+
+  const handleChangeEmail = () => {
+    resetToEmailEntry()
   }
 
   return (
@@ -601,6 +605,7 @@ export default function AccountLoginClient() {
         }
 
         .account-login-success,
+        .account-login-notice,
         .account-login-error {
           margin-top: 1rem;
           padding: 0.85rem 0.95rem;
@@ -613,6 +618,12 @@ export default function AccountLoginClient() {
           border: 1px solid #bbf7d0;
           background: #f0fdf4;
           color: #15803d;
+        }
+
+        .account-login-notice {
+          border: 1px solid #f0ddb0;
+          background: #fff8e7;
+          color: #8f6a14;
         }
 
         .account-login-error {
@@ -803,10 +814,7 @@ export default function AccountLoginClient() {
           <h1>تسجيل الدخول إلى حسابك</h1>
           <p>أدخل بريدك الإلكتروني لإرسال رمز الدخول.</p>
 
-          {notice && <div className="account-login-success">{notice}</div>}
-          {error && <div className="account-login-error">{error}</div>}
-
-          {step === 'email' ? (
+          {!showOtpStep ? (
             <div className="account-login-panel">
               <h2>تسجيل الدخول</h2>
               <p>أدخل بريدك الإلكتروني وسنرسل لك رمز التحقق.</p>
@@ -827,8 +835,7 @@ export default function AccountLoginClient() {
                     value={emailInput}
                     onChange={event => {
                       setEmailInput(event.target.value)
-                      setError('')
-                      setNotice('')
+                      setEmailError('')
                     }}
                     className="account-login-input"
                   />
@@ -836,11 +843,13 @@ export default function AccountLoginClient() {
 
                 <button
                   type="submit"
-                  disabled={sendingCode || verifyingCode}
+                  disabled={isSendingCode || isVerifyingOtp}
                   className="account-login-submit"
                 >
-                  {sendingCode ? 'جاري إرسال الرمز...' : 'إرسال الرمز'}
+                  {isSendingCode ? 'جاري إرسال الرمز...' : 'إرسال الرمز'}
                 </button>
+
+                {emailError && <div className="account-login-error">{emailError}</div>}
               </form>
             </div>
           ) : (
@@ -848,8 +857,22 @@ export default function AccountLoginClient() {
               <h2>أدخل رمز التحقق</h2>
               <p>أرسلنا الرمز إلى بريدك الإلكتروني.</p>
 
+              {otpBanner && (
+                <div
+                  className={
+                    otpBanner.tone === 'success'
+                      ? 'account-login-success'
+                      : 'account-login-notice'
+                  }
+                >
+                  {otpBanner.message}
+                </div>
+              )}
+
+              {otpError && <div className="account-login-error">{otpError}</div>}
+
               <div className="account-login-meta">
-                <strong>{deliveryEmail}</strong>
+                <strong>{activeChallenge.email}</strong>
                 <span>تحقق من البريد غير الهام إذا لم تجد الرسالة.</span>
               </div>
 
@@ -890,10 +913,10 @@ export default function AccountLoginClient() {
                 <div className="account-login-actions">
                   <button
                     type="submit"
-                    disabled={sendingCode || verifyingCode}
+                    disabled={isSendingCode || isVerifyingOtp}
                     className="account-login-submit"
                   >
-                    {verifyingCode ? 'جاري التحقق...' : 'تأكيد'}
+                    {isVerifyingOtp ? 'جاري التحقق...' : 'تأكيد'}
                   </button>
 
                   <button
@@ -904,7 +927,7 @@ export default function AccountLoginClient() {
                   >
                     {cooldownSeconds > 0
                       ? `إعادة إرسال الرمز خلال ${cooldownSeconds} ثانية`
-                      : sendingCode
+                      : isSendingCode
                         ? 'جاري إرسال الرمز...'
                         : 'إعادة إرسال الرمز'}
                   </button>
@@ -920,7 +943,6 @@ export default function AccountLoginClient() {
               </form>
             </div>
           )}
-
         </section>
       </main>
     </div>
