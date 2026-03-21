@@ -35,10 +35,25 @@ function parseFiles(formData: FormData) {
     .filter((value): value is File => value instanceof File && value.size > 0)
 }
 
+function buildStoragePath(productId: string, fileName: string) {
+  const extensionMatch = fileName.match(/\.([^.]+)$/)
+  const extension = extensionMatch?.[1]?.toLowerCase().replace(/[^a-z0-9]+/g, '') || ''
+  const baseName = fileName.replace(/\.[^.]+$/, '')
+  const safeBaseName = baseName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+
+  const storageFileName = `${safeBaseName || 'file'}-${crypto.randomUUID()}${extension ? `.${extension}` : ''}`
+
+  return `${productId}/${storageFileName}`
+}
+
 async function uploadProductFiles(productId: string, files: File[], startSortOrder = 0) {
   for (let index = 0; index < files.length; index += 1) {
     const file = files[index]
-    const storagePath = `${productId}/${file.name}`
+    const storagePath = buildStoragePath(productId, file.name)
     const fileBuffer = Buffer.from(await file.arrayBuffer())
 
     const { error: uploadError } = await supabaseAdmin.storage
