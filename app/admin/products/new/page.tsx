@@ -9,9 +9,15 @@ type AdminCategory = {
   name: string
 }
 
+type NoticeState = {
+  type: 'success' | 'error' | 'warning'
+  text: string
+} | null
+
 export default function NewProductPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [notice, setNotice] = useState<NoticeState>(null)
   const [files, setFiles] = useState<FileList | null>(null)
   const [categories, setCategories] = useState<AdminCategory[]>([])
   const [form, setForm] = useState({
@@ -44,7 +50,10 @@ export default function NewProductPage() {
     const frame = window.requestAnimationFrame(() => {
       void loadCategories().catch(error => {
         const message = error instanceof Error ? error.message : 'تعذر تحميل الفئات.'
-        alert(message)
+        setNotice({
+          type: 'error',
+          text: message,
+        })
       })
     })
 
@@ -54,6 +63,7 @@ export default function NewProductPage() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setLoading(true)
+    setNotice(null)
 
     const formData = new FormData()
     formData.set('title', form.title)
@@ -81,7 +91,10 @@ export default function NewProductPage() {
       const data = (await response.json()) as { error?: string; id?: string }
 
       if (!response.ok || !data.id) {
-        alert(data.error || 'خطأ في حفظ المنتج.')
+        setNotice({
+          type: 'error',
+          text: data.error || 'تعذر إنشاء المنتج الآن.',
+        })
         return
       }
 
@@ -89,7 +102,10 @@ export default function NewProductPage() {
       router.refresh()
     } catch (error) {
       const message = error instanceof Error ? error.message : 'خطأ في حفظ المنتج.'
-      alert(message)
+      setNotice({
+        type: 'error',
+        text: message,
+      })
     } finally {
       setLoading(false)
     }
@@ -115,6 +131,37 @@ export default function NewProductPage() {
     <div style={{ padding: '2rem', fontFamily: 'Arial', direction: 'rtl', maxWidth: '600px' }}>
       <Link href="/admin/products" style={{ color: '#888', fontSize: '14px' }}>← رجوع للمنتجات</Link>
       <h1 style={{ margin: '1rem 0' }}>إضافة منتج جديد</h1>
+
+      {notice && (
+        <div style={{
+          marginBottom: '1rem',
+          padding: '0.85rem 1rem',
+          borderRadius: '12px',
+          border:
+            notice.type === 'success'
+              ? '1px solid #bbf7d0'
+              : notice.type === 'warning'
+                ? '1px solid #fde68a'
+                : '1px solid #fecaca',
+          background:
+            notice.type === 'success'
+              ? '#f0fdf4'
+              : notice.type === 'warning'
+                ? '#fffbeb'
+                : '#fef2f2',
+          color:
+            notice.type === 'success'
+              ? '#166534'
+              : notice.type === 'warning'
+                ? '#92400e'
+                : '#b91c1c',
+          fontSize: '0.9rem',
+          fontWeight: 700,
+          lineHeight: 1.8,
+        }}>
+          {notice.text}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div>

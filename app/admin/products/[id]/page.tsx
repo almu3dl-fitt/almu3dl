@@ -38,12 +38,18 @@ type CategoriesResponse = {
   categories?: AdminCategory[]
 }
 
+type NoticeState = {
+  type: 'success' | 'error' | 'warning'
+  text: string
+} | null
+
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [notice, setNotice] = useState<NoticeState>(null)
   const [categories, setCategories] = useState<AdminCategory[]>([])
   const [files, setFiles] = useState<AdminProductFile[]>([])
   const [newFiles, setNewFiles] = useState<FileList | null>(null)
@@ -133,7 +139,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     const frame = window.requestAnimationFrame(() => {
       void loadInitialData().catch(error => {
         const message = error instanceof Error ? error.message : 'تعذر تحميل بيانات المنتج.'
-        alert(message)
+        setNotice({
+          type: 'error',
+          text: message,
+        })
       })
     })
 
@@ -143,6 +152,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault()
     setSaving(true)
+    setNotice(null)
 
     const formData = new FormData()
     formData.set('title', form.title)
@@ -167,19 +177,28 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         body: formData,
       })
 
-      const data = (await response.json()) as { error?: string }
+      const data = (await response.json()) as { error?: string; warning?: string }
 
       if (!response.ok) {
-        alert(data.error || 'تعذر حفظ التعديلات الآن.')
+        setNotice({
+          type: 'error',
+          text: data.error || 'تعذر حفظ التعديلات الآن.',
+        })
         return
       }
 
       await loadProduct()
       router.refresh()
-      alert('تم الحفظ بنجاح ✅')
+      setNotice({
+        type: data.warning ? 'warning' : 'success',
+        text: data.warning || 'تم حفظ التعديلات بنجاح.',
+      })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'تعذر حفظ التعديلات الآن.'
-      alert(message)
+      setNotice({
+        type: 'error',
+        text: message,
+      })
     } finally {
       setSaving(false)
     }
@@ -196,15 +215,25 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       const data = (await response.json()) as { error?: string }
 
       if (!response.ok) {
-        alert(data.error || 'تعذر حذف الملف الآن.')
+        setNotice({
+          type: 'error',
+          text: data.error || 'تعذر حذف الملف الآن.',
+        })
         return
       }
 
       setFiles(current => current.filter(file => file.id !== fileId))
       router.refresh()
+      setNotice({
+        type: 'success',
+        text: 'تم حذف الملف بنجاح.',
+      })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'تعذر حذف الملف الآن.'
-      alert(message)
+      setNotice({
+        type: 'error',
+        text: message,
+      })
     }
   }
 
@@ -222,7 +251,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       const data = (await response.json()) as { error?: string }
 
       if (!response.ok) {
-        alert(data.error || 'تعذر حذف المنتج الآن.')
+        setNotice({
+          type: 'error',
+          text: data.error || 'تعذر حذف المنتج الآن.',
+        })
         return
       }
 
@@ -230,7 +262,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       router.refresh()
     } catch (error) {
       const message = error instanceof Error ? error.message : 'تعذر حذف المنتج الآن.'
-      alert(message)
+      setNotice({
+        type: 'error',
+        text: message,
+      })
     } finally {
       setDeleting(false)
     }
@@ -252,6 +287,37 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>تعديل المنتج</h1>
         <Link href="/admin/products" style={{ color: '#888', fontSize: '14px', textDecoration: 'none' }}>← رجوع للمنتجات</Link>
       </div>
+
+      {notice && (
+        <div style={{
+          marginBottom: '1rem',
+          padding: '0.85rem 1rem',
+          borderRadius: '12px',
+          border:
+            notice.type === 'success'
+              ? '1px solid #bbf7d0'
+              : notice.type === 'warning'
+                ? '1px solid #fde68a'
+                : '1px solid #fecaca',
+          background:
+            notice.type === 'success'
+              ? '#f0fdf4'
+              : notice.type === 'warning'
+                ? '#fffbeb'
+                : '#fef2f2',
+          color:
+            notice.type === 'success'
+              ? '#166534'
+              : notice.type === 'warning'
+                ? '#92400e'
+                : '#b91c1c',
+          fontSize: '0.9rem',
+          fontWeight: 700,
+          lineHeight: 1.8,
+        }}>
+          {notice.text}
+        </div>
+      )}
 
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div style={{

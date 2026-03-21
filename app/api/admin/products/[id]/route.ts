@@ -29,6 +29,11 @@ type ProductFileSortRow = {
   sort_order: number | null
 }
 
+type FileUploadFailure = {
+  fileName: string
+  reason: string
+}
+
 function buildProductSlug(rawSlug: string, title: string) {
   const baseValue = rawSlug.trim() || title.trim()
 
@@ -72,6 +77,7 @@ async function uploadProductFiles(productId: string, files: File[]) {
   }
 
   const startSortOrder = Number(((currentFiles as ProductFileSortRow[] | null) ?? [])[0]?.sort_order ?? -1) + 1
+  const failures: FileUploadFailure[] = []
 
   for (let index = 0; index < files.length; index += 1) {
     const file = files[index]
@@ -86,7 +92,11 @@ async function uploadProductFiles(productId: string, files: File[]) {
       })
 
     if (uploadError) {
-      throw new Error(`UPLOAD:${uploadError.message}`)
+      failures.push({
+        fileName: file.name,
+        reason: uploadError.message,
+      })
+      continue
     }
 
     const { error: insertError } = await supabaseAdmin.from('product_files').insert({
@@ -97,9 +107,15 @@ async function uploadProductFiles(productId: string, files: File[]) {
     })
 
     if (insertError) {
-      throw new Error(`FILE_RECORD:${insertError.message}`)
+      await supabaseAdmin.storage.from(PRODUCT_DOWNLOAD_BUCKET).remove([storagePath])
+      failures.push({
+        fileName: file.name,
+        reason: insertError.message,
+      })
     }
   }
+
+  return failures
 }
 
 export async function GET(
@@ -209,16 +225,10 @@ export async function PUT(
       )
     }
 
-    if (files.length > 0) {
-      try {
-        await uploadProductFiles(id, files)
-      } catch (error) {
-        console.error('Admin update product upload error:', error)
-        return NextResponse.json(
-          { error: 'تم حفظ بيانات المنتج لكن فشل رفع بعض الملفات.' },
-          { status: 500 },
-        )
-      }
+    const uploadFailures = files.length > 0 ? await uploadProductFiles(id, files) : []
+
+    if (uploadFailures.length > 0) {
+      console.error('Admin update product partial upload failures:', uploadFailures)
     }
 
     revalidatePath('/admin')
@@ -227,7 +237,16 @@ export async function PUT(
     revalidatePath(`/store/${currentProduct.slug}`)
     revalidatePath(`/store/${slug}`)
 
-    return NextResponse.json({ ok: true, slug })
+    return NextResponse.json({
+      ok: true,
+      slug,
+      warning:
+        uploadFailures.length > 0
+          ? `تم حفظ بيانات المنتج، لكن تعذر رفع الملفات التالية: ${uploadFailures
+              .map(file => file.fileName)
+              .join('، ')}.`
+          : null,
+    })
   } catch (error) {
     console.error('Admin update product route error:', error)
     return NextResponse.json({ error: 'حدث خطأ أثناء حفظ التعديلات.' }, { status: 500 })
