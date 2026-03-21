@@ -21,8 +21,41 @@ export default async function AdminPage() {
     <div style={{ padding: '2rem', fontFamily: "'Tajawal', Arial", direction: 'rtl' }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');`}</style>
 
-      <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.5rem' }}>لوحة الإدارة</h1>
-      <p style={{ color: '#888', marginBottom: '2rem' }}>مرحباً بك في لوحة إدارة المعضل</p>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '1rem',
+          flexWrap: 'wrap',
+          marginBottom: '2rem',
+        }}
+      >
+        <div>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.5rem' }}>لوحة الإدارة</h1>
+          <p style={{ color: '#888', margin: 0 }}>مرحباً بك في لوحة إدارة المعضل</p>
+        </div>
+
+        <form action="/api/admin/logout" method="post">
+          <button
+            type="submit"
+            style={{
+              minHeight: '42px',
+              padding: '0.65rem 1rem',
+              borderRadius: '12px',
+              border: '1px solid #ececec',
+              background: '#fff',
+              color: '#555',
+              fontSize: '0.86rem',
+              fontWeight: 800,
+              fontFamily: "'Tajawal', Arial, sans-serif",
+              cursor: 'pointer',
+            }}
+          >
+            تسجيل الخروج من الإدارة
+          </button>
+        </form>
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2.5rem' }}>
         <div style={{ padding: '1.5rem', border: '1px solid #eee', borderRadius: '8px', textAlign: 'center' }}>

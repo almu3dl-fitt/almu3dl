@@ -6,7 +6,9 @@ import { notFound } from 'next/navigation'
 import AccountNavLink from '@/app/components/AccountNavLink'
 import CartIcon from '@/app/components/CartIcon'
 import AddToCartButton from '@/app/components/AddToCartButton'
-import { getApprovedProductReviews } from '@/lib/customer-reviews'
+import ProductReviewForm from '@/app/components/ProductReviewForm'
+import { getCustomerUser } from '@/lib/account-auth'
+import { getApprovedProductReviews, getProductReviewAccess } from '@/lib/customer-reviews'
 import { supabase } from '@/lib/supabase'
 import { siteConfig, truncateText } from '@/lib/site'
 
@@ -154,7 +156,11 @@ export default async function ProductPage({
     .split(/\n+/)
     .map(block => block.trim())
     .filter(Boolean)
+  const customerUser = await getCustomerUser()
   const reviewSummary = await getApprovedProductReviews(product.id)
+  const reviewAccess = customerUser?.email
+    ? await getProductReviewAccess(product.id, customerUser.email)
+    : null
 
   const trustItems = [
     { icon: '⚡', title: 'وصول فوري', text: 'تنتقل مباشرة إلى السلة ثم صفحة الإتمام بدون خطوات إضافية.' },
@@ -647,6 +653,43 @@ export default async function ProductPage({
           line-height: 1.8;
         }
 
+        .product-review-action {
+          display: grid;
+          gap: 0.9rem;
+          margin-top: 1rem;
+          padding: 1rem;
+          border: 1px solid rgba(17, 17, 17, 0.06);
+          border-radius: 24px;
+          background: rgba(255, 255, 255, 0.96);
+          box-shadow: 0 14px 26px rgba(17, 17, 17, 0.04);
+        }
+
+        .product-review-action h2 {
+          margin: 0;
+          font-size: 1.08rem;
+          font-weight: 900;
+        }
+
+        .product-review-action p {
+          margin: 0;
+          color: #787878;
+          font-size: 0.88rem;
+          line-height: 1.9;
+        }
+
+        .product-review-action a {
+          color: #8f6a14;
+          font-weight: 800;
+          text-decoration: none;
+        }
+
+        .product-review-note {
+          padding: 0.95rem;
+          border-radius: 18px;
+          border: 1px solid #efefef;
+          background: #fff;
+        }
+
         .product-footer {
           padding: 1.8rem 1.25rem;
           border-top: 1px solid #eee;
@@ -932,6 +975,35 @@ export default async function ProductPage({
                 ))
               )}
             </div>
+          </article>
+
+          <article className="product-review-action">
+            <div>
+              <h2>تقييمك لهذا المنتج</h2>
+              <p>
+                إذا كنت اشتريت هذا المنتج من قبل، يمكنك إرسال تقييمك من هنا وسيظهر
+                بعد مراجعته واعتماده.
+              </p>
+            </div>
+
+            {reviewAccess ? (
+              <ProductReviewForm
+                orderId={reviewAccess.orderId}
+                productId={product.id}
+                productTitle={product.title}
+                initialReview={reviewAccess.initialReview}
+              />
+            ) : customerUser?.email ? (
+              <div className="product-review-note">
+                هذا الحساب لا يملك طلبًا مدفوعًا لهذا المنتج حتى الآن، لذلك لن يظهر
+                نموذج التقييم إلا بعد الشراء من نفس البريد.
+              </div>
+            ) : (
+              <div className="product-review-note">
+                إذا كنت اشتريت هذا المنتج سابقًا، <Link href="/account/login">سجّل الدخول</Link>{' '}
+                بنفس بريد الطلب وسيظهر لك نموذج التقييم هنا مباشرة.
+              </div>
+            )}
           </article>
         </section>
       </main>
