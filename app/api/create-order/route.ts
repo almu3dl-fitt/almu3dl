@@ -107,11 +107,16 @@ export async function POST(req: NextRequest) {
           },
           description: `طلب من المعضل - ${items.length} منتج`,
         }],
-        application_context: {
-          brand_name: 'المعضل - Almu3dl',
-          return_url: `${req.nextUrl.origin}/api/capture-order?orderId=${order.id}`,
-          cancel_url: `${req.nextUrl.origin}/checkout?cancelled=true`,
-          user_action: 'PAY_NOW',
+        payment_source: {
+          paypal: {
+            experience_context: {
+              brand_name: 'المعضل - Almu3dl',
+              return_url: `${req.nextUrl.origin}/api/capture-order?orderId=${order.id}`,
+              cancel_url: `${req.nextUrl.origin}/checkout?cancelled=true`,
+              user_action: 'PAY_NOW',
+              landing_page: 'GUEST_CHECKOUT',
+            },
+          },
         },
       }),
     })

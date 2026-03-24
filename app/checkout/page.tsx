@@ -577,6 +577,63 @@ export default function CheckoutPage() {
           font-weight: 700;
         }
 
+        .checkout-payment-meta {
+          display: grid;
+          gap: 0.72rem;
+        }
+
+        .checkout-payment-badges {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 0.65rem;
+        }
+
+        .checkout-payment-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.65rem;
+          min-height: 44px;
+          padding: 0.62rem 0.9rem;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.035);
+          color: var(--store-text);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+
+        .checkout-payment-badge.is-paypal {
+          border-color: rgba(255, 255, 255, 0.18);
+          background:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+            rgba(255, 255, 255, 0.04);
+        }
+
+        .checkout-payment-badge svg {
+          flex: none;
+          width: 20px;
+          height: 20px;
+        }
+
+        .checkout-payment-badge-label {
+          display: grid;
+          gap: 0.08rem;
+          text-align: right;
+          line-height: 1.15;
+        }
+
+        .checkout-payment-badge-label strong {
+          color: var(--store-text);
+          font-size: 0.78rem;
+          font-weight: 900;
+        }
+
+        .checkout-payment-badge-label small {
+          color: var(--store-text-soft);
+          font-size: 0.65rem;
+          font-weight: 700;
+        }
+
         .checkout-summary-wrap {
           position: static;
           display: grid;
@@ -830,7 +887,59 @@ export default function CheckoutPage() {
                       : `ادفع ${total} ريال عبر PayPal`}
                 </button>
 
-                {total > 0 && <div className="checkout-secure">🔒 دفع آمن عبر PayPal</div>}
+                {total > 0 && (
+                  <div className="checkout-payment-meta">
+                    <div className="checkout-secure">🔒 دفع آمن عبر PayPal</div>
+
+                    <div className="checkout-payment-badges" aria-label="خيارات الدفع عبر بايبال">
+                      <div className="checkout-payment-badge is-paypal">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path
+                            d="M8.06 19.5H4.8c-.27 0-.44-.25-.39-.5L6.8 4.1c.05-.23.24-.4.48-.4h6.13c2.1 0 3.63.44 4.54 1.31.81.77 1.15 1.87.96 3.13-.27 1.85-1.16 3.07-2.65 3.66-.69.27-.69.27-.47.96l.35 1.1c.04.14-.06.29-.21.29h-1.88c-.24 0-.45-.16-.52-.39l-.24-.8c-.14-.46-.31-.54-.79-.54H9.8c-.26 0-.48.19-.52.45l-.67 4.13c-.04.28-.28.5-.55.5Z"
+                            fill="#fff"
+                            fillOpacity=".9"
+                          />
+                          <path
+                            d="M18.92 8.47c-.18 1.19-.73 2.1-1.63 2.69-.8.53-1.9.8-3.27.8H11.8c-.24 0-.44.17-.48.4l-.69 4.31-.19 1.22c-.04.23.14.44.37.44h2.78c.21 0 .4-.15.43-.36l.02-.1.52-3.28.03-.18c.03-.21.21-.36.43-.36h.27c1.73 0 3.08-.35 4.01-1.04.93-.69 1.53-1.78 1.78-3.24.1-.61.09-1.12-.03-1.54-.04.08-.09.16-.13.24Z"
+                            fill="#f3c14d"
+                          />
+                        </svg>
+
+                        <span className="checkout-payment-badge-label">
+                          <strong>PayPal</strong>
+                          <small>بوابة الدفع</small>
+                        </span>
+                      </div>
+
+                      <div className="checkout-payment-badge">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <rect
+                            x="2.5"
+                            y="5"
+                            width="19"
+                            height="14"
+                            rx="3"
+                            stroke="#f3c14d"
+                            strokeWidth="1.5"
+                          />
+                          <path d="M3.75 9.25h16.5" stroke="#f3c14d" strokeWidth="1.5" />
+                          <path
+                            d="M7 15.25h3.75M14.25 15.25h2.25"
+                            stroke="#fff"
+                            strokeOpacity=".88"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+
+                        <span className="checkout-payment-badge-label">
+                          <strong>بطاقة بنكية</strong>
+                          <small>مرتبطة بـ PayPal</small>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </form>
             </section>
 
