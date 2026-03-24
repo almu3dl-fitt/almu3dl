@@ -919,23 +919,64 @@ export default function CheckoutPage() {
 
         .checkout-payment-options {
           display: grid;
-          gap: 0.78rem;
+          gap: 0.82rem;
         }
 
         .checkout-payment-option {
           display: grid;
-          gap: 0.45rem;
+          gap: 0.5rem;
+          padding: 0.88rem;
+          border: 1px solid var(--store-border);
+          border-radius: 20px;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.02)),
+            rgba(9, 9, 9, 0.9);
         }
 
         .checkout-payment-option.is-hidden {
           display: none;
         }
 
+        .checkout-payment-option.is-featured {
+          border-color: rgba(224, 180, 72, 0.42);
+          background:
+            linear-gradient(180deg, rgba(224, 180, 72, 0.14), rgba(255, 255, 255, 0.02) 45%),
+            rgba(9, 9, 9, 0.94);
+          box-shadow: 0 18px 34px rgba(224, 180, 72, 0.12);
+        }
+
+        .checkout-payment-option-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+        }
+
         .checkout-payment-option-label {
-          color: var(--store-text-soft);
-          font-size: 0.74rem;
+          color: var(--store-text);
+          font-size: 0.9rem;
           font-weight: 800;
-          text-align: center;
+          text-align: right;
+        }
+
+        .checkout-payment-option-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0.34rem 0.68rem;
+          border-radius: 999px;
+          background: rgba(224, 180, 72, 0.16);
+          color: var(--store-accent);
+          font-size: 0.72rem;
+          font-weight: 900;
+          white-space: nowrap;
+        }
+
+        .checkout-payment-option-note {
+          color: var(--store-text-soft);
+          font-size: 0.78rem;
+          line-height: 1.75;
         }
 
         .checkout-paypal-button-slot {
@@ -1223,25 +1264,37 @@ export default function CheckoutPage() {
 
                 {total > 0 && (
                   <div className="checkout-payment-meta" ref={paymentOptionsRef}>
-                    <div className="checkout-secure">🔒 دفع آمن عبر PayPal</div>
+                    <div className="checkout-secure">🔒 اختر الطريقة المناسبة لإتمام الدفع بأمان</div>
                     <div className="checkout-payment-currency">
                       سيتم خصم {paypalEquivalentLabel} عبر PayPal بما يعادل {total} ريال سعودي.
                     </div>
 
                     <div className="checkout-payment-options" aria-label="خيارات الدفع عبر بايبال">
-                      <div className={`checkout-payment-option ${!hasPayPalButton ? 'is-hidden' : ''}`}>
-                        <div className="checkout-payment-option-label">الدفع عبر PayPal</div>
-                        <div
-                          ref={paypalButtonRef}
-                          className={`checkout-paypal-button-slot ${!hasPayPalButton ? 'is-hidden' : ''}`}
-                        />
-                      </div>
-
-                      <div className={`checkout-payment-option ${!hasCardButton ? 'is-hidden' : ''}`}>
-                        <div className="checkout-payment-option-label">الدفع بالبطاقة</div>
+                      <div className={`checkout-payment-option is-featured ${!hasCardButton ? 'is-hidden' : ''}`}>
+                        <div className="checkout-payment-option-head">
+                          <div className="checkout-payment-option-label">الدفع بالبطاقة</div>
+                          <span className="checkout-payment-option-badge">مناسب لمن لا يملك حساب PayPal</span>
+                        </div>
+                        <div className="checkout-payment-option-note">
+                          ادفع مباشرة ببطاقتك الائتمانية أو البنكية متى كان هذا الخيار متاحًا من PayPal لهذه الجلسة.
+                        </div>
                         <div
                           ref={cardButtonRef}
                           className={`checkout-paypal-button-slot ${!hasCardButton ? 'is-hidden' : ''}`}
+                        />
+                      </div>
+
+                      <div className={`checkout-payment-option ${!hasPayPalButton ? 'is-hidden' : ''}`}>
+                        <div className="checkout-payment-option-head">
+                          <div className="checkout-payment-option-label">الدفع عبر PayPal</div>
+                          <span className="checkout-payment-option-badge">لمن لديه حساب PayPal</span>
+                        </div>
+                        <div className="checkout-payment-option-note">
+                          إذا كان لديك حساب PayPal، يمكنك إتمام الطلب سريعًا من خلاله.
+                        </div>
+                        <div
+                          ref={paypalButtonRef}
+                          className={`checkout-paypal-button-slot ${!hasPayPalButton ? 'is-hidden' : ''}`}
                         />
                       </div>
                     </div>
@@ -1252,8 +1305,8 @@ export default function CheckoutPage() {
 
                     {paypalSdkStatus === 'ready' && !hasCardButton && (
                       <div className="checkout-payment-help">
-                        إذا لم يظهر زر البطاقة، فهذا يعني أن PayPal لم يفعّل هذا الخيار لهذه الجلسة أو لهذا
-                        الحساب.
+                        إذا لم يظهر خيار البطاقة، فذلك يعني أن PayPal لم تفعّل الدفع كضيف لهذه الجلسة، ويمكنك
+                        الإكمال عبر حساب PayPal.
                       </div>
                     )}
 
