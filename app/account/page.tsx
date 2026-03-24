@@ -1,8 +1,8 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import AccountNavLink from '@/app/components/AccountNavLink'
 import SignOutButton from '@/app/account/SignOutButton'
+import StorefrontFooter from '@/app/components/StorefrontFooter'
+import StorefrontHeader from '@/app/components/StorefrontHeader'
 import { getCustomerAccountByEmail } from '@/lib/customer-account'
 import { requireCustomerUser } from '@/lib/account-auth'
 
@@ -60,75 +60,19 @@ export default async function AccountPage() {
   }))
 
   return (
-    <div className="account-page-shell">
+    <div className="account-page-shell storefront-shell">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 
         .account-page-shell {
-          min-height: 100vh;
-          background:
-            radial-gradient(circle at top right, rgba(212, 168, 67, 0.08), transparent 28%),
-            #fafafa;
-          color: #1a1a1a;
           font-family: 'Tajawal', 'Arial', sans-serif;
           direction: rtl;
         }
 
-        .account-nav {
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 0.85rem;
-          padding: 0.82rem 1.2rem;
-          border-bottom: 1px solid rgba(17, 17, 17, 0.07);
-          background-color: rgba(250, 250, 250, 0.92);
-          backdrop-filter: blur(14px);
-        }
-
-        .account-brand {
-          display: flex;
-          align-items: center;
-          gap: 0.65rem;
-          text-decoration: none;
-        }
-
-        .account-brand span {
-          font-size: 1.16rem;
-          font-weight: 900;
-          background: linear-gradient(135deg, #b8912e, #d4a843);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .account-nav-actions {
-          display: flex;
-          align-items: center;
-          gap: 0.7rem;
-          flex-wrap: wrap;
-        }
-
-        .account-nav-link {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 40px;
-          padding: 0.55rem 0.85rem;
-          border-radius: 12px;
-          border: 1px solid #ececec;
-          background: rgba(255, 255, 255, 0.9);
-          color: #555;
-          text-decoration: none;
-          font-size: 0.86rem;
-          font-weight: 700;
-        }
-
         .account-main {
-          max-width: 1120px;
+          width: min(calc(100% - 2rem), var(--store-content-width));
           margin: 0 auto;
-          padding: 1.25rem 1.15rem 3.5rem;
+          padding: 1.4rem 0 0;
         }
 
         .account-hero {
@@ -137,6 +81,13 @@ export default async function AccountPage() {
           align-items: flex-end;
           gap: 1rem;
           margin-bottom: 1.2rem;
+          padding: 1.5rem;
+          border: 1px solid var(--store-border);
+          border-radius: var(--store-radius-xl);
+          background:
+            linear-gradient(135deg, rgba(224, 180, 72, 0.12), rgba(255, 255, 255, 0.02) 46%),
+            var(--store-surface);
+          box-shadow: var(--store-shadow);
         }
 
         .account-eyebrow {
@@ -144,27 +95,29 @@ export default async function AccountPage() {
           margin-bottom: 0.6rem;
           padding: 0.32rem 0.72rem;
           border-radius: 999px;
-          background: rgba(184, 145, 46, 0.12);
-          color: #8f6a14;
+          border: 1px solid var(--store-border-strong);
+          background: var(--store-accent-wash);
+          color: var(--store-accent-strong);
           font-size: 0.76rem;
           font-weight: 800;
         }
 
         .account-title {
           margin: 0 0 0.5rem;
-          font-size: clamp(1.9rem, 4vw, 2.7rem);
+          color: var(--store-text);
+          font-size: clamp(2rem, 4vw, 3rem);
           font-weight: 900;
           line-height: 1.2;
         }
 
         .account-title strong {
-          color: #b8912e;
+          color: var(--store-accent-strong);
         }
 
         .account-subtitle {
           max-width: 680px;
           margin: 0;
-          color: #757575;
+          color: var(--store-text-muted);
           font-size: 0.96rem;
           line-height: 1.8;
         }
@@ -172,15 +125,14 @@ export default async function AccountPage() {
         .account-summary {
           min-width: 280px;
           padding: 1rem;
-          border: 1px solid rgba(184, 145, 46, 0.18);
-          border-radius: 18px;
-          background: #fff;
-          box-shadow: 0 16px 28px rgba(17, 17, 17, 0.05);
+          border: 1px solid var(--store-border);
+          border-radius: 22px;
+          background: rgba(255, 255, 255, 0.04);
         }
 
         .account-summary-email {
           margin: 0 0 0.35rem;
-          color: #555;
+          color: var(--store-text-muted);
           font-size: 0.9rem;
           font-weight: 700;
           word-break: break-word;
@@ -188,7 +140,7 @@ export default async function AccountPage() {
 
         .account-summary-name {
           margin: 0 0 0.8rem;
-          color: #1a1a1a;
+          color: var(--store-text);
           font-size: 1.04rem;
           font-weight: 900;
         }
@@ -203,20 +155,20 @@ export default async function AccountPage() {
         .account-summary-stat {
           padding: 0.75rem 0.7rem;
           border-radius: 14px;
-          background: #fcfbf8;
+          background: rgba(255, 255, 255, 0.04);
           text-align: center;
         }
 
         .account-summary-stat strong {
           display: block;
           margin-bottom: 0.18rem;
-          color: #b8912e;
+          color: var(--store-accent-strong);
           font-size: 1.15rem;
           font-weight: 900;
         }
 
         .account-summary-stat span {
-          color: #7b7b7b;
+          color: var(--store-text-soft);
           font-size: 0.74rem;
           font-weight: 700;
         }
@@ -236,38 +188,39 @@ export default async function AccountPage() {
 
         .account-section-head h2 {
           margin: 0;
-          font-size: 1.15rem;
+          color: var(--store-text);
+          font-size: 1.18rem;
           font-weight: 900;
         }
 
         .account-section-head p {
           margin: 0;
-          color: #7d7d7d;
+          color: var(--store-text-soft);
           font-size: 0.88rem;
         }
 
         .account-empty {
           padding: 2rem 1.2rem;
-          border: 1px dashed #ddd;
+          border: 1px dashed var(--store-border-strong);
           border-radius: 20px;
-          background: rgba(255, 255, 255, 0.8);
+          background: rgba(255, 255, 255, 0.03);
           text-align: center;
-          color: #8b8b8b;
+          color: var(--store-text-muted);
           line-height: 1.8;
         }
 
         .account-empty a {
-          color: #b8912e;
+          color: var(--store-accent-strong);
           font-weight: 800;
           text-decoration: none;
         }
 
         .account-error {
           padding: 1rem 1.1rem;
-          border: 1px solid #fecaca;
+          border: 1px solid rgba(255, 107, 107, 0.34);
           border-radius: 18px;
-          background: #fef2f2;
-          color: #dc2626;
+          background: rgba(255, 107, 107, 0.12);
+          color: #ff8f8f;
           line-height: 1.8;
           margin-bottom: 1rem;
         }
@@ -278,10 +231,12 @@ export default async function AccountPage() {
         }
 
         .account-order-card {
-          border: 1px solid rgba(17, 17, 17, 0.06);
+          border: 1px solid var(--store-border);
           border-radius: 22px;
-          background: #fff;
-          box-shadow: 0 14px 28px rgba(17, 17, 17, 0.04);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+            var(--store-surface);
+          box-shadow: var(--store-card-shadow);
           overflow: hidden;
         }
 
@@ -296,14 +251,14 @@ export default async function AccountPage() {
         .account-order-id {
           display: inline-flex;
           margin-bottom: 0.28rem;
-          color: #1a1a1a;
+          color: var(--store-text);
           font-size: 1rem;
           font-weight: 900;
         }
 
         .account-order-date {
           margin: 0;
-          color: #8c8c8c;
+          color: var(--store-text-soft);
           font-size: 0.8rem;
         }
 
@@ -320,18 +275,18 @@ export default async function AccountPage() {
         }
 
         .account-status.is-paid {
-          background: #ecfdf3;
-          color: #15803d;
+          background: var(--store-success-wash);
+          color: #7ce6a5;
         }
 
         .account-status.is-pending {
-          background: #fff8e7;
-          color: #8f6a14;
+          background: var(--store-accent-wash);
+          color: var(--store-accent-strong);
         }
 
         .account-status.is-failed {
-          background: #fef2f2;
-          color: #dc2626;
+          background: rgba(255, 107, 107, 0.12);
+          color: #ff8f8f;
         }
 
         .account-order-meta {
@@ -344,25 +299,25 @@ export default async function AccountPage() {
         .account-order-meta div {
           padding: 0.8rem 0.75rem;
           border-radius: 16px;
-          background: #fcfbf8;
+          background: rgba(255, 255, 255, 0.04);
         }
 
         .account-order-meta span {
           display: block;
           margin-bottom: 0.2rem;
-          color: #8f8f8f;
+          color: var(--store-text-soft);
           font-size: 0.74rem;
           font-weight: 700;
         }
 
         .account-order-meta strong {
-          color: #1a1a1a;
+          color: var(--store-text);
           font-size: 0.96rem;
           font-weight: 800;
         }
 
         .account-order-details {
-          border-top: 1px solid #f2f2f2;
+          border-top: 1px solid var(--store-divider);
         }
 
         .account-order-details summary {
@@ -371,7 +326,7 @@ export default async function AccountPage() {
           padding: 0.95rem 1rem;
           font-size: 0.9rem;
           font-weight: 800;
-          color: #b8912e;
+          color: var(--store-accent-strong);
         }
 
         .account-order-details summary::-webkit-details-marker {
@@ -379,7 +334,7 @@ export default async function AccountPage() {
         }
 
         .account-order-details[open] summary {
-          border-bottom: 1px solid #f2f2f2;
+          border-bottom: 1px solid var(--store-divider);
         }
 
         .account-order-products {
@@ -404,9 +359,9 @@ export default async function AccountPage() {
           min-height: 42px;
           padding: 0.68rem 0.95rem;
           border-radius: 12px;
-          border: 1px solid #e7e7e7;
-          background: #fff;
-          color: #444;
+          border: 1px solid var(--store-border);
+          background: rgba(255, 255, 255, 0.04);
+          color: var(--store-text);
           text-decoration: none;
           font-size: 0.84rem;
           font-weight: 800;
@@ -415,8 +370,8 @@ export default async function AccountPage() {
         .account-product-card {
           padding: 0.95rem;
           border-radius: 18px;
-          background: #fafafa;
-          border: 1px solid #f0f0f0;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--store-border);
         }
 
         .account-product-head {
@@ -429,18 +384,19 @@ export default async function AccountPage() {
 
         .account-product-head h3 {
           margin: 0;
+          color: var(--store-text);
           font-size: 0.98rem;
           font-weight: 800;
           line-height: 1.5;
         }
 
         .account-product-head a {
-          color: #1a1a1a;
+          color: var(--store-text);
           text-decoration: none;
         }
 
         .account-product-price {
-          color: #b8912e;
+          color: var(--store-accent-strong);
           font-size: 0.88rem;
           font-weight: 900;
           white-space: nowrap;
@@ -459,12 +415,12 @@ export default async function AccountPage() {
           min-height: 40px;
           padding: 0.65rem 0.95rem;
           border-radius: 12px;
-          background: linear-gradient(135deg, #d4a843, #b8912e);
-          color: #fff;
+          background: linear-gradient(135deg, #fff0bf, var(--store-accent));
+          color: #111;
           text-decoration: none;
           font-size: 0.82rem;
           font-weight: 800;
-          box-shadow: 0 12px 18px rgba(184, 145, 46, 0.18);
+          box-shadow: 0 12px 18px rgba(224, 180, 72, 0.18);
         }
 
         .account-download-grid {
@@ -475,10 +431,12 @@ export default async function AccountPage() {
 
         .account-download-card {
           padding: 1rem;
-          border: 1px solid rgba(17, 17, 17, 0.06);
+          border: 1px solid var(--store-border);
           border-radius: 20px;
-          background: #fff;
-          box-shadow: 0 14px 28px rgba(17, 17, 17, 0.04);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+            var(--store-surface);
+          box-shadow: var(--store-card-shadow);
         }
 
         .account-download-badge {
@@ -486,14 +444,15 @@ export default async function AccountPage() {
           margin-bottom: 0.55rem;
           padding: 0.26rem 0.65rem;
           border-radius: 999px;
-          background: #fff8e7;
-          color: #8f6a14;
+          background: var(--store-accent-wash);
+          color: var(--store-accent-strong);
           font-size: 0.72rem;
           font-weight: 800;
         }
 
         .account-download-card h3 {
           margin: 0 0 0.35rem;
+          color: var(--store-text);
           font-size: 0.98rem;
           font-weight: 800;
           line-height: 1.5;
@@ -501,7 +460,7 @@ export default async function AccountPage() {
 
         .account-download-card p {
           margin: 0;
-          color: #7e7e7e;
+          color: var(--store-text-muted);
           font-size: 0.82rem;
           line-height: 1.7;
         }
@@ -523,21 +482,9 @@ export default async function AccountPage() {
         }
 
         @media (max-width: 640px) {
-          .account-nav {
-            gap: 0.6rem;
-            padding: 0.72rem 0.9rem;
-          }
-
-          .account-brand span {
-            font-size: 0.98rem;
-          }
-
-          .account-nav-link {
-            font-size: 0.82rem;
-          }
-
           .account-main {
-            padding: 0.95rem 0.8rem 2.8rem;
+            width: min(calc(100% - 1rem), var(--store-content-width));
+            padding-top: 1rem;
           }
 
           .account-title {
@@ -581,19 +528,12 @@ export default async function AccountPage() {
         }
       `}</style>
 
-      <nav className="account-nav">
-        <Link href="/" className="account-brand">
-          <Image src="/logo.png" alt="المعضل" width={48} height={48} />
-          <span>المعضل</span>
-        </Link>
-
-        <div className="account-nav-actions">
-          <AccountNavLink className="account-nav-link" />
-          <Link href="/store" className="account-nav-link">
-            ← المتجر
-          </Link>
-        </div>
-      </nav>
+      <StorefrontHeader
+        actions={[
+          { href: '/store', label: 'المتجر', variant: 'muted' },
+          { href: '/account#orders', label: 'طلباتي', variant: 'primary' },
+        ]}
+      />
 
       <main className="account-main">
         <section className="account-hero">
@@ -604,7 +544,8 @@ export default async function AccountPage() {
             </h1>
             <p className="account-subtitle">
               جمعنا آخر الطلبات، التنزيلات، وروابط الوصول في مكان واحد بالاعتماد
-              على نفس البريد الإلكتروني الذي استخدمته عند الطلب.
+              على نفس البريد الإلكتروني الذي استخدمته عند الطلب، ضمن لوحة أنظف
+              وأكثر موثوقية بصريًا.
             </p>
           </div>
 
@@ -784,6 +725,8 @@ export default async function AccountPage() {
           )}
         </section>
       </main>
+
+      <StorefrontFooter note="منطقة الحساب تحتفظ بنفس اللغة البصرية الفاخرة لتدعم الثقة بعد الشراء." />
     </div>
   )
 }

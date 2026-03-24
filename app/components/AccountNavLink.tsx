@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import type { CSSProperties } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabaseBrowser } from '@/lib/supabase-browser'
@@ -103,25 +102,13 @@ export default function AccountNavLink({
       {isOpen && (
         <div
           role="menu"
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 0.55rem)',
-            insetInlineEnd: 0,
-            minWidth: '190px',
-            padding: '0.45rem',
-            borderRadius: '16px',
-            border: '1px solid rgba(17, 17, 17, 0.08)',
-            background: 'rgba(255, 255, 255, 0.98)',
-            boxShadow: '0 18px 30px rgba(17, 17, 17, 0.08)',
-            backdropFilter: 'blur(14px)',
-            zIndex: 120,
-          }}
+          className="storefront-account-menu"
         >
           <Link
             href="/account"
             role="menuitem"
             onClick={() => setIsOpen(false)}
-            style={menuItemStyle}
+            className="storefront-account-menu-item"
           >
             حسابي
           </Link>
@@ -129,7 +116,7 @@ export default function AccountNavLink({
             href="/account#orders"
             role="menuitem"
             onClick={() => setIsOpen(false)}
-            style={menuItemStyle}
+            className="storefront-account-menu-item"
           >
             طلباتي
           </Link>
@@ -138,12 +125,10 @@ export default function AccountNavLink({
             onClick={handleSignOut}
             role="menuitem"
             disabled={isSigningOut}
+            className="storefront-account-menu-item"
             style={{
-              ...menuItemStyle,
-              width: '100%',
-              border: 'none',
-              background: 'transparent',
               cursor: isSigningOut ? 'not-allowed' : 'pointer',
+              opacity: isSigningOut ? 0.72 : 1,
             }}
           >
             {isSigningOut ? 'جار تسجيل الخروج...' : 'تسجيل الخروج'}
@@ -152,19 +137,4 @@ export default function AccountNavLink({
       )}
     </div>
   )
-}
-
-const menuItemStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  width: '100%',
-  minHeight: '42px',
-  padding: '0.7rem 0.8rem',
-  borderRadius: '12px',
-  color: '#333',
-  textDecoration: 'none',
-  fontSize: '0.88rem',
-  fontWeight: 800,
-  fontFamily: "'Tajawal', Arial, sans-serif",
-  textAlign: 'right',
 }

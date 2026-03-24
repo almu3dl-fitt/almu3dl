@@ -33,15 +33,15 @@ export default function AddToCartButton({ product }: { product: CartItem }) {
       <div style={{ display: 'grid', gap: '0.65rem', width: '100%' }}>
         <span
           style={{
-            backgroundColor: '#f0fdf4',
-            color: '#16a34a',
-            padding: '0.8rem 1rem',
-            borderRadius: '12px',
+            backgroundColor: 'var(--store-success-wash)',
+            color: 'var(--store-success)',
+            padding: '0.85rem 1rem',
+            borderRadius: '16px',
             fontSize: '0.92rem',
-            fontWeight: 700,
+            fontWeight: 800,
             fontFamily: "'Tajawal', Arial, sans-serif",
             textAlign: 'center',
-            border: '1px solid #bbf7d0',
+            border: '1px solid rgba(61, 194, 108, 0.22)',
           }}
         >
           ✓ في السلة
@@ -49,18 +49,8 @@ export default function AddToCartButton({ product }: { product: CartItem }) {
 
         <Link
           href="/cart"
-          style={{
-            background: 'linear-gradient(135deg, #111111, #2d2d2d)',
-            color: '#fff',
-            padding: '0.9rem 1rem',
-            borderRadius: '12px',
-            fontSize: '0.94rem',
-            fontWeight: 700,
-            textDecoration: 'none',
-            fontFamily: "'Tajawal', Arial, sans-serif",
-            textAlign: 'center',
-            boxShadow: '0 14px 24px rgba(17, 17, 17, 0.12)',
-          }}
+          className="storefront-button-secondary"
+          style={{ width: '100%' }}
         >
           عرض السلة
         </Link>
@@ -71,25 +61,21 @@ export default function AddToCartButton({ product }: { product: CartItem }) {
   return (
     <button
       onClick={handleAdd}
+      className="storefront-button-primary"
       style={{
         background: product.is_free
-          ? 'linear-gradient(135deg, #22c55e, #16a34a)'
-          : 'linear-gradient(135deg, #D4A843, #B8912E)',
-        color: '#fff',
+          ? 'linear-gradient(135deg, #59d88b, #2fac5e)'
+          : 'linear-gradient(135deg, var(--store-accent-strong), var(--store-accent))',
+        color: product.is_free ? '#062612' : '#111',
         border: 'none',
-        padding: '0.95rem 1.25rem',
-        borderRadius: '14px',
-        fontSize: '1rem',
-        fontWeight: 800,
-        cursor: 'pointer',
-        fontFamily: "'Tajawal', Arial, sans-serif",
         width: '100%',
-        boxShadow: product.is_free
-          ? '0 16px 24px rgba(34, 197, 94, 0.22)'
-          : '0 16px 24px rgba(184, 145, 46, 0.24)',
+        boxShadow:
+          product.is_free
+            ? '0 18px 30px rgba(61, 194, 108, 0.22)'
+            : '0 18px 30px rgba(224, 180, 72, 0.22)',
       }}
     >
-      {product.is_free ? 'أضف للسلة (مجاني)' : 'أضف للسلة'}
+      {product.is_free ? 'أضف إلى السلة مجانًا' : 'أضف إلى السلة'}
     </button>
   )
 }

@@ -1,9 +1,9 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import AccountNavLink from '@/app/components/AccountNavLink'
+import StorefrontFooter from '@/app/components/StorefrontFooter'
+import StorefrontHeader from '@/app/components/StorefrontHeader'
 import { getCart, getCartTotal, type CartItem } from '@/lib/cart'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 
@@ -211,12 +211,13 @@ export default function CheckoutPage() {
     width: '100%',
     padding: '0.82rem 0.95rem',
     fontSize: '0.98rem',
-    border: '1px solid #ddd',
-    borderRadius: '13px',
+    border: '1px solid var(--store-border)',
+    borderRadius: '16px',
     fontFamily: "'Tajawal', Arial, sans-serif",
     direction: 'rtl' as const,
     outline: 'none',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    color: 'var(--store-text)',
   }
 
   if (isProcessing) {
@@ -228,13 +229,8 @@ export default function CheckoutPage() {
           @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 
           .checkout-page-shell {
-            min-height: 100vh;
-            background:
-              radial-gradient(circle at top right, rgba(212, 168, 67, 0.08), transparent 30%),
-              #fafafa;
             font-family: 'Tajawal', 'Arial', sans-serif;
             direction: rtl;
-            color: #1a1a1a;
           }
 
           .checkout-empty-state {
@@ -247,11 +243,13 @@ export default function CheckoutPage() {
           .checkout-empty-card {
             width: min(100%, 500px);
             padding: 1.9rem 1.25rem;
-            border: 1px solid rgba(17, 17, 17, 0.07);
+            border: 1px solid var(--store-border);
             border-radius: 24px;
-            background: rgba(255, 255, 255, 0.95);
+            background:
+              linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+              var(--store-surface);
             text-align: center;
-            box-shadow: 0 18px 32px rgba(17, 17, 17, 0.05);
+            box-shadow: var(--store-shadow);
           }
 
           .checkout-empty-card p {
@@ -270,7 +268,7 @@ export default function CheckoutPage() {
           }
 
           .checkout-empty-card .checkout-empty-copy {
-            color: #777;
+            color: var(--store-text-muted);
             line-height: 1.9;
           }
 
@@ -278,9 +276,9 @@ export default function CheckoutPage() {
             margin-top: 1rem;
             padding: 0.8rem 0.95rem;
             border-radius: 16px;
-            background: #fff8e7;
-            border: 1px solid #f0ddb0;
-            color: #8f6a14;
+            background: var(--store-accent-wash);
+            border: 1px solid var(--store-border-strong);
+            color: var(--store-accent-strong);
             font-size: 0.84rem;
             font-weight: 800;
             line-height: 1.8;
@@ -310,13 +308,8 @@ export default function CheckoutPage() {
           @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 
           .checkout-page-shell {
-            min-height: 100vh;
-            background:
-              radial-gradient(circle at top right, rgba(212, 168, 67, 0.08), transparent 30%),
-              #fafafa;
             font-family: 'Tajawal', 'Arial', sans-serif;
             direction: rtl;
-            color: #1a1a1a;
           }
 
           .checkout-empty-state {
@@ -329,11 +322,13 @@ export default function CheckoutPage() {
           .checkout-empty-card {
             width: min(100%, 460px);
             padding: 1.8rem 1.25rem;
-            border: 1px solid rgba(17, 17, 17, 0.07);
+            border: 1px solid var(--store-border);
             border-radius: 20px;
-            background: rgba(255, 255, 255, 0.94);
+            background:
+              linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+              var(--store-surface);
             text-align: center;
-            box-shadow: 0 18px 32px rgba(17, 17, 17, 0.05);
+            box-shadow: var(--store-shadow);
           }
 
           .checkout-empty-card p {
@@ -352,7 +347,7 @@ export default function CheckoutPage() {
           }
 
           .checkout-empty-card .checkout-empty-copy {
-            color: #888;
+            color: var(--store-text-muted);
             line-height: 1.8;
           }
 
@@ -364,8 +359,8 @@ export default function CheckoutPage() {
             min-height: 48px;
             padding: 0.75rem 1.2rem;
             border-radius: 14px;
-            background: linear-gradient(135deg, #d4a843, #b8912e);
-            color: #fff;
+            background: linear-gradient(135deg, #fff0bf, var(--store-accent));
+            color: #111;
             text-decoration: none;
             font-weight: 800;
           }
@@ -384,78 +379,19 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="checkout-page-shell">
+    <div className="checkout-page-shell storefront-shell">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 
         .checkout-page-shell {
-          min-height: 100vh;
-          background:
-            radial-gradient(circle at top right, rgba(212, 168, 67, 0.08), transparent 30%),
-            #fafafa;
           font-family: 'Tajawal', 'Arial', sans-serif;
           direction: rtl;
-          color: #1a1a1a;
-        }
-
-        .checkout-nav {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.72rem 0.9rem;
-          border-bottom: 1px solid rgba(17, 17, 17, 0.07);
-          background-color: rgba(250, 250, 250, 0.92);
-          backdrop-filter: blur(14px);
-        }
-
-        .checkout-brand {
-          display: flex;
-          align-items: center;
-          gap: 0.6rem;
-          text-decoration: none;
-        }
-
-        .checkout-brand img {
-          width: 40px;
-          height: 40px;
-          object-fit: contain;
-        }
-
-        .checkout-brand span {
-          font-size: 0.98rem;
-          font-weight: 900;
-          background: linear-gradient(135deg, #b8912e, #d4a843);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .checkout-nav-link {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 40px;
-          padding: 0.55rem 0.85rem;
-          border-radius: 12px;
-          border: 1px solid #ececec;
-          background: rgba(255, 255, 255, 0.9);
-          color: #555;
-          text-decoration: none;
-          font-size: 0.86rem;
-          font-weight: 700;
-        }
-
-        .checkout-nav-actions {
-          display: flex;
-          align-items: center;
-          gap: 0.7rem;
-          flex-wrap: wrap;
         }
 
         .checkout-main {
-          max-width: 1120px;
+          width: min(calc(100% - 2rem), var(--store-content-width));
           margin: 0 auto;
-          padding: 0.95rem 0.8rem 2.4rem;
+          padding: 1.4rem 0 0;
         }
 
         .checkout-hero {
@@ -464,6 +400,13 @@ export default function CheckoutPage() {
           align-items: stretch;
           gap: 0.75rem;
           margin-bottom: 1rem;
+          padding: 1.4rem;
+          border: 1px solid var(--store-border);
+          border-radius: var(--store-radius-xl);
+          background:
+            linear-gradient(135deg, rgba(224, 180, 72, 0.12), rgba(255, 255, 255, 0.02) 48%),
+            var(--store-surface);
+          box-shadow: var(--store-shadow);
         }
 
         .checkout-eyebrow {
@@ -471,15 +414,17 @@ export default function CheckoutPage() {
           margin-bottom: 0.55rem;
           padding: 0.32rem 0.72rem;
           border-radius: 999px;
-          background: rgba(184, 145, 46, 0.12);
-          color: #8f6a14;
+          border: 1px solid var(--store-border-strong);
+          background: var(--store-accent-wash);
+          color: var(--store-accent-strong);
           font-size: 0.76rem;
           font-weight: 800;
         }
 
         .checkout-hero h1 {
           margin: 0 0 0.45rem;
-          font-size: clamp(1.58rem, 5vw, 2.35rem);
+          color: var(--store-text);
+          font-size: clamp(1.75rem, 5vw, 2.6rem);
           font-weight: 900;
           line-height: 1.2;
         }
@@ -487,23 +432,22 @@ export default function CheckoutPage() {
         .checkout-hero p {
           max-width: 640px;
           margin: 0;
-          color: #777;
+          color: var(--store-text-muted);
           font-size: 0.92rem;
-          line-height: 1.7;
+          line-height: 1.8;
         }
 
         .checkout-hero-summary {
           min-width: 0;
-          padding: 0.85rem 0.9rem;
-          border: 1px solid rgba(184, 145, 46, 0.18);
-          border-radius: 16px;
-          background: #fff;
-          box-shadow: 0 16px 28px rgba(17, 17, 17, 0.05);
+          padding: 0.9rem 1rem;
+          border: 1px solid var(--store-border);
+          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.04);
         }
 
         .checkout-hero-summary span {
           display: block;
-          color: #777;
+          color: var(--store-text-muted);
           font-size: 0.86rem;
           font-weight: 700;
         }
@@ -511,7 +455,8 @@ export default function CheckoutPage() {
         .checkout-hero-summary strong {
           display: block;
           margin-top: 0.25rem;
-          font-size: 1.28rem;
+          color: var(--store-accent-strong);
+          font-size: 1.42rem;
           font-weight: 900;
         }
 
@@ -525,10 +470,12 @@ export default function CheckoutPage() {
         .checkout-form-card,
         .checkout-summary-card,
         .checkout-loading {
-          border: 1px solid rgba(17, 17, 17, 0.06);
-          border-radius: 20px;
-          background: rgba(255, 255, 255, 0.94);
-          box-shadow: 0 16px 30px rgba(17, 17, 17, 0.05);
+          border: 1px solid var(--store-border);
+          border-radius: 24px;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+            var(--store-surface);
+          box-shadow: var(--store-card-shadow);
         }
 
         .checkout-form-card {
@@ -538,7 +485,7 @@ export default function CheckoutPage() {
         .checkout-loading {
           padding: 1.7rem 1.2rem;
           text-align: center;
-          color: #888;
+          color: var(--store-text-muted);
           line-height: 1.8;
         }
 
@@ -548,13 +495,14 @@ export default function CheckoutPage() {
 
         .checkout-form-head h2 {
           margin: 0 0 0.3rem;
-          font-size: 1.08rem;
+          color: var(--store-text);
+          font-size: 1.12rem;
           font-weight: 900;
         }
 
         .checkout-form-head p {
           margin: 0;
-          color: #7d7d7d;
+          color: var(--store-text-muted);
           font-size: 0.86rem;
           line-height: 1.7;
         }
@@ -562,10 +510,10 @@ export default function CheckoutPage() {
         .checkout-error {
           margin-bottom: 0.9rem;
           padding: 0.75rem 0.9rem;
-          border: 1px solid #fecaca;
+          border: 1px solid rgba(255, 107, 107, 0.34);
           border-radius: 14px;
-          background: #fef2f2;
-          color: #dc2626;
+          background: rgba(255, 107, 107, 0.12);
+          color: #ff8f8f;
           font-size: 0.82rem;
           font-weight: 700;
         }
@@ -578,7 +526,7 @@ export default function CheckoutPage() {
         .checkout-field label {
           display: block;
           margin-bottom: 0.45rem;
-          color: #333;
+          color: var(--store-text);
           font-size: 0.88rem;
           font-weight: 700;
         }
@@ -586,7 +534,7 @@ export default function CheckoutPage() {
         .checkout-field small {
           display: block;
           margin-top: 0.4rem;
-          color: #959595;
+          color: var(--store-text-soft);
           font-size: 0.74rem;
           line-height: 1.6;
         }
@@ -596,9 +544,9 @@ export default function CheckoutPage() {
         }
 
         .checkout-input:focus {
-          border-color: rgba(184, 145, 46, 0.8) !important;
-          box-shadow: 0 0 0 4px rgba(212, 168, 67, 0.12);
-          background-color: #fffdf8 !important;
+          border-color: var(--store-border-strong) !important;
+          box-shadow: 0 0 0 4px rgba(224, 180, 72, 0.14);
+          background-color: rgba(255, 255, 255, 0.05) !important;
         }
 
         .checkout-submit {
@@ -614,7 +562,7 @@ export default function CheckoutPage() {
           cursor: pointer;
           opacity: 1;
           transition: opacity 0.15s ease;
-          box-shadow: 0 16px 26px rgba(184, 145, 46, 0.2);
+          box-shadow: 0 16px 26px rgba(224, 180, 72, 0.2);
         }
 
         .checkout-submit:disabled {
@@ -624,7 +572,7 @@ export default function CheckoutPage() {
 
         .checkout-secure {
           text-align: center;
-          color: #8a8a8a;
+          color: var(--store-text-soft);
           font-size: 0.78rem;
           font-weight: 700;
         }
@@ -645,13 +593,14 @@ export default function CheckoutPage() {
 
         .checkout-summary-header h2 {
           margin: 0 0 0.3rem;
+          color: var(--store-text);
           font-size: 1.08rem;
           font-weight: 900;
         }
 
         .checkout-summary-header p {
           margin: 0;
-          color: #7a7a7a;
+          color: var(--store-text-muted);
           font-size: 0.82rem;
           line-height: 1.7;
         }
@@ -666,25 +615,25 @@ export default function CheckoutPage() {
           align-items: flex-start;
           gap: 0.65rem;
           padding: 0.82rem 0.9rem;
-          border-top: 1px solid #f2f2f2;
+          border-top: 1px solid var(--store-divider);
         }
 
         .checkout-summary-item strong {
-          color: #1a1a1a;
+          color: var(--store-text);
           font-size: 0.9rem;
           font-weight: 800;
           line-height: 1.55;
         }
 
         .checkout-summary-item span {
-          color: #b8912e;
+          color: var(--store-accent-strong);
           font-size: 0.86rem;
           font-weight: 800;
           white-space: nowrap;
         }
 
         .checkout-summary-item span.is-free {
-          color: #16a34a;
+          color: #7ce6a5;
         }
 
         .checkout-summary-total {
@@ -693,7 +642,9 @@ export default function CheckoutPage() {
           align-items: center;
           gap: 1rem;
           padding: 0.9rem;
-          background: #111;
+          background:
+            linear-gradient(135deg, rgba(224, 180, 72, 0.18), rgba(17, 17, 17, 0.35) 55%),
+            #0d0f0d;
           color: #fff;
         }
 
@@ -712,41 +663,24 @@ export default function CheckoutPage() {
           display: grid;
           gap: 0.6rem;
           padding: 0.9rem;
-          border: 1px solid rgba(17, 17, 17, 0.06);
+          border: 1px solid var(--store-border);
           border-radius: 18px;
-          background: #fff;
-          box-shadow: 0 14px 26px rgba(17, 17, 17, 0.04);
+          background: rgba(255, 255, 255, 0.03);
+          box-shadow: var(--store-card-shadow);
         }
 
         .checkout-trust-item {
           display: flex;
           align-items: center;
           gap: 0.6rem;
-          color: #666;
+          color: var(--store-text-muted);
           font-size: 0.82rem;
           font-weight: 700;
         }
 
         @media (min-width: 641px) {
-          .checkout-nav {
-            padding: 0.82rem 1.2rem;
-          }
-
-          .checkout-brand img {
-            width: 46px;
-            height: 46px;
-          }
-
-          .checkout-brand span {
-            font-size: 1.1rem;
-          }
-
-          .checkout-nav-link {
-            font-size: 0.9rem;
-          }
-
           .checkout-main {
-            padding: 1.15rem 1rem 2.8rem;
+            padding-top: 1.4rem;
           }
 
           .checkout-form-card {
@@ -791,18 +725,13 @@ export default function CheckoutPage() {
         }
       `}</style>
 
-      <nav className="checkout-nav">
-        <Link href="/" className="checkout-brand">
-          <Image src="/logo.png" alt="المعضل" width={48} height={48} />
-          <span>المعضل</span>
-        </Link>
-        <div className="checkout-nav-actions">
-          <AccountNavLink className="checkout-nav-link" />
-          <Link href="/cart" className="checkout-nav-link">
-            ← السلة
-          </Link>
-        </div>
-      </nav>
+      <StorefrontHeader
+        showCart={false}
+        actions={[
+          { href: '/cart', label: 'السلة', variant: 'muted' },
+          { href: '/store', label: 'تسوق الآن', variant: 'primary' },
+        ]}
+      />
 
       <main className="checkout-main">
         <section className="checkout-hero">
@@ -810,8 +739,8 @@ export default function CheckoutPage() {
             <span className="checkout-eyebrow">إتمام الطلب</span>
             <h1>خطوة أخيرة ونرسل لك كل شيء مباشرة</h1>
             <p>
-              خففنا الفراغات ورتبنا النموذج والملخص بحيث تكون الصفحة ممتلئة
-              بالمعلومات المهمة فقط، خصوصًا على الجوال.
+              نموذج مختصر، ملخص أوضح، وتأكيد بصري أعلى حتى تبدو صفحة الدفع
+              احترافية وسهلة الإكمال على الجوال والكمبيوتر.
             </p>
           </div>
 
@@ -889,14 +818,15 @@ export default function CheckoutPage() {
                   style={{
                     background:
                       total === 0
-                        ? 'linear-gradient(135deg, #22c55e, #16a34a)'
-                        : 'linear-gradient(135deg, #D4A843, #B8912E)',
+                        ? 'linear-gradient(135deg, #7ce6a5, #3dc26c)'
+                        : 'linear-gradient(135deg, #fff0bf, var(--store-accent))',
+                    color: total === 0 ? '#062612' : '#111',
                   }}
                 >
                   {loading
                     ? '⏳ جاري المعالجة...'
                     : total === 0
-                      ? 'حمّل الآن مجانًا'
+                      ? 'ابدأ اليوم مجانًا'
                       : `ادفع ${total} ريال عبر PayPal`}
                 </button>
 
@@ -947,6 +877,8 @@ export default function CheckoutPage() {
           </div>
         )}
       </main>
+
+      <StorefrontFooter note="الدفع هنا مصمم ليبدو موثوقًا ومباشرًا مع الحفاظ على كل منطق الطلب الحالي." />
     </div>
   )
 }

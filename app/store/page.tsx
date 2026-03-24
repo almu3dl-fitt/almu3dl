@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
-import AccountNavLink from '@/app/components/AccountNavLink'
-import CartIcon from '@/app/components/CartIcon'
+import StorefrontFooter from '@/app/components/StorefrontFooter'
+import StorefrontHeader from '@/app/components/StorefrontHeader'
 import { getProductImageUrls } from '@/lib/product-images'
 import { supabase } from '@/lib/supabase'
 import { siteConfig } from '@/lib/site'
@@ -147,88 +147,19 @@ export default async function StorePage({
   ].filter(Boolean).length
 
   return (
-    <div className="store-page-shell">
+    <div className="store-page-shell storefront-shell">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 
         .store-page-shell {
-          min-height: 100vh;
-          background:
-            radial-gradient(circle at top right, rgba(212, 168, 67, 0.08), transparent 28%),
-            #fafafa;
-          color: #1a1a1a;
           font-family: 'Tajawal', 'Arial', sans-serif;
           direction: rtl;
         }
 
-        .store-nav {
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 0.85rem;
-          padding: 0.82rem 1.2rem;
-          border-bottom: 1px solid rgba(17, 17, 17, 0.07);
-          background-color: rgba(250, 250, 250, 0.92);
-          backdrop-filter: blur(14px);
-        }
-
-        .store-brand {
-          display: flex;
-          align-items: center;
-          gap: 0.65rem;
-          text-decoration: none;
-        }
-
-        .store-brand img {
-          width: 48px;
-          height: 48px;
-          object-fit: contain;
-        }
-
-        .store-brand span {
-          font-size: 1.16rem;
-          font-weight: 900;
-          background: linear-gradient(135deg, #b8912e, #d4a843);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .store-nav-actions {
-          display: flex;
-          align-items: center;
-          gap: 0.85rem;
-          flex-wrap: wrap;
-        }
-
-        .store-nav-link {
-          color: #555;
-          text-decoration: none;
-          font-size: 0.92rem;
-          font-weight: 600;
-        }
-
-        .store-nav-account {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 40px;
-          padding: 0.6rem 0.9rem;
-          border-radius: 12px;
-          border: 1px solid #f0ddb0;
-          background: #fff8e7;
-          color: #8f6a14;
-          text-decoration: none;
-          font-size: 0.84rem;
-          font-weight: 800;
-        }
-
         .store-main {
-          max-width: 1120px;
+          width: min(calc(100% - 2rem), var(--store-content-width));
           margin: 0 auto;
-          padding: 1.25rem 1.15rem 3.5rem;
+          padding: 1.4rem 0 0;
         }
 
         .store-hero {
@@ -237,69 +168,94 @@ export default async function StorePage({
           align-items: flex-end;
           gap: 1rem;
           margin-bottom: 1.2rem;
+          padding: 1.5rem;
+          border: 1px solid var(--store-border);
+          border-radius: var(--store-radius-xl);
+          background:
+            linear-gradient(135deg, rgba(224, 180, 72, 0.12), rgba(255, 255, 255, 0.02) 42%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+            var(--store-surface);
+          box-shadow: var(--store-shadow);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .store-hero::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+          background-size: 36px 36px;
+          mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.8), transparent 88%);
+          pointer-events: none;
         }
 
         .store-eyebrow {
           display: inline-flex;
           align-items: center;
           gap: 0.4rem;
-          margin-bottom: 0.6rem;
-          padding: 0.32rem 0.72rem;
+          margin-bottom: 0.8rem;
+          padding: 0.35rem 0.82rem;
           border-radius: 999px;
-          background: rgba(184, 145, 46, 0.12);
-          color: #8f6a14;
+          border: 1px solid var(--store-border-strong);
+          background: var(--store-accent-wash);
+          color: var(--store-accent-strong);
           font-size: 0.76rem;
           font-weight: 800;
         }
 
         .store-title {
           margin: 0 0 0.6rem;
-          font-size: clamp(1.9rem, 4vw, 2.8rem);
+          color: var(--store-text);
+          font-size: clamp(2rem, 4vw, 3.3rem);
           font-weight: 900;
-          line-height: 1.2;
+          line-height: 1.15;
         }
 
         .store-subtitle {
           max-width: 640px;
           margin: 0;
-          color: #6f6f6f;
+          color: var(--store-text-muted);
           font-size: 0.98rem;
-          line-height: 1.7;
+          line-height: 1.9;
         }
 
         .store-hero-summary {
           min-width: 196px;
-          padding: 0.9rem 1rem;
-          border: 1px solid rgba(184, 145, 46, 0.18);
-          border-radius: 16px;
-          background: #fff;
-          box-shadow: 0 16px 30px rgba(17, 17, 17, 0.04);
+          padding: 1rem;
+          border: 1px solid var(--store-border);
+          border-radius: 22px;
+          background: rgba(255, 255, 255, 0.04);
         }
 
         .store-hero-summary strong {
           display: block;
           margin-bottom: 0.3rem;
-          color: #1a1a1a;
-          font-size: 1.45rem;
+          color: var(--store-accent-strong);
+          font-size: 1.7rem;
           font-weight: 900;
         }
 
         .store-hero-summary span,
         .store-hero-summary p {
           margin: 0;
-          color: #777;
-          font-size: 0.9rem;
+          color: var(--store-text-muted);
+          font-size: 0.88rem;
         }
 
         .store-filter-panel {
           display: grid;
           gap: 0.85rem;
-          padding: 1rem;
+          padding: 1.15rem;
           margin-bottom: 1.3rem;
-          border: 1px solid rgba(17, 17, 17, 0.06);
-          border-radius: 18px;
-          background: rgba(255, 255, 255, 0.92);
-          box-shadow: 0 14px 30px rgba(17, 17, 17, 0.04);
+          border: 1px solid var(--store-border);
+          border-radius: var(--store-radius-lg);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+            rgba(255, 255, 255, 0.02);
+          box-shadow: var(--store-card-shadow);
         }
 
         .store-filter-head {
@@ -312,13 +268,14 @@ export default async function StorePage({
 
         .store-filter-head h2 {
           margin: 0;
-          font-size: 0.98rem;
+          color: var(--store-text);
+          font-size: 1rem;
           font-weight: 800;
         }
 
         .store-filter-head p {
           margin: 0.2rem 0 0;
-          color: #7b7b7b;
+          color: var(--store-text-soft);
           font-size: 0.84rem;
         }
 
@@ -326,10 +283,11 @@ export default async function StorePage({
           display: inline-flex;
           align-items: center;
           gap: 0.4rem;
-          padding: 0.35rem 0.65rem;
+          padding: 0.35rem 0.7rem;
           border-radius: 999px;
-          background: #f7f7f7;
-          color: #666;
+          border: 1px solid var(--store-border);
+          background: rgba(255, 255, 255, 0.04);
+          color: var(--store-text-muted);
           font-size: 0.76rem;
           font-weight: 700;
         }
@@ -340,7 +298,7 @@ export default async function StorePage({
         }
 
         .store-filter-label {
-          color: #6a6a6a;
+          color: var(--store-text-soft);
           font-size: 0.78rem;
           font-weight: 800;
         }
@@ -357,10 +315,10 @@ export default async function StorePage({
           justify-content: center;
           min-height: 38px;
           padding: 0.52rem 0.88rem;
-          border: 1px solid #e7e7e7;
+          border: 1px solid var(--store-border);
           border-radius: 999px;
-          background: #fcfcfc;
-          color: #555;
+          background: rgba(255, 255, 255, 0.03);
+          color: var(--store-text-muted);
           text-decoration: none;
           font-size: 0.84rem;
           font-weight: 700;
@@ -370,20 +328,20 @@ export default async function StorePage({
 
         .store-filter-pill:hover {
           transform: translateY(-1px);
-          border-color: #d3c18a;
-          box-shadow: 0 10px 18px rgba(212, 168, 67, 0.12);
+          border-color: var(--store-border-strong);
+          box-shadow: 0 10px 18px rgba(224, 180, 72, 0.12);
         }
 
         .store-filter-pill.is-active {
           border-color: transparent;
-          background: linear-gradient(135deg, #1a1a1a, #383838);
-          color: #fff;
+          background: linear-gradient(135deg, #fff0bf, var(--store-accent));
+          color: #111;
         }
 
         .store-filter-pill.is-highlighted {
-          color: #8f6a14;
-          background: #fff8e7;
-          border-color: #f0ddb0;
+          color: var(--store-accent-strong);
+          background: var(--store-accent-wash);
+          border-color: var(--store-border-strong);
         }
 
         .store-products-head {
@@ -397,20 +355,21 @@ export default async function StorePage({
 
         .store-products-head h3 {
           margin: 0;
-          font-size: 1.05rem;
+          color: var(--store-text);
+          font-size: 1.14rem;
           font-weight: 800;
         }
 
         .store-products-head p {
           margin: 0;
-          color: #767676;
+          color: var(--store-text-soft);
           font-size: 0.88rem;
         }
 
         .store-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-          gap: 0.9rem;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: 1rem;
         }
 
         .store-card {
@@ -418,18 +377,20 @@ export default async function StorePage({
           flex-direction: column;
           min-height: 100%;
           overflow: hidden;
-          border: 1px solid rgba(17, 17, 17, 0.06);
-          border-radius: 20px;
-          background: #fff;
-          box-shadow: 0 14px 30px rgba(17, 17, 17, 0.05);
+          border: 1px solid var(--store-border);
+          border-radius: 24px;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+            var(--store-surface);
+          box-shadow: var(--store-card-shadow);
           text-decoration: none;
           transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
         }
 
         .store-card:hover {
           transform: translateY(-3px);
-          border-color: rgba(184, 145, 46, 0.24);
-          box-shadow: 0 18px 34px rgba(17, 17, 17, 0.08);
+          border-color: var(--store-border-strong);
+          box-shadow: 0 22px 38px rgba(0, 0, 0, 0.35);
         }
 
         .store-card-visual {
@@ -437,15 +398,15 @@ export default async function StorePage({
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
-          min-height: 80px;
-          padding: 0.85rem 0.9rem 0.75rem;
+          min-height: 92px;
+          padding: 1rem 1rem 0.85rem;
           color: #fff;
         }
 
         .store-card-visual.has-image {
-          min-height: 230px;
-          padding: 0.78rem;
-          background: #111 !important;
+          min-height: 260px;
+          padding: 0.85rem;
+          background: #090909 !important;
         }
 
         .store-card-visual::after {
@@ -456,8 +417,8 @@ export default async function StorePage({
             45deg,
             transparent,
             transparent 18px,
-            rgba(255, 255, 255, 0.07) 18px,
-            rgba(255, 255, 255, 0.07) 19px
+            rgba(255, 255, 255, 0.06) 18px,
+            rgba(255, 255, 255, 0.06) 19px
           );
           pointer-events: none;
         }
@@ -478,15 +439,16 @@ export default async function StorePage({
         }
 
         .store-card-icon {
-          font-size: 1.7rem;
+          font-size: 2rem;
           line-height: 1;
         }
 
         .store-card-price-chip {
-          padding: 0.3rem 0.6rem;
+          padding: 0.36rem 0.68rem;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.18);
-          font-size: 0.74rem;
+          background: rgba(17, 17, 17, 0.38);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          font-size: 0.72rem;
           font-weight: 800;
         }
 
@@ -494,8 +456,8 @@ export default async function StorePage({
           display: flex;
           flex: 1;
           flex-direction: column;
-          gap: 0.7rem;
-          padding: 0.9rem 0.9rem 1rem;
+          gap: 0.76rem;
+          padding: 1rem;
         }
 
         .store-card-meta {
@@ -511,30 +473,30 @@ export default async function StorePage({
           min-height: 24px;
           padding: 0.2rem 0.55rem;
           border-radius: 999px;
-          background: #f5f5f5;
-          color: #6a6a6a;
+          background: rgba(255, 255, 255, 0.05);
+          color: var(--store-text-soft);
           font-size: 0.7rem;
           font-weight: 800;
         }
 
         .store-card-meta .store-card-category {
-          background: #fef7e5;
-          color: #9f7414;
+          background: var(--store-accent-wash);
+          color: var(--store-accent-strong);
         }
 
         .store-card-title {
           margin: 0;
-          color: #1a1a1a;
-          font-size: 1rem;
+          color: var(--store-text);
+          font-size: 1.04rem;
           font-weight: 800;
           line-height: 1.45;
         }
 
         .store-card-description {
           margin: 0;
-          color: #8a8a8a;
+          color: var(--store-text-muted);
           font-size: 0.84rem;
-          line-height: 1.6;
+          line-height: 1.75;
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 2;
@@ -553,20 +515,20 @@ export default async function StorePage({
         .store-card-price-label {
           display: block;
           margin-bottom: 0.2rem;
-          color: #9b9b9b;
+          color: var(--store-text-soft);
           font-size: 0.74rem;
           font-weight: 700;
         }
 
         .store-card-price {
-          color: #b8912e;
-          font-size: 1.18rem;
+          color: var(--store-accent-strong);
+          font-size: 1.22rem;
           font-weight: 900;
           line-height: 1;
         }
 
         .store-card-price.is-free {
-          color: #16a34a;
+          color: #7ce6a5;
         }
 
         .store-card-cta {
@@ -574,37 +536,28 @@ export default async function StorePage({
           align-items: center;
           justify-content: center;
           min-height: 44px;
-          padding: 0.72rem 1rem;
+          padding: 0.72rem 1.05rem;
           border-radius: 14px;
-          background: linear-gradient(135deg, #d4a843, #b8912e);
-          color: #fff;
-          box-shadow: 0 12px 22px rgba(184, 145, 46, 0.22);
+          background: linear-gradient(135deg, #fff0bf, var(--store-accent));
+          color: #111;
+          box-shadow: 0 12px 22px rgba(224, 180, 72, 0.18);
           font-size: 0.84rem;
           font-weight: 800;
           white-space: nowrap;
         }
 
         .store-card-cta.is-free {
-          background: linear-gradient(135deg, #22c55e, #16a34a);
+          background: linear-gradient(135deg, #86efac, #3dc26c);
         }
 
         .store-empty {
           padding: 3rem 1.5rem;
-          border: 1px dashed #ddd;
+          border: 1px dashed var(--store-border-strong);
           border-radius: 20px;
-          background: rgba(255, 255, 255, 0.7);
+          background: rgba(255, 255, 255, 0.02);
           text-align: center;
-          color: #8f8f8f;
+          color: var(--store-text-muted);
           line-height: 1.8;
-        }
-
-        .store-footer {
-          padding: 1.8rem 1.25rem;
-          border-top: 1px solid #eee;
-          background: #fff;
-          color: #bbb;
-          font-size: 0.8rem;
-          text-align: center;
         }
 
         @media (max-width: 820px) {
@@ -619,41 +572,15 @@ export default async function StorePage({
         }
 
         @media (max-width: 640px) {
-          .store-nav {
-            gap: 0.6rem;
-            padding: 0.72rem 0.9rem;
-          }
-
-          .store-brand img {
-            width: 40px;
-            height: 40px;
-          }
-
-          .store-brand span {
-            font-size: 0.98rem;
-          }
-
-          .store-nav-actions {
-            gap: 0.55rem;
-          }
-
-          .store-nav-link {
-            font-size: 0.82rem;
-          }
-
-          .store-nav-account {
-            min-height: 36px;
-            padding: 0.5rem 0.78rem;
-            font-size: 0.78rem;
-          }
-
           .store-main {
-            padding: 0.95rem 0.8rem 2.8rem;
+            width: min(calc(100% - 1rem), var(--store-content-width));
+            padding-top: 1rem;
           }
 
           .store-hero {
             gap: 0.8rem;
             margin-bottom: 1rem;
+            padding: 1rem;
           }
 
           .store-title {
@@ -674,7 +601,7 @@ export default async function StorePage({
 
           .store-filter-panel {
             gap: 0.7rem;
-            padding: 0.85rem 0.8rem;
+            padding: 0.95rem 0.85rem;
             border-radius: 16px;
           }
 
@@ -699,18 +626,18 @@ export default async function StorePage({
           }
 
           .store-card-visual {
-            min-height: 68px;
-            padding: 0.72rem 0.78rem 0.65rem;
+            min-height: 78px;
+            padding: 0.82rem 0.85rem 0.72rem;
           }
 
           .store-card-visual.has-image {
-            min-height: 200px;
-            padding: 0.7rem;
+            min-height: 220px;
+            padding: 0.78rem;
           }
 
           .store-card-body {
             gap: 0.62rem;
-            padding: 0.82rem 0.82rem 0.9rem;
+            padding: 0.9rem 0.9rem 1rem;
           }
 
           .store-card-footer {
@@ -728,44 +655,40 @@ export default async function StorePage({
         }
       `}</style>
 
-      <nav className="store-nav">
-        <Link href="/" className="store-brand">
-          <Image src="/logo.png" alt="المعضل" width={48} height={48} />
-          <span>المعضل</span>
-        </Link>
-
-        <div className="store-nav-actions">
-          <CartIcon />
-          <AccountNavLink className="store-nav-account" />
-          <Link href="/" className="store-nav-link">
-            الرئيسية
-          </Link>
-        </div>
-      </nav>
+      <StorefrontHeader
+        actions={[
+          { href: '/', label: 'الرئيسية', variant: 'muted' },
+          { href: '/store?free=true', label: 'العروض المجانية', variant: 'primary' },
+        ]}
+      />
 
       <main className="store-main">
         <section className="store-hero">
           <div>
             <span className="store-eyebrow">المتجر الرقمي</span>
-            <h1 className="store-title">اختر البرنامج اللي يناسب هدفك</h1>
+            <h1 className="store-title">اختَر البرنامج الذي يترجم هدفك إلى بداية فعلية</h1>
             <p className="store-subtitle">
-              رتّبنا الأقسام والفلاتر بحيث يكون التصفح أسرع على الجوال، مع بطاقات
-              أخف بصريًا وسعر أوضح من أول نظرة.
+              تجربة تصفح عربية بطابع رياضي فاخر: فلاتر واضحة، بطاقات أكثر جاذبية،
+              وتسلسل بصري يجعل القرار أسرع والثقة أعلى.
             </p>
           </div>
 
           <div className="store-hero-summary">
             <strong>{products.length}</strong>
             <span>برنامج ظاهر حسب الفلاتر الحالية</span>
-            <p>{activeFilterCount > 0 ? `${activeFilterCount} فلتر مفعّل الآن` : 'بدون أي فلترة إضافية'}</p>
+            <p>
+              {activeFilterCount > 0
+                ? `${activeFilterCount} فلتر مفعّل الآن`
+                : 'تصفح كامل للمتجر بدون قيود'}
+            </p>
           </div>
         </section>
 
         <section className="store-filter-panel">
           <div className="store-filter-head">
             <div>
-              <h2>فلترة أسرع</h2>
-              <p>الفئة، المستوى، والبرامج المجانية كلها صارت أوضح وأسهل على الموبايل.</p>
+              <h2>فلترة أسرع وأكثر وضوحًا</h2>
+              <p>حدّد الفئة والمستوى والبرامج المجانية ضمن شريط واضح ومهيأ للمس.</p>
             </div>
             <span className="store-filter-status">
               {activeFilterCount > 0 ? `${activeFilterCount} مفعّل` : 'كل البرامج'}
@@ -827,7 +750,7 @@ export default async function StorePage({
           <div className="store-products-head">
             <div>
               <h3>البرامج المتاحة</h3>
-              <p>بطاقات أقصر، معلومات أهم، وخطوة أوضح للوصول إلى صفحة المنتج.</p>
+              <p>بطاقات أخف بصريًا، معلومات أوضح، وإحساس أقرب لواجهة علامة رياضية احترافية.</p>
             </div>
             <p>{products.length} نتيجة</p>
           </div>
@@ -898,7 +821,7 @@ export default async function StorePage({
                         </div>
 
                         <span className={`store-card-cta ${product.is_free ? 'is-free' : ''}`}>
-                          {product.is_free ? 'حمّل الآن' : 'عرض التفاصيل'}
+                          {product.is_free ? 'ابدأ اليوم' : 'اكتشف الآن'}
                         </span>
                       </div>
                     </div>
@@ -910,9 +833,7 @@ export default async function StorePage({
         </section>
       </main>
 
-      <footer className="store-footer">
-        <p>© {new Date().getFullYear()} المعضل — Almu3dl. جميع الحقوق محفوظة.</p>
-      </footer>
+      <StorefrontFooter note="تجربة متجر مصممة للثقة، الوضوح، وسرعة الوصول إلى المنتج المناسب." />
     </div>
   )
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { getCart } from '@/lib/cart'
 
@@ -18,30 +19,11 @@ export default function CartIcon() {
   }, [])
 
   return (
-    <a href="/cart" style={{
-      position: 'relative',
-      textDecoration: 'none',
-      fontSize: '1.4rem',
-      color: '#555',
-    }}>
-      🛒
+    <Link href="/cart" className="storefront-cart-icon" aria-label="عرض السلة">
+      <span aria-hidden="true">🛒</span>
       {count > 0 && (
-        <span style={{
-          position: 'absolute',
-          top: '-8px',
-          right: '-10px',
-          backgroundColor: '#B8912E',
-          color: '#fff',
-          fontSize: '0.65rem',
-          fontWeight: 700,
-          width: '18px',
-          height: '18px',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>{count}</span>
+        <span className="storefront-cart-count">{count}</span>
       )}
-    </a>
+    </Link>
   )
 }

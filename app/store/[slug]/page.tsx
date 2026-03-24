@@ -3,10 +3,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { cache } from 'react'
 import { notFound } from 'next/navigation'
-import AccountNavLink from '@/app/components/AccountNavLink'
-import CartIcon from '@/app/components/CartIcon'
 import AddToCartButton from '@/app/components/AddToCartButton'
 import ProductReviewForm from '@/app/components/ProductReviewForm'
+import StorefrontFooter from '@/app/components/StorefrontFooter'
+import StorefrontHeader from '@/app/components/StorefrontHeader'
 import { getCustomerUser } from '@/lib/account-auth'
 import { getApprovedProductReviews, getProductReviewAccess } from '@/lib/customer-reviews'
 import { getProductImages } from '@/lib/product-images'
@@ -41,27 +41,27 @@ const categoryThemes: Record<
 > = {
   nutrition: {
     icon: '🥗',
-    gradient: 'linear-gradient(135deg, #D4A843, #B8912E)',
-    accent: '#B8912E',
-    surface: '#fff7e8',
+    gradient: 'linear-gradient(135deg, #e0b448, #6e4f12)',
+    accent: '#e0b448',
+    surface: 'rgba(224, 180, 72, 0.14)',
   },
   workouts: {
     icon: '🏋🏻',
-    gradient: 'linear-gradient(135deg, #111111, #2f2f2f)',
-    accent: '#1a1a1a',
-    surface: '#f4f4f4',
+    gradient: 'linear-gradient(135deg, #0b0d0b, #272b27)',
+    accent: '#f5cf66',
+    surface: 'rgba(255, 255, 255, 0.05)',
   },
   therapy: {
     icon: '🩺',
-    gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-    accent: '#2563eb',
-    surface: '#eff6ff',
+    gradient: 'linear-gradient(135deg, #1c2427, #435056)',
+    accent: '#d8c17a',
+    surface: 'rgba(216, 193, 122, 0.12)',
   },
   bundles: {
     icon: '📦',
-    gradient: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-    accent: '#7c3aed',
-    surface: '#f5f3ff',
+    gradient: 'linear-gradient(135deg, #17130a, #6a4c0f)',
+    accent: '#f0c45a',
+    surface: 'rgba(240, 196, 90, 0.14)',
   },
 }
 
@@ -142,9 +142,9 @@ export default async function ProductPage({
   const theme = product.is_free
     ? {
         icon: '🎁',
-        gradient: 'linear-gradient(135deg, #22c55e, #16a34a)',
-        accent: '#16a34a',
-        surface: '#ecfdf3',
+        gradient: 'linear-gradient(135deg, #193922, #3dc26c)',
+        accent: '#7ce6a5',
+        surface: 'rgba(61, 194, 108, 0.14)',
       }
     : categoryThemes[product.categories?.slug ?? 'bundles'] ?? categoryThemes.bundles
 
@@ -180,88 +180,19 @@ export default async function ProductPage({
   ]
 
   return (
-    <div className="product-page-shell">
+    <div className="product-page-shell storefront-shell">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 
         .product-page-shell {
-          min-height: 100vh;
-          background:
-            radial-gradient(circle at top right, rgba(212, 168, 67, 0.08), transparent 28%),
-            #fafafa;
-          color: #1a1a1a;
           font-family: 'Tajawal', 'Arial', sans-serif;
           direction: rtl;
         }
 
-        .product-nav {
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 0.85rem;
-          padding: 0.82rem 1.2rem;
-          border-bottom: 1px solid rgba(17, 17, 17, 0.07);
-          background-color: rgba(250, 250, 250, 0.92);
-          backdrop-filter: blur(14px);
-        }
-
-        .product-brand {
-          display: flex;
-          align-items: center;
-          gap: 0.65rem;
-          text-decoration: none;
-        }
-
-        .product-brand img {
-          width: 48px;
-          height: 48px;
-          object-fit: contain;
-        }
-
-        .product-brand span {
-          font-size: 1.16rem;
-          font-weight: 900;
-          background: linear-gradient(135deg, #b8912e, #d4a843);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .product-nav-actions {
-          display: flex;
-          align-items: center;
-          gap: 0.85rem;
-          flex-wrap: wrap;
-        }
-
-        .product-nav-link {
-          color: #555;
-          text-decoration: none;
-          font-size: 0.92rem;
-          font-weight: 700;
-        }
-
-        .product-nav-account {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 40px;
-          padding: 0.6rem 0.9rem;
-          border-radius: 12px;
-          border: 1px solid #f0ddb0;
-          background: #fff8e7;
-          color: #8f6a14;
-          text-decoration: none;
-          font-size: 0.84rem;
-          font-weight: 800;
-        }
-
         .product-main {
-          max-width: 1120px;
+          width: min(calc(100% - 2rem), var(--store-content-width));
           margin: 0 auto;
-          padding: 1.25rem 1.15rem 3.5rem;
+          padding: 1.4rem 0 0;
         }
 
         .product-breadcrumbs {
@@ -269,14 +200,14 @@ export default async function ProductPage({
           align-items: center;
           gap: 0.45rem;
           margin-bottom: 1rem;
-          color: #8a8a8a;
+          color: var(--store-text-soft);
           font-size: 0.82rem;
           font-weight: 700;
           flex-wrap: wrap;
         }
 
         .product-breadcrumbs a {
-          color: #b8912e;
+          color: var(--store-accent-strong);
           text-decoration: none;
         }
 
@@ -295,10 +226,12 @@ export default async function ProductPage({
         .product-hero-card,
         .product-detail-card,
         .product-purchase-card {
-          border: 1px solid rgba(17, 17, 17, 0.06);
-          border-radius: 22px;
-          background: rgba(255, 255, 255, 0.96);
-          box-shadow: 0 16px 30px rgba(17, 17, 17, 0.05);
+          border: 1px solid var(--store-border);
+          border-radius: 26px;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+            var(--store-surface);
+          box-shadow: var(--store-card-shadow);
         }
 
         .product-hero-card {
@@ -310,7 +243,7 @@ export default async function ProductPage({
           display: flex;
           align-items: flex-end;
           justify-content: space-between;
-          min-height: 210px;
+          min-height: 240px;
           padding: 1.35rem;
           color: #fff;
         }
@@ -318,9 +251,9 @@ export default async function ProductPage({
         .product-visual.has-image {
           align-items: flex-start;
           justify-content: flex-end;
-          min-height: 420px;
+          min-height: 460px;
           padding: 1rem;
-          background: #111 !important;
+          background: #080908 !important;
         }
 
         .product-visual::after {
@@ -331,8 +264,8 @@ export default async function ProductPage({
             45deg,
             transparent,
             transparent 22px,
-            rgba(255, 255, 255, 0.07) 22px,
-            rgba(255, 255, 255, 0.07) 23px
+            rgba(255, 255, 255, 0.06) 22px,
+            rgba(255, 255, 255, 0.06) 23px
           );
           pointer-events: none;
         }
@@ -358,10 +291,11 @@ export default async function ProductPage({
         }
 
         .product-visual-chip {
-          padding: 0.45rem 0.8rem;
+          padding: 0.5rem 0.82rem;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.18);
-          font-size: 0.8rem;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(17, 17, 17, 0.38);
+          font-size: 0.78rem;
           font-weight: 800;
         }
 
@@ -383,8 +317,8 @@ export default async function ProductPage({
           aspect-ratio: 1 / 1;
           overflow: hidden;
           border-radius: 16px;
-          border: 1px solid rgba(17, 17, 17, 0.08);
-          background: #f4f4f4;
+          border: 1px solid var(--store-border);
+          background: rgba(255, 255, 255, 0.03);
         }
 
         .product-gallery-item img {
@@ -398,22 +332,24 @@ export default async function ProductPage({
           width: fit-content;
           padding: 0.34rem 0.78rem;
           border-radius: 999px;
-          background: rgba(184, 145, 46, 0.12);
-          color: #8f6a14;
+          border: 1px solid var(--store-border-strong);
+          background: var(--store-accent-wash);
+          color: var(--store-accent-strong);
           font-size: 0.78rem;
           font-weight: 800;
         }
 
         .product-title {
           margin: 0;
-          font-size: clamp(1.9rem, 4vw, 2.65rem);
+          color: var(--store-text);
+          font-size: clamp(2rem, 4vw, 3rem);
           font-weight: 900;
-          line-height: 1.25;
+          line-height: 1.18;
         }
 
         .product-lead {
           margin: 0;
-          color: #6f6f6f;
+          color: var(--store-text-muted);
           font-size: 0.98rem;
           line-height: 1.85;
         }
@@ -430,8 +366,8 @@ export default async function ProductPage({
           min-height: 30px;
           padding: 0.32rem 0.72rem;
           border-radius: 999px;
-          background: #f5f5f5;
-          color: #656565;
+          background: rgba(255, 255, 255, 0.04);
+          color: var(--store-text-muted);
           font-size: 0.76rem;
           font-weight: 800;
         }
@@ -450,20 +386,21 @@ export default async function ProductPage({
         .product-highlight {
           padding: 0.9rem;
           border-radius: 16px;
-          background: #fcfbf8;
-          border: 1px solid rgba(17, 17, 17, 0.05);
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--store-border);
         }
 
         .product-highlight strong {
           display: block;
           margin: 0.25rem 0 0.3rem;
+          color: var(--store-text);
           font-size: 0.94rem;
           font-weight: 800;
         }
 
         .product-highlight p {
           margin: 0;
-          color: #7d7d7d;
+          color: var(--store-text-muted);
           font-size: 0.82rem;
           line-height: 1.7;
         }
@@ -475,13 +412,17 @@ export default async function ProductPage({
           gap: 1rem;
           padding: 1.2rem;
           background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(251, 250, 246, 0.98));
+            linear-gradient(180deg, rgba(224, 180, 72, 0.09), rgba(255, 255, 255, 0.02)),
+            var(--store-surface);
         }
 
         .product-price-block {
           padding: 1rem;
-          border-radius: 18px;
-          background: #111;
+          border-radius: 22px;
+          border: 1px solid var(--store-border);
+          background:
+            linear-gradient(135deg, rgba(224, 180, 72, 0.18), rgba(17, 17, 17, 0.35) 55%),
+            #0d0f0d;
           color: #fff;
         }
 
@@ -506,7 +447,7 @@ export default async function ProductPage({
 
         .product-price-block p {
           margin: 0;
-          color: rgba(255, 255, 255, 0.76);
+          color: rgba(255, 255, 255, 0.74);
           font-size: 0.84rem;
           line-height: 1.7;
         }
@@ -523,14 +464,14 @@ export default async function ProductPage({
           display: flex;
           align-items: center;
           gap: 0.65rem;
-          color: #666;
+          color: var(--store-text-muted);
           font-size: 0.86rem;
           font-weight: 700;
         }
 
         .product-purchase-note {
           margin: 0;
-          color: #898989;
+          color: var(--store-text-soft);
           font-size: 0.78rem;
           line-height: 1.7;
           text-align: center;
@@ -549,13 +490,14 @@ export default async function ProductPage({
 
         .product-detail-card h2 {
           margin: 0 0 0.5rem;
-          font-size: 1.15rem;
+          color: var(--store-text);
+          font-size: 1.18rem;
           font-weight: 900;
         }
 
         .product-detail-card p {
           margin: 0;
-          color: #6e6e6e;
+          color: var(--store-text-muted);
           font-size: 0.94rem;
           line-height: 1.9;
         }
@@ -576,9 +518,9 @@ export default async function ProductPage({
         .product-fit-list li {
           padding: 0.85rem 0.9rem;
           border-radius: 16px;
-          background: #fcfbf8;
-          border: 1px solid rgba(17, 17, 17, 0.05);
-          color: #555;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--store-border);
+          color: var(--store-text-muted);
           font-size: 0.88rem;
           line-height: 1.7;
           font-weight: 700;
@@ -597,8 +539,8 @@ export default async function ProductPage({
           min-height: 28px;
           padding: 0.28rem 0.7rem;
           border-radius: 999px;
-          background: #fef7e5;
-          color: #a16f00;
+          background: var(--store-accent-wash);
+          color: var(--store-accent-strong);
           font-size: 0.76rem;
           font-weight: 800;
         }
@@ -612,10 +554,12 @@ export default async function ProductPage({
           grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
           gap: 1rem;
           padding: 1rem;
-          border: 1px solid rgba(17, 17, 17, 0.06);
+          border: 1px solid var(--store-border);
           border-radius: 24px;
-          background: linear-gradient(180deg, #fff, #fcfbf8);
-          box-shadow: 0 14px 26px rgba(17, 17, 17, 0.04);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+            var(--store-surface);
+          box-shadow: var(--store-card-shadow);
         }
 
         .product-review-score {
@@ -625,20 +569,20 @@ export default async function ProductPage({
         }
 
         .product-review-score strong {
-          color: #1a1a1a;
+          color: var(--store-text);
           font-size: 2.2rem;
           font-weight: 900;
           line-height: 1;
         }
 
         .product-review-score span {
-          color: #7b7b7b;
+          color: var(--store-text-muted);
           font-size: 0.86rem;
           line-height: 1.8;
         }
 
         .product-review-stars {
-          color: #b8912e;
+          color: var(--store-accent-strong);
           letter-spacing: 0.16rem;
           font-size: 1.08rem;
           font-weight: 900;
@@ -652,19 +596,20 @@ export default async function ProductPage({
         .product-review-card {
           padding: 0.95rem;
           border-radius: 18px;
-          border: 1px solid #efefef;
-          background: #fff;
+          border: 1px solid var(--store-border);
+          background: rgba(255, 255, 255, 0.03);
         }
 
         .product-review-card h3 {
           margin: 0;
+          color: var(--store-text);
           font-size: 0.95rem;
           font-weight: 900;
         }
 
         .product-review-card p {
           margin: 0.4rem 0 0;
-          color: #6f6f6f;
+          color: var(--store-text-muted);
           font-size: 0.88rem;
           line-height: 1.9;
         }
@@ -679,7 +624,7 @@ export default async function ProductPage({
         }
 
         .product-review-date {
-          color: #9a9a9a;
+          color: var(--store-text-soft);
           font-size: 0.76rem;
           font-weight: 700;
         }
@@ -687,9 +632,9 @@ export default async function ProductPage({
         .product-review-empty {
           padding: 1rem;
           border-radius: 18px;
-          border: 1px dashed #ddd;
-          background: rgba(255, 255, 255, 0.9);
-          color: #8b8b8b;
+          border: 1px dashed var(--store-border-strong);
+          background: rgba(255, 255, 255, 0.02);
+          color: var(--store-text-muted);
           line-height: 1.8;
         }
 
@@ -698,26 +643,19 @@ export default async function ProductPage({
           gap: 0.9rem;
           margin-top: 1rem;
           padding: 1rem;
-          border: 1px solid rgba(17, 17, 17, 0.06);
+          border: 1px solid var(--store-border);
           border-radius: 24px;
-          background: rgba(255, 255, 255, 0.96);
-          box-shadow: 0 14px 26px rgba(17, 17, 17, 0.04);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+            var(--store-surface);
+          box-shadow: var(--store-card-shadow);
         }
 
         .product-review-action h2 {
           margin: 0;
+          color: var(--store-text);
           font-size: 1.08rem;
           font-weight: 900;
-        }
-
-        .product-footer {
-          padding: 1.8rem 1.25rem;
-          border-top: 1px solid #eee;
-          background: #fff;
-          color: #bbb;
-          font-size: 0.8rem;
-          text-align: center;
-          margin-top: 3rem;
         }
 
         @media (max-width: 960px) {
@@ -733,36 +671,9 @@ export default async function ProductPage({
         }
 
         @media (max-width: 640px) {
-          .product-nav {
-            gap: 0.6rem;
-            padding: 0.72rem 0.9rem;
-          }
-
-          .product-brand img {
-            width: 40px;
-            height: 40px;
-          }
-
-          .product-brand span {
-            font-size: 0.98rem;
-          }
-
-          .product-nav-actions {
-            gap: 0.55rem;
-          }
-
-          .product-nav-link {
-            font-size: 0.82rem;
-          }
-
-          .product-nav-account {
-            min-height: 36px;
-            padding: 0.5rem 0.78rem;
-            font-size: 0.78rem;
-          }
-
           .product-main {
-            padding: 0.95rem 0.8rem 2.8rem;
+            width: min(calc(100% - 1rem), var(--store-content-width));
+            padding-top: 1rem;
           }
 
           .product-breadcrumbs {
@@ -776,7 +687,7 @@ export default async function ProductPage({
           }
 
           .product-visual.has-image {
-            min-height: 300px;
+            min-height: 340px;
             padding: 0.82rem;
           }
 
@@ -823,20 +734,12 @@ export default async function ProductPage({
         }
       `}</style>
 
-      <nav className="product-nav">
-        <Link href="/" className="product-brand">
-          <Image src="/logo.png" alt="المعضل" width={48} height={48} />
-          <span>المعضل</span>
-        </Link>
-
-        <div className="product-nav-actions">
-          <CartIcon />
-          <AccountNavLink className="product-nav-account" />
-          <Link href="/store" className="product-nav-link">
-            ← المتجر
-          </Link>
-        </div>
-      </nav>
+      <StorefrontHeader
+        actions={[
+          { href: '/store', label: 'المتجر', variant: 'muted' },
+          { href: '/cart', label: 'السلة', variant: 'primary' },
+        ]}
+      />
 
       <main className="product-main">
         <div className="product-breadcrumbs">
@@ -873,7 +776,7 @@ export default async function ProductPage({
                   <span className="product-visual-icon">{theme.icon}</span>
                 )}
                 <span className="product-visual-chip">
-                  {product.is_free ? 'إضافة مجانية' : 'تحميل فوري بعد الدفع'}
+                  {product.is_free ? 'إضافة مجانية فورية' : 'تحميل فوري بعد الدفع'}
                 </span>
               </div>
 
@@ -956,7 +859,8 @@ export default async function ProductPage({
             />
 
             <p className="product-purchase-note">
-              إذا أضفت أكثر من برنامج يمكنك إكمالها كلها من السلة بنفس التجربة المختصرة.
+              إذا أضفت أكثر من برنامج يمكنك إكمالها كلها من السلة ضمن نفس الرحلة
+              المختصرة والواضحة.
             </p>
           </aside>
         </section>
@@ -1050,9 +954,7 @@ export default async function ProductPage({
         </section>
       </main>
 
-      <footer className="product-footer">
-        <p>© {new Date().getFullYear()} المعضل — Almu3dl. جميع الحقوق محفوظة.</p>
-      </footer>
+      <StorefrontFooter note="صفحة منتج تركز على القرار: قيمة واضحة، ثقة أعلى، وCTA مباشر." />
     </div>
   )
 }

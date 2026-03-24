@@ -1,8 +1,8 @@
 'use client'
 
-import Image from 'next/image'
-import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import StorefrontFooter from '@/app/components/StorefrontFooter'
+import StorefrontHeader from '@/app/components/StorefrontHeader'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 
 const LOGIN_STORAGE_KEY = 'almu3dl_account_login_state'
@@ -570,70 +570,31 @@ export default function AccountLoginClient() {
   }
 
   return (
-    <div className="account-login-shell">
+    <div className="account-login-shell storefront-shell">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 
         .account-login-shell {
-          min-height: 100vh;
-          background:
-            radial-gradient(circle at top right, rgba(212, 168, 67, 0.08), transparent 28%),
-            #fafafa;
-          color: #1a1a1a;
           font-family: 'Tajawal', 'Arial', sans-serif;
           direction: rtl;
-        }
-
-        .account-login-nav {
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 0.85rem;
-          padding: 0.82rem 1.2rem;
-          border-bottom: 1px solid rgba(17, 17, 17, 0.07);
-          background-color: rgba(250, 250, 250, 0.92);
-          backdrop-filter: blur(14px);
-        }
-
-        .account-login-brand {
-          display: flex;
-          align-items: center;
-          gap: 0.65rem;
-          text-decoration: none;
-        }
-
-        .account-login-brand span {
-          font-size: 1.16rem;
-          font-weight: 900;
-          background: linear-gradient(135deg, #b8912e, #d4a843);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .account-login-nav-link {
-          color: #555;
-          text-decoration: none;
-          font-size: 0.92rem;
-          font-weight: 700;
         }
 
         .account-login-main {
           display: grid;
           place-items: center;
-          min-height: calc(100vh - 82px);
-          padding: 1.2rem;
+          min-height: calc(100vh - 180px);
+          padding: 1.5rem 1rem 0;
         }
 
         .account-login-card {
           width: min(100%, 560px);
-          padding: 1.3rem 1rem;
-          border: 1px solid rgba(17, 17, 17, 0.06);
-          border-radius: 24px;
-          background: rgba(255, 255, 255, 0.96);
-          box-shadow: 0 18px 34px rgba(17, 17, 17, 0.05);
+          padding: 1.5rem 1.15rem;
+          border: 1px solid var(--store-border);
+          border-radius: 28px;
+          background:
+            linear-gradient(135deg, rgba(224, 180, 72, 0.12), rgba(255, 255, 255, 0.02) 48%),
+            var(--store-surface);
+          box-shadow: var(--store-shadow);
         }
 
         .account-login-eyebrow {
@@ -641,22 +602,24 @@ export default function AccountLoginClient() {
           margin-bottom: 0.7rem;
           padding: 0.32rem 0.72rem;
           border-radius: 999px;
-          background: rgba(184, 145, 46, 0.12);
-          color: #8f6a14;
+          border: 1px solid var(--store-border-strong);
+          background: var(--store-accent-wash);
+          color: var(--store-accent-strong);
           font-size: 0.76rem;
           font-weight: 800;
         }
 
         .account-login-card h1 {
           margin: 0 0 0.45rem;
-          font-size: clamp(1.7rem, 4vw, 2.25rem);
+          color: var(--store-text);
+          font-size: clamp(1.9rem, 4vw, 2.5rem);
           font-weight: 900;
           line-height: 1.2;
         }
 
         .account-login-card p {
           margin: 0;
-          color: #787878;
+          color: var(--store-text-muted);
           font-size: 0.95rem;
           line-height: 1.8;
         }
@@ -665,19 +628,19 @@ export default function AccountLoginClient() {
           margin-top: 1.15rem;
           padding: 1rem;
           border-radius: 20px;
-          border: 1px solid rgba(184, 145, 46, 0.12);
-          background: linear-gradient(180deg, #fff, #fcfbf8);
+          border: 1px solid var(--store-border);
+          background: rgba(255, 255, 255, 0.04);
         }
 
         .account-login-panel h2 {
           margin: 0 0 0.35rem;
           font-size: 1.08rem;
           font-weight: 900;
-          color: #1a1a1a;
+          color: var(--store-text);
         }
 
         .account-login-panel p {
-          color: #767676;
+          color: var(--store-text-muted);
           font-size: 0.88rem;
           line-height: 1.8;
         }
@@ -693,21 +656,21 @@ export default function AccountLoginClient() {
         }
 
         .account-login-success {
-          border: 1px solid #bbf7d0;
-          background: #f0fdf4;
-          color: #15803d;
+          border: 1px solid rgba(61, 194, 108, 0.24);
+          background: var(--store-success-wash);
+          color: #7ce6a5;
         }
 
         .account-login-notice {
-          border: 1px solid #f0ddb0;
-          background: #fff8e7;
-          color: #8f6a14;
+          border: 1px solid var(--store-border-strong);
+          background: var(--store-accent-wash);
+          color: var(--store-accent-strong);
         }
 
         .account-login-error {
-          border: 1px solid #fecaca;
-          background: #fef2f2;
-          color: #dc2626;
+          border: 1px solid rgba(255, 107, 107, 0.34);
+          background: rgba(255, 107, 107, 0.12);
+          color: #ff8f8f;
         }
 
         .account-login-form {
@@ -719,7 +682,7 @@ export default function AccountLoginClient() {
         .account-login-field label {
           display: block;
           margin-bottom: 0.45rem;
-          color: #333;
+          color: var(--store-text);
           font-size: 0.9rem;
           font-weight: 700;
         }
@@ -727,9 +690,10 @@ export default function AccountLoginClient() {
         .account-login-input {
           width: 100%;
           padding: 0.9rem 0.95rem;
-          border: 1px solid #ddd;
-          border-radius: 14px;
-          background: #fff;
+          border: 1px solid var(--store-border);
+          border-radius: 16px;
+          background: rgba(255, 255, 255, 0.03);
+          color: var(--store-text);
           font-size: 0.98rem;
           font-family: 'Tajawal', Arial, sans-serif;
           direction: rtl;
@@ -738,8 +702,8 @@ export default function AccountLoginClient() {
         }
 
         .account-login-input:focus {
-          border-color: rgba(184, 145, 46, 0.8);
-          box-shadow: 0 0 0 4px rgba(212, 168, 67, 0.12);
+          border-color: var(--store-border-strong);
+          box-shadow: 0 0 0 4px rgba(224, 180, 72, 0.14);
         }
 
         .account-login-otp-group {
@@ -751,10 +715,10 @@ export default function AccountLoginClient() {
         .account-login-otp-input {
           width: 100%;
           min-height: 58px;
-          border: 1px solid #ddd;
+          border: 1px solid var(--store-border);
           border-radius: 16px;
-          background: #fff;
-          color: #1a1a1a;
+          background: rgba(255, 255, 255, 0.03);
+          color: var(--store-text);
           text-align: center;
           font-size: 1.3rem;
           font-weight: 900;
@@ -763,8 +727,8 @@ export default function AccountLoginClient() {
         }
 
         .account-login-otp-input:focus {
-          border-color: rgba(184, 145, 46, 0.8);
-          box-shadow: 0 0 0 4px rgba(212, 168, 67, 0.12);
+          border-color: var(--store-border-strong);
+          box-shadow: 0 0 0 4px rgba(224, 180, 72, 0.14);
           transform: translateY(-1px);
         }
 
@@ -773,19 +737,19 @@ export default function AccountLoginClient() {
           gap: 0.55rem;
           padding: 0.85rem 0.95rem;
           border-radius: 16px;
-          background: #fff;
-          border: 1px solid #f0f0f0;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--store-border);
         }
 
         .account-login-meta strong {
-          color: #1a1a1a;
+          color: var(--store-text);
           font-size: 0.92rem;
           font-weight: 900;
           word-break: break-word;
         }
 
         .account-login-meta span {
-          color: #7d7d7d;
+          color: var(--store-text-muted);
           font-size: 0.8rem;
           line-height: 1.8;
         }
@@ -795,9 +759,9 @@ export default function AccountLoginClient() {
           gap: 0.25rem;
           padding: 0.85rem 0.95rem;
           border-radius: 16px;
-          background: #fff8e7;
-          border: 1px solid #f0ddb0;
-          color: #8f6a14;
+          background: var(--store-accent-wash);
+          border: 1px solid var(--store-border-strong);
+          color: var(--store-accent-strong);
           font-size: 0.82rem;
           line-height: 1.8;
           font-weight: 800;
@@ -815,15 +779,15 @@ export default function AccountLoginClient() {
         }
 
         .account-login-submit {
-          background: linear-gradient(135deg, #d4a843, #b8912e);
-          color: #fff;
-          box-shadow: 0 16px 24px rgba(184, 145, 46, 0.22);
+          background: linear-gradient(135deg, #fff0bf, var(--store-accent));
+          color: #111;
+          box-shadow: 0 16px 24px rgba(224, 180, 72, 0.22);
         }
 
         .account-login-secondary {
-          background: #fff;
-          border: 1px solid #e8e8e8;
-          color: #555;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--store-border);
+          color: var(--store-text);
         }
 
         .account-login-submit:disabled,
@@ -838,19 +802,6 @@ export default function AccountLoginClient() {
         }
 
         @media (max-width: 640px) {
-          .account-login-nav {
-            gap: 0.6rem;
-            padding: 0.72rem 0.9rem;
-          }
-
-          .account-login-brand span {
-            font-size: 0.98rem;
-          }
-
-          .account-login-nav-link {
-            font-size: 0.82rem;
-          }
-
           .account-login-main {
             padding: 0.9rem;
           }
@@ -875,27 +826,22 @@ export default function AccountLoginClient() {
         }
       `}</style>
 
-      <nav className="account-login-nav">
-        <Link href="/" className="account-login-brand">
-          <Image src="/logo.png" alt="المعضل" width={48} height={48} />
-          <span>المعضل</span>
-        </Link>
-
-        <Link href="/store" className="account-login-nav-link">
-          ← المتجر
-        </Link>
-      </nav>
+      <StorefrontHeader
+        showCart={false}
+        showAccount={false}
+        actions={[{ href: '/store', label: 'المتجر', variant: 'primary' }]}
+      />
 
       <main className="account-login-main">
         <section className="account-login-card">
           <span className="account-login-eyebrow">حساب العميل</span>
           <h1>تسجيل الدخول إلى حسابك</h1>
-          <p>أدخل بريدك الإلكتروني لإرسال رمز الدخول.</p>
+          <p>دخول سريع وآمن عبر البريد الإلكتروني ضمن واجهة أوضح وأكثر احترافية.</p>
 
           {!showOtpStep ? (
             <div className="account-login-panel">
               <h2>تسجيل الدخول</h2>
-              <p>أدخل بريدك الإلكتروني وسنرسل لك رمز التحقق.</p>
+              <p>أدخل بريدك الإلكتروني وسنرسل لك رمز التحقق خلال لحظات.</p>
 
               <form className="account-login-form" onSubmit={handleEmailSubmit}>
                 <div className="account-login-field">
@@ -933,7 +879,7 @@ export default function AccountLoginClient() {
           ) : (
             <div className="account-login-panel">
               <h2>أدخل رمز التحقق</h2>
-              <p>أرسلنا الرمز إلى بريدك الإلكتروني.</p>
+              <p>أرسلنا الرمز إلى بريدك الإلكتروني. أدخله هنا لإكمال الوصول إلى حسابك.</p>
 
               {otpBanner && (
                 <div
@@ -1023,6 +969,8 @@ export default function AccountLoginClient() {
           )}
         </section>
       </main>
+
+      <StorefrontFooter note="تسجيل دخول العميل يحافظ على نفس هوية المتجر الموثوقة دون تغيير منطق OTP الحالي." />
     </div>
   )
 }

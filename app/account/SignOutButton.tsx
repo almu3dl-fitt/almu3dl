@@ -20,20 +20,14 @@ export default function SignOutButton() {
       type="button"
       onClick={handleSignOut}
       disabled={loading}
+      className="storefront-button-secondary"
       style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '46px',
-        padding: '0.7rem 1rem',
-        borderRadius: '14px',
-        border: '1px solid #e7e7e7',
-        background: '#fff',
-        color: '#555',
+        width: '100%',
+        background: 'rgba(255, 255, 255, 0.04)',
+        color: 'var(--store-text)',
         fontSize: '0.9rem',
         fontWeight: 800,
-        cursor: loading ? 'not-allowed' : 'pointer',
-        fontFamily: "'Tajawal', Arial, sans-serif",
+        opacity: loading ? 0.72 : 1,
       }}
     >
       {loading ? '⏳ جاري الخروج...' : 'تسجيل الخروج'}
