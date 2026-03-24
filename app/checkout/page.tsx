@@ -215,7 +215,9 @@ export default function CheckoutPage() {
         : ''
   const activeRouteError = hasDismissedRouteError ? '' : routeError
   const effectiveError = error || activeRouteError
-  const isProcessing = processingState !== 'idle' && !activeRouteError
+  const isProcessing =
+    !activeRouteError &&
+    (processingState === 'free' || (processingState === 'paypal' && loading))
 
   useEffect(() => {
     checkoutContextRef.current = {
@@ -262,8 +264,6 @@ export default function CheckoutPage() {
     setError('')
     setHasDismissedRouteError(true)
     setLoading(true)
-    setProcessingState('paypal')
-    window.sessionStorage.setItem(CHECKOUT_PROCESSING_KEY, 'paypal')
 
     try {
       const res = await fetch('/api/create-order', {
@@ -307,6 +307,8 @@ export default function CheckoutPage() {
     }
 
     setLoading(true)
+    setProcessingState('paypal')
+    window.sessionStorage.setItem(CHECKOUT_PROCESSING_KEY, 'paypal')
 
     try {
       const res = await fetch('/api/capture-order', {
