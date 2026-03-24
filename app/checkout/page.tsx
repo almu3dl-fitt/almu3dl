@@ -931,6 +931,7 @@ export default function CheckoutPage() {
           background:
             linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.02)),
             rgba(9, 9, 9, 0.9);
+          position: relative;
         }
 
         .checkout-payment-option.is-hidden {
@@ -981,10 +982,20 @@ export default function CheckoutPage() {
 
         .checkout-paypal-button-slot {
           min-height: 50px;
+          position: relative;
+          z-index: 3;
+          isolation: isolate;
         }
 
         .checkout-paypal-button-slot.is-hidden {
           display: none;
+        }
+
+        .checkout-paypal-button-slot > div,
+        .checkout-paypal-button-slot iframe {
+          position: relative !important;
+          z-index: 4 !important;
+          pointer-events: auto !important;
         }
 
         .checkout-payment-loading,
@@ -1262,62 +1273,63 @@ export default function CheckoutPage() {
                         : 'اختر طريقة الدفع'}
                 </button>
 
-                {total > 0 && (
-                  <div className="checkout-payment-meta" ref={paymentOptionsRef}>
-                    <div className="checkout-secure">🔒 اختر الطريقة المناسبة لإتمام الدفع بأمان</div>
-                    <div className="checkout-payment-currency">
-                      سيتم خصم {paypalEquivalentLabel} عبر PayPal بما يعادل {total} ريال سعودي.
-                    </div>
-
-                    <div className="checkout-payment-options" aria-label="خيارات الدفع عبر بايبال">
-                      <div className={`checkout-payment-option is-featured ${!hasCardButton ? 'is-hidden' : ''}`}>
-                        <div className="checkout-payment-option-head">
-                          <div className="checkout-payment-option-label">الدفع بالبطاقة</div>
-                          <span className="checkout-payment-option-badge">مناسب لمن لا يملك حساب PayPal</span>
-                        </div>
-                        <div className="checkout-payment-option-note">
-                          ادفع مباشرة ببطاقتك الائتمانية أو البنكية متى كان هذا الخيار متاحًا من PayPal لهذه الجلسة.
-                        </div>
-                        <div
-                          ref={cardButtonRef}
-                          className={`checkout-paypal-button-slot ${!hasCardButton ? 'is-hidden' : ''}`}
-                        />
-                      </div>
-
-                      <div className={`checkout-payment-option ${!hasPayPalButton ? 'is-hidden' : ''}`}>
-                        <div className="checkout-payment-option-head">
-                          <div className="checkout-payment-option-label">الدفع عبر PayPal</div>
-                          <span className="checkout-payment-option-badge">لمن لديه حساب PayPal</span>
-                        </div>
-                        <div className="checkout-payment-option-note">
-                          إذا كان لديك حساب PayPal، يمكنك إتمام الطلب سريعًا من خلاله.
-                        </div>
-                        <div
-                          ref={paypalButtonRef}
-                          className={`checkout-paypal-button-slot ${!hasPayPalButton ? 'is-hidden' : ''}`}
-                        />
-                      </div>
-                    </div>
-
-                    {paypalSdkStatus === 'loading' && (
-                      <div className="checkout-payment-loading">جار تجهيز خيارات الدفع...</div>
-                    )}
-
-                    {paypalSdkStatus === 'ready' && !hasCardButton && (
-                      <div className="checkout-payment-help">
-                        إذا لم يظهر خيار البطاقة، فذلك يعني أن PayPal لم تفعّل الدفع كضيف لهذه الجلسة، ويمكنك
-                        الإكمال عبر حساب PayPal.
-                      </div>
-                    )}
-
-                    {paypalSdkStatus === 'error' && (
-                      <div className="checkout-payment-fallback">
-                        تعذر تحميل أزرار PayPal الآن. حدّث الصفحة ثم حاول مرة أخرى.
-                      </div>
-                    )}
-                  </div>
-                )}
               </form>
+
+              {total > 0 && (
+                <div className="checkout-payment-meta" ref={paymentOptionsRef}>
+                  <div className="checkout-secure">🔒 اختر الطريقة المناسبة لإتمام الدفع بأمان</div>
+                  <div className="checkout-payment-currency">
+                    سيتم خصم {paypalEquivalentLabel} عبر PayPal بما يعادل {total} ريال سعودي.
+                  </div>
+
+                  <div className="checkout-payment-options" aria-label="خيارات الدفع عبر بايبال">
+                    <div className={`checkout-payment-option is-featured ${!hasCardButton ? 'is-hidden' : ''}`}>
+                      <div className="checkout-payment-option-head">
+                        <div className="checkout-payment-option-label">الدفع بالبطاقة</div>
+                        <span className="checkout-payment-option-badge">مناسب لمن لا يملك حساب PayPal</span>
+                      </div>
+                      <div className="checkout-payment-option-note">
+                        ادفع مباشرة ببطاقتك الائتمانية أو البنكية متى كان هذا الخيار متاحًا من PayPal لهذه الجلسة.
+                      </div>
+                      <div
+                        ref={cardButtonRef}
+                        className={`checkout-paypal-button-slot ${!hasCardButton ? 'is-hidden' : ''}`}
+                      />
+                    </div>
+
+                    <div className={`checkout-payment-option ${!hasPayPalButton ? 'is-hidden' : ''}`}>
+                      <div className="checkout-payment-option-head">
+                        <div className="checkout-payment-option-label">الدفع عبر PayPal</div>
+                        <span className="checkout-payment-option-badge">لمن لديه حساب PayPal</span>
+                      </div>
+                      <div className="checkout-payment-option-note">
+                        إذا كان لديك حساب PayPal، يمكنك إتمام الطلب سريعًا من خلاله.
+                      </div>
+                      <div
+                        ref={paypalButtonRef}
+                        className={`checkout-paypal-button-slot ${!hasPayPalButton ? 'is-hidden' : ''}`}
+                      />
+                    </div>
+                  </div>
+
+                  {paypalSdkStatus === 'loading' && (
+                    <div className="checkout-payment-loading">جار تجهيز خيارات الدفع...</div>
+                  )}
+
+                  {paypalSdkStatus === 'ready' && !hasCardButton && (
+                    <div className="checkout-payment-help">
+                      إذا لم يظهر خيار البطاقة، فذلك يعني أن PayPal لم تفعّل الدفع كضيف لهذه الجلسة، ويمكنك
+                      الإكمال عبر حساب PayPal.
+                    </div>
+                  )}
+
+                  {paypalSdkStatus === 'error' && (
+                    <div className="checkout-payment-fallback">
+                      تعذر تحميل أزرار PayPal الآن. حدّث الصفحة ثم حاول مرة أخرى.
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
 
             <aside className="checkout-summary-wrap">

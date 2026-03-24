@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import AdminNavigation from '@/app/admin/AdminNavigation'
+import './admin.css'
 
 export const metadata: Metadata = {
   title: {
@@ -24,9 +25,9 @@ export default function AdminLayout({
   children: React.ReactNode
 }>) {
   return (
-    <>
+    <div className="admin-app">
       <AdminNavigation />
-      {children}
-    </>
+      <div className="admin-layout">{children}</div>
+    </div>
   )
 }

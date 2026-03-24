@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useEffectEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import AdminPageHeader from '@/app/admin/components/AdminPageHeader'
 
 type AdminCategory = {
   id: string
@@ -122,180 +123,206 @@ export default function NewProductPage() {
     }
   }
 
-  const inputStyle = {
-    width: '100%',
-    padding: '0.5rem',
-    fontSize: '1rem',
-    border: '1px solid #ddd',
-    borderRadius: '6px',
-    fontFamily: 'Arial',
-    direction: 'rtl' as const,
-  }
-
-  const labelStyle = {
-    display: 'block',
-    marginBottom: '0.25rem',
-    fontWeight: 'bold' as const,
-  }
-
   return (
-    <div style={{ padding: '2rem', fontFamily: 'Arial', direction: 'rtl', maxWidth: '600px' }}>
-      <Link href="/admin/products" style={{ color: '#888', fontSize: '14px' }}>← رجوع للمنتجات</Link>
-      <h1 style={{ margin: '1rem 0' }}>إضافة منتج جديد</h1>
+    <div className="admin-page">
+      <AdminPageHeader
+        eyebrow="إضافة منتج"
+        title="منتج جديد"
+        description="أدخل الأساسيات أولًا، ثم أرفق الصور والملفات. النموذج مرتب ليكون الحفظ أسرع وأوضح."
+        backHref="/admin/products"
+        backLabel="الرجوع للمنتجات"
+      />
 
-      {notice && (
-        <div style={{
-          marginBottom: '1rem',
-          padding: '0.85rem 1rem',
-          borderRadius: '12px',
-          border:
-            notice.type === 'success'
-              ? '1px solid #bbf7d0'
-              : notice.type === 'warning'
-                ? '1px solid #fde68a'
-                : '1px solid #fecaca',
-          background:
-            notice.type === 'success'
-              ? '#f0fdf4'
-              : notice.type === 'warning'
-                ? '#fffbeb'
-                : '#fef2f2',
-          color:
-            notice.type === 'success'
-              ? '#166534'
-              : notice.type === 'warning'
-                ? '#92400e'
-                : '#b91c1c',
-          fontSize: '0.9rem',
-          fontWeight: 700,
-          lineHeight: 1.8,
-        }}>
-          {notice.text}
-        </div>
-      )}
+      {notice ? <div className={`admin-notice is-${notice.type}`}>{notice.text}</div> : null}
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div>
-          <label style={labelStyle}>اسم المنتج *</label>
-          <input style={inputStyle} required value={form.title}
-            onChange={event => setForm({ ...form, title: event.target.value })} />
-        </div>
-
-        <div>
-          <label style={labelStyle}>الوصف</label>
-          <textarea style={{ ...inputStyle, height: '100px', resize: 'vertical' }}
-            value={form.description}
-            onChange={event => setForm({ ...form, description: event.target.value })} />
-        </div>
-
-        <div>
-          <label style={labelStyle}>الفئة</label>
-          <select style={inputStyle} value={form.category_id}
-            onChange={event => setForm({ ...form, category_id: event.target.value })}>
-            <option value="">— بدون فئة —</option>
-            {categories.map(category => (
-              <option key={category.id} value={category.id}>{category.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label style={labelStyle}>المستوى</label>
-          <select style={inputStyle} value={form.level}
-            onChange={event => setForm({ ...form, level: event.target.value })}>
-            <option value="beginner">مبتدئ</option>
-            <option value="intermediate">متوسط</option>
-            <option value="all">الكل</option>
-          </select>
-        </div>
-
-        <div>
-          <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <input type="checkbox" checked={form.is_free}
-              onChange={event => setForm({ ...form, is_free: event.target.checked })} />
-            منتج مجاني
-          </label>
-        </div>
-
-        <div>
-          <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <input type="checkbox" checked={form.is_active}
-              onChange={event => setForm({ ...form, is_active: event.target.checked })} />
-            المنتج ظاهر في المتجر
-          </label>
-        </div>
-
-        {!form.is_free && (
-          <div>
-            <label style={labelStyle}>السعر (ريال) *</label>
-            <input style={inputStyle} type="number" min="0" value={form.price}
-              onChange={event => setForm({ ...form, price: event.target.value })} />
-          </div>
-        )}
-
-        <div>
-          <label style={labelStyle}>Slug (اختياري)</label>
-          <input style={inputStyle} value={form.slug} placeholder="beginner-program-4-days"
-            onChange={event => setForm({ ...form, slug: event.target.value })} />
-        </div>
-
-        <div>
-          <label style={labelStyle}>التاقز (مفصولة بفاصلة)</label>
-          <input style={inputStyle} value={form.tags} placeholder="تمارين, غذاء, متوسط"
-            onChange={event => setForm({ ...form, tags: event.target.value })} />
-        </div>
-
-        <div>
-          <label style={labelStyle}>صور المنتج (اختياري - يمكن اختيار أكثر من صورة)</label>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={event => setImages(event.target.files)}
-            style={{ ...inputStyle, padding: '0.4rem' }}
-          />
-          <div style={{ marginTop: '0.35rem', fontSize: '13px', color: '#777' }}>
-            أول صورة ستظهر كمصغّرة في المتجر.
-          </div>
-          {images && images.length > 0 && (
-            <div style={{ marginTop: '0.5rem', fontSize: '13px', color: '#555' }}>
-              {Array.from(images).map((image, index) => (
-                <div key={index}>🖼️ {image.name}</div>
-              ))}
+      <form onSubmit={handleSubmit} className="admin-form-grid">
+        <div className="admin-form-column">
+          <section className="admin-section-card">
+            <div className="admin-section-head">
+              <h2 className="admin-section-title">البيانات الأساسية</h2>
+              <p className="admin-section-copy">المعلومات التي تظهر للعميل داخل صفحة المنتج والمتجر.</p>
             </div>
-          )}
-        </div>
 
-        <div>
-          <label style={labelStyle}>ملفات المنتج (يمكن اختيار أكثر من ملف)</label>
-          <input
-            type="file"
-            accept=".pdf,.mp4,.zip"
-            multiple
-            onChange={event => setFiles(event.target.files)}
-            style={{ ...inputStyle, padding: '0.4rem' }}
-          />
-          {files && files.length > 0 && (
-            <div style={{ marginTop: '0.5rem', fontSize: '13px', color: '#555' }}>
-              {Array.from(files).map((file, index) => (
-                <div key={index}>📄 {file.name}</div>
-              ))}
+            <div className="admin-field">
+              <label className="admin-label">اسم المنتج *</label>
+              <input
+                className="admin-input"
+                required
+                value={form.title}
+                onChange={event => setForm({ ...form, title: event.target.value })}
+              />
             </div>
-          )}
+
+            <div className="admin-field">
+              <label className="admin-label">الوصف</label>
+              <textarea
+                className="admin-textarea"
+                value={form.description}
+                onChange={event => setForm({ ...form, description: event.target.value })}
+              />
+            </div>
+
+            <div className="admin-field">
+              <label className="admin-label">الرابط المخصص (Slug)</label>
+              <input
+                className="admin-input is-ltr"
+                placeholder="beginner-program-4-days"
+                value={form.slug}
+                onChange={event => setForm({ ...form, slug: event.target.value })}
+              />
+              <span className="admin-help">يمكن تركه فارغًا وسيتم توليده تلقائيًا من اسم المنتج.</span>
+            </div>
+
+            <div className="admin-field">
+              <label className="admin-label">التاقات</label>
+              <input
+                className="admin-input"
+                placeholder="تمارين, غذاء, متوسط"
+                value={form.tags}
+                onChange={event => setForm({ ...form, tags: event.target.value })}
+              />
+            </div>
+          </section>
+
+          <section className="admin-section-card">
+            <div className="admin-section-head">
+              <h2 className="admin-section-title">الصور والملفات</h2>
+              <p className="admin-section-copy">يمكنك رفع أكثر من صورة وأكثر من ملف في نفس المنتج.</p>
+            </div>
+
+            <div className="admin-field">
+              <label className="admin-label">صور المنتج</label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={event => setImages(event.target.files)}
+                className="admin-file-input"
+              />
+              <span className="admin-help">أول صورة ستظهر كمصغّرة في المتجر.</span>
+              {images?.length ? (
+                <div className="admin-file-list">
+                  {Array.from(images).map((image, index) => (
+                    <div key={index} className="admin-file-row">
+                      <span className="admin-file-name">{image.name}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="admin-field">
+              <label className="admin-label">ملفات المنتج</label>
+              <input
+                type="file"
+                accept=".pdf,.mp4,.zip"
+                multiple
+                onChange={event => setFiles(event.target.files)}
+                className="admin-file-input"
+              />
+              {files?.length ? (
+                <div className="admin-file-list">
+                  {Array.from(files).map((file, index) => (
+                    <div key={index} className="admin-file-row">
+                      <span className="admin-file-name">{file.name}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </section>
         </div>
 
-        <button type="submit" disabled={loading} style={{
-          background: '#000',
-          color: '#fff',
-          padding: '0.75rem',
-          border: 'none',
-          borderRadius: '8px',
-          fontSize: '1rem',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          opacity: loading ? 0.7 : 1,
-        }}>
-          {loading ? '⏳ جاري الحفظ والرفع...' : 'حفظ المنتج'}
-        </button>
+        <div className="admin-form-column">
+          <section className="admin-section-card">
+            <div className="admin-section-head">
+              <h2 className="admin-section-title">التصنيف والتسعير</h2>
+              <p className="admin-section-copy">حدد الفئة والمستوى وحالة الظهور قبل نشر المنتج.</p>
+            </div>
+
+            <div className="admin-field">
+              <label className="admin-label">الفئة</label>
+              <select
+                className="admin-select"
+                value={form.category_id}
+                onChange={event => setForm({ ...form, category_id: event.target.value })}
+              >
+                <option value="">— بدون فئة —</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="admin-field">
+              <label className="admin-label">المستوى</label>
+              <select
+                className="admin-select"
+                value={form.level}
+                onChange={event => setForm({ ...form, level: event.target.value })}
+              >
+                <option value="beginner">مبتدئ</option>
+                <option value="intermediate">متوسط</option>
+                <option value="all">الكل</option>
+              </select>
+            </div>
+
+            <div className="admin-checkbox-panel">
+              <label className="admin-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={form.is_free}
+                  onChange={event => setForm({ ...form, is_free: event.target.checked })}
+                />
+                منتج مجاني
+              </label>
+              <span className="admin-help">عند تفعيله يصبح السعر صفرًا.</span>
+            </div>
+
+            <div className="admin-checkbox-panel">
+              <label className="admin-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={form.is_active}
+                  onChange={event => setForm({ ...form, is_active: event.target.checked })}
+                />
+                المنتج ظاهر في المتجر
+              </label>
+              <span className="admin-help">يمكنك حفظ المنتج كمخفي حتى يكتمل تجهيزه.</span>
+            </div>
+
+            {!form.is_free ? (
+              <div className="admin-field">
+                <label className="admin-label">السعر (ريال) *</label>
+                <input
+                  className="admin-input"
+                  type="number"
+                  min="0"
+                  value={form.price}
+                  onChange={event => setForm({ ...form, price: event.target.value })}
+                />
+              </div>
+            ) : null}
+          </section>
+
+          <section className="admin-section-card">
+            <div className="admin-section-head">
+              <h2 className="admin-section-title">الإجراء</h2>
+              <p className="admin-section-copy">بعد الحفظ سيتم نقلك مباشرة إلى صفحة تعديل المنتج.</p>
+            </div>
+
+            <div className="admin-actions-row">
+              <button type="submit" disabled={loading} className="admin-button" style={{ flex: 1 }}>
+                {loading ? 'جاري الحفظ...' : 'حفظ المنتج'}
+              </button>
+              <Link href="/admin/products" className="admin-button-secondary">
+                إلغاء
+              </Link>
+            </div>
+          </section>
+        </div>
       </form>
     </div>
   )

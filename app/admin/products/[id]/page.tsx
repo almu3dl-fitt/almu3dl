@@ -1,9 +1,9 @@
 'use client'
 
 import { use, useEffect, useEffectEvent, useState } from 'react'
-import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
+import AdminPageHeader from '@/app/admin/components/AdminPageHeader'
 
 type AdminCategory = {
   id: string
@@ -76,24 +76,6 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     is_active: true,
     tags: '',
   })
-
-  const inputStyle = {
-    width: '100%',
-    padding: '0.6rem 0.75rem',
-    fontSize: '0.95rem',
-    border: '1px solid #ddd',
-    borderRadius: '6px',
-    fontFamily: "'Tajawal', Arial, sans-serif",
-    direction: 'rtl' as const,
-  }
-
-  const labelStyle = {
-    display: 'block',
-    marginBottom: '0.3rem',
-    fontWeight: 'bold' as const,
-    fontSize: '0.9rem',
-    color: '#333',
-  }
 
   const loadProduct = async () => {
     const response = await fetch(`/api/admin/products/${id}`, {
@@ -314,8 +296,8 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   }
 
   const handleDeleteProduct = async () => {
-    if (!confirm('هل أنت متأكد من حذف هذا المنتج نهائياً؟')) return
-    if (!confirm('الحذف نهائي ولا يمكن التراجع — متأكد؟')) return
+    if (!confirm('هل أنت متأكد من حذف هذا المنتج نهائيًا؟')) return
+    if (!confirm('الحذف نهائي ولا يمكن التراجع. هل تريد المتابعة؟')) return
 
     setDeleting(true)
 
@@ -349,316 +331,279 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
   if (loading) {
     return (
-      <div style={{ padding: '2rem', fontFamily: 'Arial', direction: 'rtl', textAlign: 'center' }}>
-        <p>⏳ جاري التحميل...</p>
+      <div className="admin-page">
+        <div className="admin-empty">جاري تحميل بيانات المنتج...</div>
       </div>
     )
   }
 
   return (
-    <div style={{ padding: '2rem', fontFamily: "'Tajawal', Arial", direction: 'rtl', maxWidth: '700px' }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');`}</style>
+    <div className="admin-page">
+      <AdminPageHeader
+        eyebrow="تعديل المنتج"
+        title={form.title || 'تعديل المنتج'}
+        description="عدّل البيانات الأساسية أو الملفات أو الصور من نفس الصفحة، مع إبقاء حالة الظهور والسعر تحت سيطرتك."
+        backHref="/admin/products"
+        backLabel="الرجوع للمنتجات"
+      />
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>تعديل المنتج</h1>
-        <Link href="/admin/products" style={{ color: '#888', fontSize: '14px', textDecoration: 'none' }}>← رجوع للمنتجات</Link>
-      </div>
+      {notice ? <div className={`admin-notice is-${notice.type}`}>{notice.text}</div> : null}
 
-      {notice && (
-        <div style={{
-          marginBottom: '1rem',
-          padding: '0.85rem 1rem',
-          borderRadius: '12px',
-          border:
-            notice.type === 'success'
-              ? '1px solid #bbf7d0'
-              : notice.type === 'warning'
-                ? '1px solid #fde68a'
-                : '1px solid #fecaca',
-          background:
-            notice.type === 'success'
-              ? '#f0fdf4'
-              : notice.type === 'warning'
-                ? '#fffbeb'
-                : '#fef2f2',
-          color:
-            notice.type === 'success'
-              ? '#166534'
-              : notice.type === 'warning'
-                ? '#92400e'
-                : '#b91c1c',
-          fontSize: '0.9rem',
-          fontWeight: 700,
-          lineHeight: 1.8,
-        }}>
-          {notice.text}
-        </div>
-      )}
+      <form onSubmit={handleSave} className="admin-form-grid">
+        <div className="admin-form-column">
+          <section className="admin-section-card">
+            <div className="admin-checkbox-panel">
+              <label className="admin-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={form.is_active}
+                  onChange={event => setForm({ ...form, is_active: event.target.checked })}
+                />
+                {form.is_active ? 'المنتج ظاهر حاليًا في المتجر' : 'المنتج مخفي حاليًا من المتجر'}
+              </label>
+              <span className="admin-help">
+                {form.is_active ? 'يمكن للعميل الوصول إليه والشراء.' : 'لن يظهر في واجهة المتجر.'}
+              </span>
+            </div>
 
-      <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-          padding: '0.75rem 1rem',
-          backgroundColor: form.is_active ? '#f0fdf4' : '#fef2f2',
-          borderRadius: '8px',
-          border: `1px solid ${form.is_active ? '#bbf7d0' : '#fecaca'}`,
-        }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
-            <input type="checkbox" checked={form.is_active}
-              onChange={event => setForm({ ...form, is_active: event.target.checked })} />
-            {form.is_active ? '✅ المنتج نشط ومرئي في المتجر' : '❌ المنتج مخفي من المتجر'}
-          </label>
-        </div>
+            <div className="admin-field">
+              <label className="admin-label">اسم المنتج *</label>
+              <input
+                className="admin-input"
+                required
+                value={form.title}
+                onChange={event => setForm({ ...form, title: event.target.value })}
+              />
+            </div>
 
-        <div>
-          <label style={labelStyle}>اسم المنتج *</label>
-          <input style={inputStyle} required value={form.title}
-            onChange={event => setForm({ ...form, title: event.target.value })} />
-        </div>
+            <div className="admin-field">
+              <label className="admin-label">الرابط المخصص</label>
+              <input
+                className="admin-input is-ltr"
+                value={form.slug}
+                onChange={event => setForm({ ...form, slug: event.target.value })}
+              />
+            </div>
 
-        <div>
-          <label style={labelStyle}>Slug (رابط المنتج)</label>
-          <input style={{ ...inputStyle, direction: 'ltr', textAlign: 'right' }} value={form.slug}
-            onChange={event => setForm({ ...form, slug: event.target.value })} />
-        </div>
+            <div className="admin-field">
+              <label className="admin-label">الوصف</label>
+              <textarea
+                className="admin-textarea"
+                value={form.description}
+                onChange={event => setForm({ ...form, description: event.target.value })}
+              />
+            </div>
 
-        <div>
-          <label style={labelStyle}>الوصف</label>
-          <textarea style={{ ...inputStyle, height: '100px', resize: 'vertical' }}
-            value={form.description}
-            onChange={event => setForm({ ...form, description: event.target.value })} />
-        </div>
+            <div className="admin-field">
+              <label className="admin-label">التاقات</label>
+              <input
+                className="admin-input"
+                placeholder="غذاء, تنحيف, مبتدئ"
+                value={form.tags}
+                onChange={event => setForm({ ...form, tags: event.target.value })}
+              />
+            </div>
+          </section>
 
-        <div>
-          <label style={labelStyle}>الفئة</label>
-          <select style={inputStyle} value={form.category_id}
-            onChange={event => setForm({ ...form, category_id: event.target.value })}>
-            <option value="">— بدون فئة —</option>
-            {categories.map(category => (
-              <option key={category.id} value={category.id}>{category.name}</option>
-            ))}
-          </select>
-        </div>
+          <section className="admin-section-card">
+            <div className="admin-section-head">
+              <h2 className="admin-section-title">صور المنتج</h2>
+              <p className="admin-section-copy">تحكم بالصورة المصغرة والصور الإضافية من مكان واحد.</p>
+            </div>
 
-        <div>
-          <label style={labelStyle}>المستوى</label>
-          <select style={inputStyle} value={form.level}
-            onChange={event => setForm({ ...form, level: event.target.value })}>
-            <option value="beginner">مبتدئ</option>
-            <option value="intermediate">متوسط</option>
-            <option value="all">الكل</option>
-          </select>
-        </div>
-
-        <div>
-          <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <input type="checkbox" checked={form.is_free}
-              onChange={event => setForm({ ...form, is_free: event.target.checked })} />
-            منتج مجاني
-          </label>
-        </div>
-
-        {!form.is_free && (
-          <div>
-            <label style={labelStyle}>السعر (ريال) *</label>
-            <input style={inputStyle} type="number" min="0" value={form.price}
-              onChange={event => setForm({ ...form, price: event.target.value })} />
-          </div>
-        )}
-
-        <div>
-          <label style={labelStyle}>التاقز (مفصولة بفاصلة)</label>
-          <input style={inputStyle} value={form.tags} placeholder="غذاء, تنحيف, مبتدئ"
-            onChange={event => setForm({ ...form, tags: event.target.value })} />
-        </div>
-
-        <div style={{
-          backgroundColor: '#f9f9f9',
-          border: '1px solid #eee',
-          borderRadius: '8px',
-          padding: '1rem',
-        }}>
-          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.75rem' }}>
-            🖼️ صور المنتج ({images.length})
-          </h3>
-
-          <p style={{ margin: '0 0 0.75rem', color: '#777', fontSize: '0.82rem', lineHeight: 1.8 }}>
-            أول صورة تظهر كمصغّرة في المتجر، ويمكنك رفع صورة واحدة أو عدة صور بشكل اختياري.
-          </p>
-
-          {images.length === 0 ? (
-            <p style={{ color: '#999', fontSize: '0.85rem' }}>لا توجد صور مضافة لهذا المنتج.</p>
-          ) : (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-              gap: '0.75rem',
-            }}>
-              {images.map((image, index) => (
-                <div key={image.path} style={{
-                  overflow: 'hidden',
-                  border: '1px solid #eee',
-                  borderRadius: '12px',
-                  backgroundColor: '#fff',
-                }}>
-                  <div style={{ position: 'relative', aspectRatio: '1 / 1', backgroundColor: '#f3f3f3' }}>
-                    <Image
-                      src={image.url}
-                      alt={`صورة ${index + 1} للمنتج`}
-                      fill
-                      sizes="180px"
-                      style={{ objectFit: 'cover' }}
-                    />
-                  </div>
-                  <div style={{ padding: '0.65rem', display: 'grid', gap: '0.45rem' }}>
-                    <div style={{ color: '#666', fontSize: '0.78rem', fontWeight: 700 }}>
-                      {index === 0 ? 'الصورة المصغّرة الحالية' : `صورة إضافية ${index + 1}`}
+            {images.length === 0 ? (
+              <div className="admin-empty">لا توجد صور مضافة لهذا المنتج.</div>
+            ) : (
+              <div className="admin-media-grid">
+                {images.map((image, index) => (
+                  <div key={image.path} className="admin-media-card">
+                    <div className="admin-media-preview">
+                      <Image
+                        src={image.url}
+                        alt={`صورة ${index + 1} للمنتج`}
+                        fill
+                        sizes="180px"
+                        style={{ objectFit: 'cover' }}
+                      />
                     </div>
-                    {image.isLegacy ? (
-                      <div style={{
-                        border: '1px solid #e5e7eb',
-                        color: '#6b7280',
-                        borderRadius: '6px',
-                        padding: '0.35rem 0.55rem',
-                        fontSize: '0.78rem',
-                        lineHeight: 1.7,
-                      }}>
-                        صورة افتراضية مرتبطة بالواجهة ويمكن استبدالها برفع صورة جديدة.
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteImage(image.path)}
-                        style={{
-                          background: 'none',
-                          border: '1px solid #fecaca',
-                          color: '#dc2626',
-                          borderRadius: '6px',
-                          padding: '0.35rem 0.55rem',
-                          cursor: 'pointer',
-                          fontSize: '0.78rem',
-                          fontFamily: "'Tajawal', Arial",
-                        }}
-                      >
-                        حذف الصورة
-                      </button>
-                    )}
+
+                    <div className="admin-media-body">
+                      <span className="admin-file-name">
+                        {index === 0 ? 'الصورة المصغّرة الحالية' : `صورة إضافية ${index + 1}`}
+                      </span>
+
+                      {image.isLegacy ? (
+                        <div className="admin-help">
+                          هذه صورة افتراضية مرتبطة بالواجهة، ويمكن استبدالها برفع صورة جديدة.
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="admin-button-danger"
+                          onClick={() => handleDeleteImage(image.path)}
+                        >
+                          حذف الصورة
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div style={{ marginTop: '0.85rem' }}>
-            <label style={{ ...labelStyle, fontSize: '0.85rem' }}>إضافة صور جديدة</label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={event => setNewImages(event.target.files)}
-              style={{ fontSize: '0.85rem' }}
-            />
-            {newImages && newImages.length > 0 && (
-              <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: '#555' }}>
-                {Array.from(newImages).map((image, index) => (
-                  <div key={index}>🖼️ {image.name}</div>
                 ))}
               </div>
             )}
-          </div>
-        </div>
 
-        <div style={{
-          backgroundColor: '#f9f9f9',
-          border: '1px solid #eee',
-          borderRadius: '8px',
-          padding: '1rem',
-        }}>
-          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.75rem' }}>
-            📁 الملفات المرفقة ({files.length})
-          </h3>
-
-          {files.length === 0 ? (
-            <p style={{ color: '#999', fontSize: '0.85rem' }}>لا توجد ملفات</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {files.map(file => (
-                <div key={file.id} style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '0.5rem 0.75rem',
-                  backgroundColor: '#fff',
-                  border: '1px solid #eee',
-                  borderRadius: '6px',
-                  fontSize: '0.85rem',
-                }}>
-                  <span>📄 {file.file_name}</span>
-                  <button type="button" onClick={() => handleDeleteFile(file.id)}
-                    style={{
-                      background: 'none',
-                      border: '1px solid #fecaca',
-                      color: '#dc2626',
-                      borderRadius: '4px',
-                      padding: '0.2rem 0.5rem',
-                      cursor: 'pointer',
-                      fontSize: '0.75rem',
-                      fontFamily: "'Tajawal', Arial",
-                    }}>
-                    حذف
-                  </button>
+            <div className="admin-field">
+              <label className="admin-label">إضافة صور جديدة</label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={event => setNewImages(event.target.files)}
+                className="admin-file-input"
+              />
+              {newImages?.length ? (
+                <div className="admin-file-list">
+                  {Array.from(newImages).map((image, index) => (
+                    <div key={index} className="admin-file-row">
+                      <span className="admin-file-name">{image.name}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : null}
             </div>
-          )}
+          </section>
 
-          <div style={{ marginTop: '0.75rem' }}>
-            <label style={{ ...labelStyle, fontSize: '0.85rem' }}>إضافة ملفات جديدة</label>
-            <input type="file" accept=".pdf,.mp4,.zip" multiple
-              onChange={event => setNewFiles(event.target.files)}
-              style={{ fontSize: '0.85rem' }} />
-            {newFiles && newFiles.length > 0 && (
-              <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: '#555' }}>
-                {Array.from(newFiles).map((file, index) => (
-                  <div key={index}>📎 {file.name}</div>
+          <section className="admin-section-card">
+            <div className="admin-section-head">
+              <h2 className="admin-section-title">ملفات المنتج</h2>
+              <p className="admin-section-copy">حذف الملفات القديمة أو إضافة ملفات جديدة للعميل.</p>
+            </div>
+
+            {files.length === 0 ? (
+              <div className="admin-empty">لا توجد ملفات مرفقة بهذا المنتج.</div>
+            ) : (
+              <div className="admin-file-list">
+                {files.map(file => (
+                  <div key={file.id} className="admin-file-row">
+                    <span className="admin-file-name">{file.file_name}</span>
+                    <button
+                      type="button"
+                      className="admin-button-danger"
+                      onClick={() => handleDeleteFile(file.id)}
+                    >
+                      حذف
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
-          </div>
+
+            <div className="admin-field">
+              <label className="admin-label">إضافة ملفات جديدة</label>
+              <input
+                type="file"
+                accept=".pdf,.mp4,.zip"
+                multiple
+                onChange={event => setNewFiles(event.target.files)}
+                className="admin-file-input"
+              />
+              {newFiles?.length ? (
+                <div className="admin-file-list">
+                  {Array.from(newFiles).map((file, index) => (
+                    <div key={index} className="admin-file-row">
+                      <span className="admin-file-name">{file.name}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </section>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-          <button type="submit" disabled={saving} style={{
-            flex: 1,
-            background: 'linear-gradient(135deg, #D4A843, #B8912E)',
-            color: '#fff',
-            padding: '0.75rem',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '1rem',
-            fontWeight: 700,
-            cursor: saving ? 'not-allowed' : 'pointer',
-            opacity: saving ? 0.7 : 1,
-            fontFamily: "'Tajawal', Arial",
-          }}>
-            {saving ? '⏳ جاري الحفظ...' : '💾 حفظ التعديلات'}
-          </button>
+        <div className="admin-form-column">
+          <section className="admin-section-card">
+            <div className="admin-section-head">
+              <h2 className="admin-section-title">التصنيف والتسعير</h2>
+              <p className="admin-section-copy">حدّث الفئة والمستوى والسعر وحالة المجانية.</p>
+            </div>
 
-          <button type="button" onClick={handleDeleteProduct} disabled={deleting} style={{
-            background: '#fff',
-            color: '#dc2626',
-            padding: '0.75rem 1.5rem',
-            border: '1px solid #fecaca',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            fontWeight: 600,
-            cursor: deleting ? 'not-allowed' : 'pointer',
-            fontFamily: "'Tajawal', Arial",
-          }}>
-            {deleting ? '⏳...' : '🗑️ حذف'}
-          </button>
+            <div className="admin-field">
+              <label className="admin-label">الفئة</label>
+              <select
+                className="admin-select"
+                value={form.category_id}
+                onChange={event => setForm({ ...form, category_id: event.target.value })}
+              >
+                <option value="">— بدون فئة —</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="admin-field">
+              <label className="admin-label">المستوى</label>
+              <select
+                className="admin-select"
+                value={form.level}
+                onChange={event => setForm({ ...form, level: event.target.value })}
+              >
+                <option value="beginner">مبتدئ</option>
+                <option value="intermediate">متوسط</option>
+                <option value="all">الكل</option>
+              </select>
+            </div>
+
+            <div className="admin-checkbox-panel">
+              <label className="admin-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={form.is_free}
+                  onChange={event => setForm({ ...form, is_free: event.target.checked })}
+                />
+                منتج مجاني
+              </label>
+              <span className="admin-help">إذا كان مجانيًا فلن يُحتسب عليه سعر.</span>
+            </div>
+
+            {!form.is_free ? (
+              <div className="admin-field">
+                <label className="admin-label">السعر (ريال) *</label>
+                <input
+                  className="admin-input"
+                  type="number"
+                  min="0"
+                  value={form.price}
+                  onChange={event => setForm({ ...form, price: event.target.value })}
+                />
+              </div>
+            ) : null}
+          </section>
+
+          <section className="admin-section-card">
+            <div className="admin-section-head">
+              <h2 className="admin-section-title">إجراءات المنتج</h2>
+              <p className="admin-section-copy">احفظ التغييرات أو احذف المنتج إذا لم تعد تحتاجه.</p>
+            </div>
+
+            <div className="admin-actions-row">
+              <button type="submit" disabled={saving} className="admin-button" style={{ flex: 1 }}>
+                {saving ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+              </button>
+            </div>
+
+            <div className="admin-actions-row">
+              <button
+                type="button"
+                onClick={handleDeleteProduct}
+                disabled={deleting}
+                className="admin-button-danger"
+              >
+                {deleting ? 'جاري الحذف...' : 'حذف المنتج'}
+              </button>
+            </div>
+          </section>
         </div>
       </form>
     </div>

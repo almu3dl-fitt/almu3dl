@@ -30,24 +30,18 @@ export default function AdminNavigation() {
   }
 
   return (
-    <nav
-      aria-label="التنقل داخل لوحة الإدارة"
-      style={{
-        padding: '1rem 2rem 0',
-        direction: 'rtl',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '0.65rem',
-          padding: '0.75rem',
-          borderRadius: '18px',
-          border: '1px solid #eee',
-          background: '#fff',
-        }}
-      >
+    <nav className="admin-nav" aria-label="التنقل داخل لوحة الإدارة">
+      <div className="admin-layout" style={{ padding: 0 }}>
+        <div className="admin-nav-shell">
+          <div className="admin-brand">
+            <span className="admin-brand-label">ALMU3DL ADMIN</span>
+            <strong className="admin-brand-title">لوحة إدارة المعضل</strong>
+            <span className="admin-brand-copy">
+              تحكم أسرع في المنتجات والطلبات والتقييمات من مكان واحد.
+            </span>
+          </div>
+
+          <div className="admin-nav-links">
         {adminNavItems.map(item => {
           const isActive = item.match(pathname)
 
@@ -55,26 +49,14 @@ export default function AdminNavigation() {
             <Link
               key={item.href}
               href={item.href}
-              style={{
-                minHeight: '42px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '0.65rem 1rem',
-                borderRadius: '12px',
-                border: isActive ? '1px solid #d4a843' : '1px solid #ececec',
-                background: isActive ? 'rgba(212, 168, 67, 0.12)' : '#fff',
-                color: isActive ? '#8f6a14' : '#555',
-                textDecoration: 'none',
-                fontSize: '0.92rem',
-                fontWeight: 800,
-                fontFamily: "'Tajawal', Arial, sans-serif",
-              }}
+              className={`admin-nav-link ${isActive ? 'is-active' : ''}`}
             >
               {item.label}
             </Link>
           )
         })}
+          </div>
+        </div>
       </div>
     </nav>
   )

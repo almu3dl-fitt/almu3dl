@@ -1,4 +1,7 @@
 import Link from 'next/link'
+import AdminPageHeader from '@/app/admin/components/AdminPageHeader'
+import AdminStatCard from '@/app/admin/components/AdminStatCard'
+import AdminOrderDeleteButton from '@/app/admin/orders/AdminOrderDeleteButton'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export const dynamic = 'force-dynamic'
@@ -21,7 +24,28 @@ type AdminOrder = {
   order_items: AdminOrderItem[] | null
 }
 
-export default async function AdminOrdersPage() {
+type OrdersSearchParams = {
+  q?: string
+  status?: string
+}
+
+function normalizeProduct(
+  value: { title: string } | { title: string }[] | null,
+) {
+  return Array.isArray(value) ? value[0] : value
+}
+
+export default async function AdminOrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<OrdersSearchParams> | OrdersSearchParams
+}) {
+  const params = await searchParams
+  const query = typeof params.q === 'string' ? params.q.trim() : ''
+  const statusFilter = ['all', 'paid', 'pending', 'failed'].includes(params.status ?? '')
+    ? params.status ?? 'all'
+    : 'all'
+
   const { data: orders } = await supabaseAdmin
     .from('orders')
     .select(`
@@ -37,143 +61,182 @@ export default async function AdminOrdersPage() {
     `)
     .order('created_at', { ascending: false })
 
-  const statusLabel: Record<string, string> = {
-    paid: '✅ مدفوع',
-    pending: '⏳ معلّق',
-    failed: '❌ فشل',
-  }
-
   const safeOrders = (orders ?? []) as AdminOrder[]
 
+  const filteredOrders = safeOrders.filter(order => {
+    const matchesQuery = query
+      ? [
+          order.id,
+          order.customer_name ?? '',
+          order.customer_email ?? '',
+          order.customer_phone ?? '',
+          order.paypal_id ?? '',
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(query.toLowerCase())
+      : true
+
+    const matchesStatus = statusFilter === 'all' ? true : order.status === statusFilter
+    return matchesQuery && matchesStatus
+  })
+
+  const paidOrders = safeOrders.filter(order => order.status === 'paid')
+  const pendingOrders = safeOrders.filter(order => order.status === 'pending')
+  const failedOrders = safeOrders.filter(order => order.status === 'failed')
+  const totalRevenue = paidOrders.reduce((sum, order) => sum + Number(order.amount), 0)
+
+  const statusTheme: Record<string, { label: string; tone: 'success' | 'warning' | 'danger' | 'muted' }> = {
+    paid: { label: 'مدفوع', tone: 'success' },
+    pending: { label: 'معلّق', tone: 'warning' },
+    failed: { label: 'فشل', tone: 'danger' },
+  }
+
   return (
-    <div style={{ padding: '2rem', fontFamily: "'Tajawal', Arial", direction: 'rtl' }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');`}</style>
+    <div className="admin-page">
+      <AdminPageHeader
+        eyebrow="إدارة الطلبات"
+        title="الطلبات والمدفوعات"
+        description="تابع الطلبات بسرعة، راجع الحالات المعلقة والفاشلة، واحذف الطلبات غير المكتملة حتى تبقى اللوحة مرتبة وواضحة."
+        backHref="/admin"
+        backLabel="الرجوع للرئيسية"
+      />
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>الطلبات</h1>
-        <Link href="/admin" style={{ color: '#888', fontSize: '14px', textDecoration: 'none' }}>← لوحة الإدارة</Link>
+      <div className="admin-stats-grid">
+        <AdminStatCard
+          label="مدفوع"
+          value={String(paidOrders.length)}
+          helper="الطلبات التي اكتمل سدادها بنجاح."
+          tone="success"
+        />
+        <AdminStatCard
+          label="معلّق"
+          value={String(pendingOrders.length)}
+          helper="طلبات بدأت ولم تكتمل بعد."
+          tone="warning"
+        />
+        <AdminStatCard
+          label="فشل"
+          value={String(failedOrders.length)}
+          helper="محاولات لم تتم بنجاح ويمكن تنظيفها."
+          tone="danger"
+        />
+        <AdminStatCard
+          label="إجمالي الإيرادات"
+          value={`${totalRevenue} ريال`}
+          helper="يُحتسب من الطلبات المدفوعة فقط."
+          tone="accent"
+        />
       </div>
 
-      {/* إحصائيات سريعة */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
-        <div style={{ padding: '1rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', textAlign: 'center' }}>
-          <p style={{ fontSize: '1.5rem', fontWeight: 800, color: '#16a34a' }}>
-            {safeOrders.filter(order => order.status === 'paid').length}
-          </p>
-          <p style={{ fontSize: '0.8rem', color: '#777' }}>طلب مدفوع</p>
-        </div>
-        <div style={{ padding: '1rem', backgroundColor: '#fef9ee', border: '1px solid #fde68a', borderRadius: '8px', textAlign: 'center' }}>
-          <p style={{ fontSize: '1.5rem', fontWeight: 800, color: '#B8912E' }}>
-            {safeOrders
-              .filter(order => order.status === 'paid')
-              .reduce((sum, order) => sum + Number(order.amount), 0)} ريال
-          </p>
-          <p style={{ fontSize: '0.8rem', color: '#777' }}>إجمالي الإيرادات</p>
-        </div>
-        <div style={{ padding: '1rem', backgroundColor: '#f5f5f5', border: '1px solid #eee', borderRadius: '8px', textAlign: 'center' }}>
-          <p style={{ fontSize: '1.5rem', fontWeight: 800, color: '#555' }}>
-            {safeOrders.length}
-          </p>
-          <p style={{ fontSize: '0.8rem', color: '#777' }}>إجمالي الطلبات</p>
-        </div>
-      </div>
+      <form className="admin-toolbar" method="get">
+        <div className="admin-toolbar-grid">
+          <div className="admin-field">
+            <label htmlFor="orders-q" className="admin-label">بحث سريع</label>
+            <input
+              id="orders-q"
+              name="q"
+              defaultValue={query}
+              className="admin-input"
+              placeholder="ابحث بالاسم أو البريد أو رقم الطلب أو PayPal"
+            />
+          </div>
 
-      {safeOrders.length === 0 ? (
-        <p style={{ color: '#888', marginTop: '2rem', textAlign: 'center' }}>لا توجد طلبات بعد</p>
+          <div className="admin-field">
+            <label htmlFor="orders-status" className="admin-label">الحالة</label>
+            <select id="orders-status" name="status" defaultValue={statusFilter} className="admin-select">
+              <option value="all">كل الحالات</option>
+              <option value="paid">مدفوع</option>
+              <option value="pending">معلّق</option>
+              <option value="failed">فشل</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="admin-toolbar-actions">
+          <button type="submit" className="admin-button">تطبيق التصفية</button>
+          <Link href="/admin/orders" className="admin-button-secondary">إعادة الضبط</Link>
+          <span className="admin-help">
+            المعروض الآن: {filteredOrders.length} من أصل {safeOrders.length} طلب.
+          </span>
+        </div>
+      </form>
+
+      {filteredOrders.length === 0 ? (
+        <div className="admin-empty">
+          لا توجد طلبات مطابقة للفلاتر الحالية. جرّب إزالة التصفية أو البحث بكلمة أخرى.
+        </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {safeOrders.map(order => (
-            <div key={order.id} style={{
-              backgroundColor: '#fff',
-              border: '1px solid #eee',
-              borderRadius: '10px',
-              padding: '1.25rem',
-            }}>
-              {/* Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                <div>
-                  <p style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.25rem' }}>
-                    {order.customer_name || '—'}
-                  </p>
-                  <p style={{ fontSize: '0.85rem', color: '#777' }}>{order.customer_email || '—'}</p>
-                  {order.customer_phone && (
-                    <p style={{ fontSize: '0.8rem', color: '#999' }}>📱 {order.customer_phone}</p>
-                  )}
-                </div>
-                <div style={{ textAlign: 'left' }}>
-                  <span style={{
-                    display: 'inline-block',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '12px',
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    backgroundColor: order.status === 'paid' ? '#f0fdf4' : order.status === 'pending' ? '#fef9ee' : '#fef2f2',
-                    color: order.status === 'paid' ? '#16a34a' : order.status === 'pending' ? '#B8912E' : '#dc2626',
-                    border: `1px solid ${order.status === 'paid' ? '#bbf7d0' : order.status === 'pending' ? '#fde68a' : '#fecaca'}`,
-                  }}>
-                    {statusLabel[order.status] || order.status}
-                  </span>
-                  <p style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.4rem' }}>
-                    {new Date(order.created_at).toLocaleDateString('ar-SA')} — {new Date(order.created_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-              </div>
+        <div className="admin-order-list">
+          {filteredOrders.map(order => {
+            const status = statusTheme[order.status] || { label: order.status, tone: 'muted' as const }
+            const shortId = `#${order.id.slice(0, 8)}`
 
-              {/* المنتجات */}
-              <div style={{
-                backgroundColor: '#f9f9f9',
-                borderRadius: '6px',
-                padding: '0.75rem',
-                marginBottom: '0.75rem',
-              }}>
-                {order.order_items?.map((item, index) => {
-                  const product = Array.isArray(item.products)
-                    ? item.products[0]
-                    : item.products
+            return (
+              <article key={order.id} className="admin-order-card">
+                <div className="admin-card-head">
+                  <div>
+                    <h2 className="admin-card-title">{order.customer_name || 'عميل بدون اسم'}</h2>
+                    <p className="admin-card-subtitle">{order.customer_email || 'بدون بريد مسجل'}</p>
+                    {order.customer_phone ? (
+                      <p className="admin-card-subtitle">الجوال: {order.customer_phone}</p>
+                    ) : null}
+                  </div>
 
-                  return (
-                    <div key={item.id} style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: '0.85rem',
-                    padding: '0.25rem 0',
-                    borderBottom:
-                      index < (order.order_items?.length ?? 0) - 1 ? '1px solid #eee' : 'none',
-                  }}>
-                    <span>{product?.title || '—'}</span>
-                    <span style={{ color: '#B8912E', fontWeight: 600 }}>
-                      {Number(item.price_paid) === 0 ? 'مجاني' : `${item.price_paid} ريال`}
+                  <div className="admin-card-meta">
+                    <span className={`admin-status-badge is-${status.tone}`}>{status.label}</span>
+                    <span className="admin-total">
+                      {Number(order.amount) === 0 ? 'مجاني' : `${order.amount} ريال`}
                     </span>
                   </div>
-                  )
-                })}
-              </div>
-
-              {/* Footer */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontSize: '0.8rem', color: '#999' }}>
-                  #{order.id.slice(0, 8)}
-                  {order.paypal_id && <span> • PayPal: {order.paypal_id.slice(0, 12)}...</span>}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#B8912E' }}>
-                    {Number(order.amount) === 0 ? 'مجاني' : `${order.amount} ريال`}
-                  </span>
-                  {order.status === 'paid' && (
-                    <Link href={`/success?order=${order.id}`} target="_blank" style={{
-                      backgroundColor: '#f0fdf4',
-                      color: '#16a34a',
-                      padding: '0.35rem 0.75rem',
-                      borderRadius: '6px',
-                      textDecoration: 'none',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                    }}>📦 صفحة التحميل</Link>
+
+                <div className="admin-order-products">
+                  {order.order_items?.length ? (
+                    order.order_items.map(item => {
+                      const product = normalizeProduct(item.products)
+
+                      return (
+                        <div key={item.id} className="admin-order-item">
+                          <span>{product?.title || 'منتج غير متاح'}</span>
+                          <strong className="admin-muted">
+                            {Number(item.price_paid) === 0 ? 'مجاني' : `${item.price_paid} ريال`}
+                          </strong>
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <div className="admin-help">لا توجد عناصر مرتبطة بهذا الطلب.</div>
                   )}
                 </div>
-              </div>
-            </div>
-          ))}
+
+                <div className="admin-order-foot">
+                  <div className="admin-meta-block">
+                    <span>{shortId}</span>
+                    <span>
+                      {new Intl.DateTimeFormat('ar-SA', {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                      }).format(new Date(order.created_at))}
+                    </span>
+                    {order.paypal_id ? <span>PayPal: {order.paypal_id}</span> : null}
+                  </div>
+
+                  <div className="admin-order-actions">
+                    {order.status === 'paid' ? (
+                      <Link href={`/success?order=${order.id}`} target="_blank" className="admin-button-secondary">
+                        صفحة التحميل
+                      </Link>
+                    ) : null}
+
+                    {order.status !== 'paid' ? (
+                      <AdminOrderDeleteButton orderId={order.id} shortId={shortId} />
+                    ) : null}
+                  </div>
+                </div>
+              </article>
+            )
+          })}
         </div>
       )}
     </div>
