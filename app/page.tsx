@@ -162,6 +162,14 @@ export default async function Home() {
 
   const goalCards = [
     {
+      eyebrow: 'قبل الاختيار',
+      title: 'احسب احتياجك اليومي أولًا',
+      description:
+        'أدخل بياناتك الأساسية لتظهر لك سعراتك التقديرية وأقرب نظام غذائي مناسب لهدفك داخل المتجر.',
+      href: '/calorie-calculator',
+      cta: 'ابدأ الحساب',
+    },
+    {
       eyebrow: 'تنظيم الأكل',
       title: nutritionRange
         ? `أنظمة مرنة من ${nutritionRange} سعرة`
@@ -788,9 +796,7 @@ export default async function Home() {
 
       <StorefrontHeader
         actions={[
-          freeOffer
-            ? { href: '/store?free=true', label: 'الكتاب المجاني', variant: 'muted' }
-            : { href: '/store', label: 'المتجر', variant: 'muted' },
+          { href: '/calorie-calculator', label: 'حاسبة السعرات', variant: 'muted' },
           { href: '/store', label: 'اكتشف البرامج', variant: 'primary' },
         ]}
       />
@@ -814,6 +820,9 @@ export default async function Home() {
               <div className="home-hero-actions">
                 <Link href="/store" className="storefront-button-primary">
                   اكتشف البرامج
+                </Link>
+                <Link href="/calorie-calculator" className="storefront-button-secondary">
+                  احسب سعراتك
                 </Link>
                 {freeOffer && (
                   <Link href="/store?free=true" className="storefront-button-secondary">
@@ -1019,6 +1028,12 @@ export default async function Home() {
             <div className="home-final-actions">
               <Link href="/store" className="storefront-button-primary">
                 تسوق الآن
+              </Link>
+              <Link
+                href="/calorie-calculator"
+                className="storefront-button-secondary"
+              >
+                احسب سعراتك
               </Link>
               {freeOffer && (
                 <Link href="/store?free=true" className="storefront-button-secondary">

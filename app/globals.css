@@ -509,3 +509,27 @@ select {
     min-width: 200px;
   }
 }
+
+@media (max-width: 560px) {
+  .storefront-header-inner {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .storefront-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.1rem;
+    scrollbar-width: none;
+  }
+
+  .storefront-header-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .storefront-action {
+    white-space: nowrap;
+  }
+}
