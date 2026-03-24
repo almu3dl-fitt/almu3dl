@@ -107,16 +107,13 @@ export async function POST(req: NextRequest) {
           },
           description: `طلب من المعضل - ${items.length} منتج`,
         }],
-        payment_source: {
-          paypal: {
-            experience_context: {
-              brand_name: 'المعضل - Almu3dl',
-              return_url: `${req.nextUrl.origin}/api/capture-order?orderId=${order.id}`,
-              cancel_url: `${req.nextUrl.origin}/checkout?cancelled=true`,
-              user_action: 'PAY_NOW',
-              landing_page: 'GUEST_CHECKOUT',
-            },
-          },
+        application_context: {
+          brand_name: 'المعضل - Almu3dl',
+          return_url: `${req.nextUrl.origin}/api/capture-order?orderId=${order.id}`,
+          cancel_url: `${req.nextUrl.origin}/checkout?cancelled=true`,
+          user_action: 'PAY_NOW',
+          landing_page: 'BILLING',
+          shipping_preference: 'NO_SHIPPING',
         },
       }),
     })
@@ -124,6 +121,7 @@ export async function POST(req: NextRequest) {
     const paypalData = (await paypalRes.json()) as PayPalOrderResponse
 
     if (!paypalRes.ok) {
+      console.error('PayPal create order error:', paypalData)
       return NextResponse.json({ error: 'خطأ في PayPal' }, { status: 500 })
     }
 
