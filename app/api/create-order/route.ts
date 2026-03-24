@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { convertSarToPayPalAmount, PAYPAL_CURRENCY_CODE } from '@/lib/paypal-currency'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 
 type CreateOrderItem = {
   id: string
-  price: number
 }
 
 type CreateOrderBody = {
@@ -26,6 +26,12 @@ type PayPalLink = {
 type PayPalOrderResponse = {
   id: string
   links: PayPalLink[]
+}
+
+type ProductRow = {
+  id: string
+  price: number | null
+  is_free: boolean | null
 }
 
 const PAYPAL_BASE = process.env.PAYPAL_MODE === 'live'
@@ -62,6 +68,39 @@ export async function POST(req: NextRequest) {
       { onConflict: 'email' }
     )
 
+    const itemIds = items.map(item => item.id)
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('id, price, is_free')
+      .in('id', itemIds)
+
+    if (productsError || !products) {
+      return NextResponse.json({ error: 'تعذر التحقق من المنتجات الحالية' }, { status: 500 })
+    }
+
+    if (products.length !== itemIds.length) {
+      return NextResponse.json({ error: 'بعض المنتجات لم تعد متاحة للطلب' }, { status: 400 })
+    }
+
+    const productsById = new Map(
+      (products as ProductRow[]).map(product => [product.id, product])
+    )
+
+    const verifiedOrderItems = items.map(item => {
+      const product = productsById.get(item.id)
+
+      if (!product) {
+        throw new Error(`Missing product during checkout: ${item.id}`)
+      }
+
+      return {
+        product_id: item.id,
+        price_paid: product.is_free ? 0 : Number(product.price ?? 0),
+      }
+    })
+
+    const verifiedTotal = verifiedOrderItems.reduce((sum, item) => sum + item.price_paid, 0)
+
     // 2. أنشئ الطلب في DB بحالة pending
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -69,7 +108,7 @@ export async function POST(req: NextRequest) {
         customer_email: email,
         customer_name: full_name,
         customer_phone: phone || null,
-        amount: total,
+        amount: verifiedTotal,
         status: 'pending',
       })
       .select()
@@ -80,16 +119,17 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. أضف المنتجات للطلب
-    const orderItems = items.map((item: CreateOrderItem) => ({
+    const orderItems = verifiedOrderItems.map(item => ({
       order_id: order.id,
-      product_id: item.id,
-      price_paid: item.price,
+      product_id: item.product_id,
+      price_paid: item.price_paid,
     }))
 
     await supabase.from('order_items').insert(orderItems)
 
     // 4. أنشئ طلب PayPal
     const token = await getPayPalToken()
+    const paypalAmount = convertSarToPayPalAmount(verifiedTotal)
 
     const paypalRes = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
       method: 'POST',
@@ -102,8 +142,8 @@ export async function POST(req: NextRequest) {
         purchase_units: [{
           reference_id: order.id,
           amount: {
-            currency_code: 'USD',
-            value: total.toFixed(2),
+            currency_code: PAYPAL_CURRENCY_CODE,
+            value: paypalAmount.toFixed(2),
           },
           description: `طلب من المعضل - ${items.length} منتج`,
         }],
@@ -122,6 +162,7 @@ export async function POST(req: NextRequest) {
 
     if (!paypalRes.ok) {
       console.error('PayPal create order error:', paypalData)
+      await supabase.from('orders').update({ status: 'failed' }).eq('id', order.id)
       return NextResponse.json({ error: 'خطأ في PayPal' }, { status: 500 })
     }
 

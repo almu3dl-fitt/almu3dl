@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { PAYPAL_CURRENCY_CODE } from '@/lib/paypal-currency'
 
 export async function GET() {
   const clientId = process.env.PAYPAL_CLIENT_ID
@@ -9,7 +10,7 @@ export async function GET() {
 
   return NextResponse.json({
     clientId,
-    currency: 'USD',
+    currency: PAYPAL_CURRENCY_CODE,
     intent: 'capture',
     mode: process.env.PAYPAL_MODE === 'live' ? 'live' : 'sandbox',
   })

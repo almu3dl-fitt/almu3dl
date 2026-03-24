@@ -10,6 +10,11 @@ type PayPalAuthResponse = {
 
 type PayPalCaptureResponse = {
   status: string
+  details?: Array<{
+    issue?: string
+    description?: string
+  }>
+  message?: string
 }
 
 type OrderItem = {
@@ -36,6 +41,7 @@ const routeErrorMessages = {
   missing_order: 'تعذر العثور على الطلب المطلوب لإكمال الدفع.',
   invalid_order: 'تعذر التحقق من الطلب الحالي. حاول إنشاء طلب جديد.',
   payment_failed: 'لم يكتمل الدفع بنجاح. يمكنك المحاولة مرة أخرى.',
+  instrument_declined: 'تم رفض البطاقة أو وسيلة الدفع من PayPal. جرّب بطاقة أخرى أو أعد المحاولة.',
   unknown: 'حدث خطأ غير متوقع أثناء تأكيد الطلب. حاول مرة أخرى.',
 } as const
 
@@ -87,9 +93,14 @@ async function finalizePaidOrder(orderId: string | undefined, origin: string): P
     )
     const captureData = (await captureRes.json()) as PayPalCaptureResponse
 
-    if (captureData.status !== 'COMPLETED') {
+    if (!captureRes.ok || captureData.status !== 'COMPLETED') {
+      const issue = captureData.details?.[0]?.issue
+      console.error('PayPal capture error:', captureData)
       await supabase.from('orders').update({ status: 'failed' }).eq('id', orderId)
-      return { ok: false, errorCode: 'payment_failed' }
+      return {
+        ok: false,
+        errorCode: issue === 'INSTRUMENT_DECLINED' ? 'instrument_declined' : 'payment_failed',
+      }
     }
 
     await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId)

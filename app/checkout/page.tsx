@@ -5,6 +5,7 @@ import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import StorefrontFooter from '@/app/components/StorefrontFooter'
 import StorefrontHeader from '@/app/components/StorefrontHeader'
 import { getCart, getCartTotal, type CartItem } from '@/lib/cart'
+import { formatPayPalAmountLabel } from '@/lib/paypal-currency'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 
 const CHECKOUT_PROCESSING_KEY = 'almu3dl_checkout_processing'
@@ -199,12 +200,14 @@ export default function CheckoutPage() {
 
   const total = getCartTotal(cart)
   const totalLabel = total === 0 ? 'مجاني' : `${total} ريال`
+  const paypalEquivalentLabel = total === 0 ? '' : formatPayPalAmountLabel(total)
   const cancelled = routeState.cancelled
   const errorCode = routeState.errorCode
   const routeErrorMessages: Record<string, string> = {
     missing_order: 'تعذر العثور على الطلب المطلوب لإكمال الدفع.',
     invalid_order: 'تعذر التحقق من الطلب الحالي. حاول إنشاء طلب جديد.',
     payment_failed: 'لم يكتمل الدفع بنجاح. يمكنك المحاولة مرة أخرى.',
+    instrument_declined: 'تم رفض البطاقة أو وسيلة الدفع من PayPal. جرّب بطاقة أخرى أو أعد المحاولة.',
     unknown: 'حدث خطأ غير متوقع أثناء تأكيد الطلب. حاول مرة أخرى.',
   }
   const routeError =
@@ -952,6 +955,13 @@ export default function CheckoutPage() {
           font-weight: 700;
         }
 
+        .checkout-payment-currency {
+          text-align: center;
+          color: var(--store-text-muted);
+          font-size: 0.74rem;
+          line-height: 1.8;
+        }
+
         .checkout-payment-fallback {
           color: #ffb4b4;
         }
@@ -1214,6 +1224,9 @@ export default function CheckoutPage() {
                 {total > 0 && (
                   <div className="checkout-payment-meta" ref={paymentOptionsRef}>
                     <div className="checkout-secure">🔒 دفع آمن عبر PayPal</div>
+                    <div className="checkout-payment-currency">
+                      سيتم خصم {paypalEquivalentLabel} عبر PayPal بما يعادل {total} ريال سعودي.
+                    </div>
 
                     <div className="checkout-payment-options" aria-label="خيارات الدفع عبر بايبال">
                       <div className={`checkout-payment-option ${!hasPayPalButton ? 'is-hidden' : ''}`}>
