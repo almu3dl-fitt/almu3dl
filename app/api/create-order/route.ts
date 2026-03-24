@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
     // 6. ارجع رابط الدفع
     const approvalUrl = paypalData.links.find((link: PayPalLink) => link.rel === 'approve')?.href
 
-    return NextResponse.json({ approvalUrl, orderId: order.id })
+    return NextResponse.json({ approvalUrl, orderId: order.id, paypalOrderId: paypalData.id })
 
   } catch (err) {
     console.error('Create order error:', err)

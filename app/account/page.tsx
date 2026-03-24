@@ -726,7 +726,7 @@ export default async function AccountPage() {
         </section>
       </main>
 
-      <StorefrontFooter note="منطقة الحساب تحتفظ بنفس اللغة البصرية الفاخرة لتدعم الثقة بعد الشراء." />
+      <StorefrontFooter note="من حسابك يمكنك مراجعة طلباتك والوصول إلى ملفاتك في أي وقت." />
     </div>
   )
 }

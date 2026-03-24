@@ -1,13 +1,100 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import StorefrontFooter from '@/app/components/StorefrontFooter'
 import StorefrontHeader from '@/app/components/StorefrontHeader'
 import { getCart, getCartTotal, type CartItem } from '@/lib/cart'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 
 const CHECKOUT_PROCESSING_KEY = 'almu3dl_checkout_processing'
+
+type PayPalConfigResponse = {
+  clientId: string
+  currency: string
+  intent: string
+  mode: 'live' | 'sandbox'
+}
+
+type CreateOrderResponse = {
+  approvalUrl?: string
+  orderId?: string
+  paypalOrderId?: string
+  error?: string
+}
+
+type CaptureOrderResponse = {
+  redirectTo?: string
+  success?: boolean
+  error?: string
+}
+
+type PayPalButtonsConfig = {
+  fundingSource: string
+  style: {
+    layout: 'vertical'
+    color: 'gold' | 'black'
+    shape: 'pill'
+    label?: 'paypal'
+    height: number
+  }
+  createOrder: () => Promise<string>
+  onApprove: (data: { orderID?: string }) => Promise<void>
+  onCancel: () => void
+  onError: (error: unknown) => void
+}
+
+type PayPalButtonsInstance = {
+  isEligible: () => boolean
+  render: (container: HTMLDivElement) => Promise<void>
+}
+
+type PayPalNamespace = {
+  FUNDING: {
+    PAYPAL: string
+    CARD: string
+  }
+  Buttons: (config: PayPalButtonsConfig) => PayPalButtonsInstance
+}
+
+declare global {
+  interface Window {
+    paypal?: PayPalNamespace
+  }
+}
+
+async function loadPayPalSdk(clientId: string, currency: string) {
+  const params = new URLSearchParams({
+    'client-id': clientId,
+    currency,
+    intent: 'capture',
+    components: 'buttons,funding-eligibility',
+    'enable-funding': 'card',
+    commit: 'true',
+  })
+
+  const src = `https://www.paypal.com/sdk/js?${params.toString()}`
+  const existingScript = document.querySelector<HTMLScriptElement>('script[data-paypal-sdk="true"]')
+
+  if (existingScript) {
+    if (existingScript.src === src && window.paypal) {
+      return
+    }
+
+    existingScript.remove()
+    delete window.paypal
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = src
+    script.async = true
+    script.dataset.paypalSdk = 'true'
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('تعذر تحميل PayPal SDK'))
+    document.body.appendChild(script)
+  })
+}
 
 export default function CheckoutPage() {
   const [cart, setCart] = useState<CartItem[]>([])
@@ -44,6 +131,18 @@ export default function CheckoutPage() {
     full_name: '',
     email: '',
     phone: '',
+  })
+  const [paypalSdkStatus, setPaypalSdkStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [hasCardButton, setHasCardButton] = useState(false)
+  const [hasPayPalButton, setHasPayPalButton] = useState(false)
+  const paypalButtonRef = useRef<HTMLDivElement | null>(null)
+  const cardButtonRef = useRef<HTMLDivElement | null>(null)
+  const paymentOptionsRef = useRef<HTMLDivElement | null>(null)
+  const orderIdByPayPalOrderIdRef = useRef<Record<string, string>>({})
+  const checkoutContextRef = useRef({
+    form,
+    cart,
+    total: 0,
   })
 
   useEffect(() => {
@@ -118,31 +217,140 @@ export default function CheckoutPage() {
   const effectiveError = error || activeRouteError
   const isProcessing = processingState !== 'idle' && !activeRouteError
 
+  useEffect(() => {
+    checkoutContextRef.current = {
+      form,
+      cart,
+      total,
+    }
+  }, [form, cart, total])
+
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)
   }
+
+  const clearPaidProcessingState = useEffectEvent(() => {
+    window.sessionStorage.removeItem(CHECKOUT_PROCESSING_KEY)
+    setProcessingState('idle')
+    setLoading(false)
+  })
+
+  const validateCheckoutForm = () => {
+    const { form: currentForm } = checkoutContextRef.current
+
+    if (!currentForm.full_name.trim()) {
+      return 'ادخل اسمك الكامل'
+    }
+
+    if (!isValidEmail(currentForm.email)) {
+      return 'ادخل بريد إلكتروني صحيح'
+    }
+
+    return ''
+  }
+
+  const createPaidOrder = useEffectEvent(async () => {
+    const validationError = validateCheckoutForm()
+
+    if (validationError) {
+      setError(validationError)
+      throw new Error(validationError)
+    }
+
+    const { form: currentForm, cart: currentCart, total: currentTotal } = checkoutContextRef.current
+
+    setError('')
+    setHasDismissedRouteError(true)
+    setLoading(true)
+    setProcessingState('paypal')
+    window.sessionStorage.setItem(CHECKOUT_PROCESSING_KEY, 'paypal')
+
+    try {
+      const res = await fetch('/api/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: currentForm.email,
+          full_name: currentForm.full_name,
+          phone: currentForm.phone || null,
+          items: currentCart.map(item => ({ id: item.id, price: item.price })),
+          total: currentTotal,
+        }),
+      })
+
+      const data = (await res.json()) as CreateOrderResponse
+
+      if (!res.ok || !data.orderId || !data.paypalOrderId) {
+        const message = data.error || 'تعذر بدء الدفع الآن. حاول مرة أخرى.'
+        setError(message)
+        clearPaidProcessingState()
+        throw new Error(message)
+      }
+
+      orderIdByPayPalOrderIdRef.current[data.paypalOrderId] = data.orderId
+      setLoading(false)
+      return data.paypalOrderId
+    } catch (createError) {
+      clearPaidProcessingState()
+      throw createError
+    }
+  })
+
+  const capturePaidOrder = useEffectEvent(async (paypalOrderId: string) => {
+    const orderId = orderIdByPayPalOrderIdRef.current[paypalOrderId]
+
+    if (!orderId) {
+      const message = 'تعذر التحقق من الطلب الحالي. حاول مرة أخرى.'
+      setError(message)
+      clearPaidProcessingState()
+      throw new Error(message)
+    }
+
+    setLoading(true)
+
+    try {
+      const res = await fetch('/api/capture-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      })
+
+      const data = (await res.json()) as CaptureOrderResponse
+
+      if (!res.ok || !data.redirectTo) {
+        const message = data.error || 'لم يكتمل الدفع بنجاح. يمكنك المحاولة مرة أخرى.'
+        setError(message)
+        clearPaidProcessingState()
+        throw new Error(message)
+      }
+
+      window.sessionStorage.removeItem(CHECKOUT_PROCESSING_KEY)
+      setProcessingState('idle')
+      setLoading(false)
+      window.location.href = data.redirectTo
+    } catch (captureError) {
+      clearPaidProcessingState()
+      throw captureError
+    }
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setHasDismissedRouteError(true)
+    const validationError = validateCheckoutForm()
 
-    if (!form.full_name.trim()) {
-      setError('ادخل اسمك الكامل')
+    if (validationError) {
+      setError(validationError)
       return
     }
-    if (!isValidEmail(form.email)) {
-      setError('ادخل بريد إلكتروني صحيح')
-      return
-    }
-
-    const nextState = total === 0 ? 'free' : 'paypal'
-    setLoading(true)
-    setProcessingState(nextState)
-    window.sessionStorage.setItem(CHECKOUT_PROCESSING_KEY, nextState)
 
     // لو كل المنتجات مجانية
     if (total === 0) {
+      setLoading(true)
+      setProcessingState('free')
+      window.sessionStorage.setItem(CHECKOUT_PROCESSING_KEY, 'free')
+
       try {
         const res = await fetch('/api/free-order', {
           method: 'POST',
@@ -173,39 +381,161 @@ export default function CheckoutPage() {
       return
     }
 
-    // منتجات مدفوعة — PayPal
-    try {
-      const res = await fetch('/api/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: form.email,
-          full_name: form.full_name,
-          phone: form.phone || null,
-          items: cart.map(i => ({ id: i.id, price: i.price })),
-          total,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'حصل خطأ')
-        window.sessionStorage.removeItem(CHECKOUT_PROCESSING_KEY)
-        setProcessingState('idle')
-        setLoading(false)
-        return
-      }
-      if (data.approvalUrl) {
-        window.location.href = data.approvalUrl
-        return
-      }
-      setError('تعذر بدء الدفع الآن. حاول مرة أخرى.')
-    } catch {
-      setError('حصل خطأ، حاول مرة ثانية')
-    }
-    window.sessionStorage.removeItem(CHECKOUT_PROCESSING_KEY)
-    setProcessingState('idle')
-    setLoading(false)
+    paymentOptionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
+
+  useEffect(() => {
+    if (!hydrated || total === 0) {
+      setPaypalSdkStatus('idle')
+      setHasPayPalButton(false)
+      setHasCardButton(false)
+      return
+    }
+
+    let isActive = true
+    const paypalContainer = paypalButtonRef.current
+    const cardContainer = cardButtonRef.current
+
+    const renderButtons = async () => {
+      setPaypalSdkStatus('loading')
+      setHasPayPalButton(false)
+      setHasCardButton(false)
+
+      if (paypalContainer) {
+        paypalContainer.innerHTML = ''
+      }
+
+      if (cardContainer) {
+        cardContainer.innerHTML = ''
+      }
+
+      try {
+        const configRes = await fetch('/api/paypal-config')
+        const config = (await configRes.json()) as PayPalConfigResponse & { error?: string }
+
+        if (!configRes.ok || !config.clientId) {
+          throw new Error(config.error || 'تعذر تحميل إعدادات PayPal')
+        }
+
+        await loadPayPalSdk(config.clientId, config.currency)
+
+        if (!isActive || !window.paypal) {
+          return
+        }
+
+        const fundingSources = [
+          {
+            source: window.paypal.FUNDING.PAYPAL,
+            container: paypalContainer,
+            markRendered: () => setHasPayPalButton(true),
+            style: {
+              layout: 'vertical',
+              color: 'gold',
+              shape: 'pill',
+              label: 'paypal',
+              height: 50,
+            } satisfies PayPalButtonsConfig['style'],
+          },
+          {
+            source: window.paypal.FUNDING.CARD,
+            container: cardContainer,
+            markRendered: () => setHasCardButton(true),
+            style: {
+              layout: 'vertical',
+              color: 'black',
+              shape: 'pill',
+              height: 50,
+            } satisfies PayPalButtonsConfig['style'],
+          },
+        ]
+
+        let renderedAtLeastOneButton = false
+
+        for (const item of fundingSources) {
+          const container = item.container
+
+          if (!container) {
+            continue
+          }
+
+          const button = window.paypal.Buttons({
+            fundingSource: item.source,
+            style: item.style,
+            createOrder: async () => {
+              return await createPaidOrder()
+            },
+            onApprove: async (data: { orderID?: string }) => {
+              if (!data.orderID) {
+                const message = 'تعذر تأكيد الطلب الحالي. حاول مرة أخرى.'
+                setError(message)
+                clearPaidProcessingState()
+                return
+              }
+
+              try {
+                await capturePaidOrder(data.orderID)
+              } catch (approveError) {
+                console.error('PayPal approve error:', approveError)
+              }
+            },
+            onCancel: () => {
+              setError('تم إلغاء الدفع قبل الإتمام. يمكنك المحاولة مرة أخرى.')
+              clearPaidProcessingState()
+            },
+            onError: (paypalError: unknown) => {
+              console.error('PayPal Buttons error:', paypalError)
+              setError('تعذر إكمال الدفع الآن. حاول مرة أخرى.')
+              clearPaidProcessingState()
+            },
+          })
+
+          if (!button.isEligible()) {
+            container.innerHTML = ''
+            continue
+          }
+
+          await button.render(container)
+
+          if (!isActive) {
+            return
+          }
+
+          renderedAtLeastOneButton = true
+          item.markRendered()
+        }
+
+        if (!isActive) {
+          return
+        }
+
+        setPaypalSdkStatus(renderedAtLeastOneButton ? 'ready' : 'error')
+      } catch (paypalSdkError) {
+        console.error('PayPal SDK load error:', paypalSdkError)
+
+        if (!isActive) {
+          return
+        }
+
+        setPaypalSdkStatus('error')
+        setHasPayPalButton(false)
+        setHasCardButton(false)
+      }
+    }
+
+    void renderButtons()
+
+    return () => {
+      isActive = false
+
+      if (paypalContainer) {
+        paypalContainer.innerHTML = ''
+      }
+
+      if (cardContainer) {
+        cardContainer.innerHTML = ''
+      }
+    }
+  }, [hydrated, total])
 
   const inputStyle = {
     width: '100%',
@@ -579,59 +909,49 @@ export default function CheckoutPage() {
 
         .checkout-payment-meta {
           display: grid;
-          gap: 0.72rem;
+          gap: 0.78rem;
         }
 
-        .checkout-payment-badges {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 0.65rem;
-        }
-
-        .checkout-payment-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.65rem;
-          min-height: 44px;
-          padding: 0.62rem 0.9rem;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.035);
-          color: var(--store-text);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-        }
-
-        .checkout-payment-badge.is-paypal {
-          border-color: rgba(255, 255, 255, 0.18);
-          background:
-            linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-            rgba(255, 255, 255, 0.04);
-        }
-
-        .checkout-payment-badge svg {
-          flex: none;
-          width: 20px;
-          height: 20px;
-        }
-
-        .checkout-payment-badge-label {
+        .checkout-payment-options {
           display: grid;
-          gap: 0.08rem;
-          text-align: right;
-          line-height: 1.15;
+          gap: 0.78rem;
         }
 
-        .checkout-payment-badge-label strong {
-          color: var(--store-text);
-          font-size: 0.78rem;
-          font-weight: 900;
+        .checkout-payment-option {
+          display: grid;
+          gap: 0.45rem;
         }
 
-        .checkout-payment-badge-label small {
+        .checkout-payment-option.is-hidden {
+          display: none;
+        }
+
+        .checkout-payment-option-label {
           color: var(--store-text-soft);
-          font-size: 0.65rem;
+          font-size: 0.74rem;
+          font-weight: 800;
+          text-align: center;
+        }
+
+        .checkout-paypal-button-slot {
+          min-height: 50px;
+        }
+
+        .checkout-paypal-button-slot.is-hidden {
+          display: none;
+        }
+
+        .checkout-payment-loading,
+        .checkout-payment-help,
+        .checkout-payment-fallback {
+          text-align: center;
+          color: var(--store-text-soft);
+          font-size: 0.76rem;
           font-weight: 700;
+        }
+
+        .checkout-payment-fallback {
+          color: #ffb4b4;
         }
 
         .checkout-summary-wrap {
@@ -796,8 +1116,8 @@ export default function CheckoutPage() {
             <span className="checkout-eyebrow">إتمام الطلب</span>
             <h1>خطوة أخيرة ونرسل لك كل شيء مباشرة</h1>
             <p>
-              نموذج مختصر، ملخص أوضح، وتأكيد بصري أعلى حتى تبدو صفحة الدفع
-              احترافية وسهلة الإكمال على الجوال والكمبيوتر.
+              أدخل بياناتك لإتمام الطلب، وبعد نجاح الدفع ستصلك الفاتورة وروابط
+              الوصول مباشرة.
             </p>
           </div>
 
@@ -870,7 +1190,7 @@ export default function CheckoutPage() {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || (total > 0 && paypalSdkStatus === 'loading')}
                   className="checkout-submit"
                   style={{
                     background:
@@ -884,60 +1204,49 @@ export default function CheckoutPage() {
                     ? '⏳ جاري المعالجة...'
                     : total === 0
                       ? 'ابدأ اليوم مجانًا'
-                      : `ادفع ${total} ريال عبر PayPal`}
+                      : paypalSdkStatus === 'loading'
+                        ? 'جار تجهيز خيارات الدفع...'
+                        : 'اختر طريقة الدفع'}
                 </button>
 
                 {total > 0 && (
-                  <div className="checkout-payment-meta">
+                  <div className="checkout-payment-meta" ref={paymentOptionsRef}>
                     <div className="checkout-secure">🔒 دفع آمن عبر PayPal</div>
 
-                    <div className="checkout-payment-badges" aria-label="خيارات الدفع عبر بايبال">
-                      <div className="checkout-payment-badge is-paypal">
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                          <path
-                            d="M8.06 19.5H4.8c-.27 0-.44-.25-.39-.5L6.8 4.1c.05-.23.24-.4.48-.4h6.13c2.1 0 3.63.44 4.54 1.31.81.77 1.15 1.87.96 3.13-.27 1.85-1.16 3.07-2.65 3.66-.69.27-.69.27-.47.96l.35 1.1c.04.14-.06.29-.21.29h-1.88c-.24 0-.45-.16-.52-.39l-.24-.8c-.14-.46-.31-.54-.79-.54H9.8c-.26 0-.48.19-.52.45l-.67 4.13c-.04.28-.28.5-.55.5Z"
-                            fill="#fff"
-                            fillOpacity=".9"
-                          />
-                          <path
-                            d="M18.92 8.47c-.18 1.19-.73 2.1-1.63 2.69-.8.53-1.9.8-3.27.8H11.8c-.24 0-.44.17-.48.4l-.69 4.31-.19 1.22c-.04.23.14.44.37.44h2.78c.21 0 .4-.15.43-.36l.02-.1.52-3.28.03-.18c.03-.21.21-.36.43-.36h.27c1.73 0 3.08-.35 4.01-1.04.93-.69 1.53-1.78 1.78-3.24.1-.61.09-1.12-.03-1.54-.04.08-.09.16-.13.24Z"
-                            fill="#f3c14d"
-                          />
-                        </svg>
-
-                        <span className="checkout-payment-badge-label">
-                          <strong>PayPal</strong>
-                          <small>بوابة الدفع</small>
-                        </span>
+                    <div className="checkout-payment-options" aria-label="خيارات الدفع عبر بايبال">
+                      <div className={`checkout-payment-option ${!hasPayPalButton ? 'is-hidden' : ''}`}>
+                        <div className="checkout-payment-option-label">الدفع عبر PayPal</div>
+                        <div
+                          ref={paypalButtonRef}
+                          className={`checkout-paypal-button-slot ${!hasPayPalButton ? 'is-hidden' : ''}`}
+                        />
                       </div>
 
-                      <div className="checkout-payment-badge">
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                          <rect
-                            x="2.5"
-                            y="5"
-                            width="19"
-                            height="14"
-                            rx="3"
-                            stroke="#f3c14d"
-                            strokeWidth="1.5"
-                          />
-                          <path d="M3.75 9.25h16.5" stroke="#f3c14d" strokeWidth="1.5" />
-                          <path
-                            d="M7 15.25h3.75M14.25 15.25h2.25"
-                            stroke="#fff"
-                            strokeOpacity=".88"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-
-                        <span className="checkout-payment-badge-label">
-                          <strong>بطاقة بنكية</strong>
-                          <small>مرتبطة بـ PayPal</small>
-                        </span>
+                      <div className={`checkout-payment-option ${!hasCardButton ? 'is-hidden' : ''}`}>
+                        <div className="checkout-payment-option-label">الدفع بالبطاقة</div>
+                        <div
+                          ref={cardButtonRef}
+                          className={`checkout-paypal-button-slot ${!hasCardButton ? 'is-hidden' : ''}`}
+                        />
                       </div>
                     </div>
+
+                    {paypalSdkStatus === 'loading' && (
+                      <div className="checkout-payment-loading">جار تجهيز خيارات الدفع...</div>
+                    )}
+
+                    {paypalSdkStatus === 'ready' && !hasCardButton && (
+                      <div className="checkout-payment-help">
+                        إذا لم يظهر زر البطاقة، فهذا يعني أن PayPal لم يفعّل هذا الخيار لهذه الجلسة أو لهذا
+                        الحساب.
+                      </div>
+                    )}
+
+                    {paypalSdkStatus === 'error' && (
+                      <div className="checkout-payment-fallback">
+                        تعذر تحميل أزرار PayPal الآن. حدّث الصفحة ثم حاول مرة أخرى.
+                      </div>
+                    )}
                   </div>
                 )}
               </form>
@@ -987,7 +1296,7 @@ export default function CheckoutPage() {
         )}
       </main>
 
-      <StorefrontFooter note="الدفع هنا مصمم ليبدو موثوقًا ومباشرًا مع الحفاظ على كل منطق الطلب الحالي." />
+      <StorefrontFooter note="بعد نجاح الطلب ستصلك الفاتورة وروابط الوصول مباشرة إلى بريدك." />
     </div>
   )
 }

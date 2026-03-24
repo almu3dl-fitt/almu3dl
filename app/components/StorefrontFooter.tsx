@@ -1,7 +1,7 @@
 'use client'
 
 export default function StorefrontFooter({
-  note = 'واجهة عربية واضحة، شراء سريع، وتجربة تحميل موثوقة.',
+  note = 'برامج رقمية في التغذية والتمارين والتأهيل مع شراء آمن ووصول مباشر.',
 }: {
   note?: string
 }) {

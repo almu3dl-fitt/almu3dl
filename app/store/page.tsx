@@ -668,8 +668,8 @@ export default async function StorePage({
             <span className="store-eyebrow">المتجر الرقمي</span>
             <h1 className="store-title">اختَر البرنامج الذي يترجم هدفك إلى بداية فعلية</h1>
             <p className="store-subtitle">
-              تجربة تصفح عربية بطابع رياضي فاخر: فلاتر واضحة، بطاقات أكثر جاذبية،
-              وتسلسل بصري يجعل القرار أسرع والثقة أعلى.
+              تصفح برامج التغذية والتمارين والتأهيل والباقات، واستخدم الفلاتر
+              للوصول بسرعة إلى ما يناسب هدفك.
             </p>
           </div>
 
@@ -747,13 +747,13 @@ export default async function StorePage({
         </section>
 
         <section>
-          <div className="store-products-head">
-            <div>
-              <h3>البرامج المتاحة</h3>
-              <p>بطاقات أخف بصريًا، معلومات أوضح، وإحساس أقرب لواجهة علامة رياضية احترافية.</p>
+            <div className="store-products-head">
+              <div>
+                <h3>البرامج المتاحة</h3>
+                <p>اختر من البرامج المتاحة حسب هدفك والمستوى المناسب لك.</p>
+              </div>
+              <p>{products.length} نتيجة</p>
             </div>
-            <p>{products.length} نتيجة</p>
-          </div>
 
           {products.length === 0 ? (
             <div className="store-empty">
@@ -833,7 +833,7 @@ export default async function StorePage({
         </section>
       </main>
 
-      <StorefrontFooter note="تجربة متجر مصممة للثقة، الوضوح، وسرعة الوصول إلى المنتج المناسب." />
+      <StorefrontFooter note="تصفح البرامج واختر ما يناسب هدفك وميزانيتك." />
     </div>
   )
 }

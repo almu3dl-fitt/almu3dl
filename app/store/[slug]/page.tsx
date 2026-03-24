@@ -175,7 +175,7 @@ export default async function ProductPage({
     {
       icon: '📱',
       title: 'جاهز على الجوال',
-      text: 'الواجهة مختصرة ومريحة للشراء والتحميل من الهاتف أو الكمبيوتر.',
+      text: 'يمكنك شراء البرنامج والوصول إليه بسهولة من الجوال أو الكمبيوتر.',
     },
   ]
 
@@ -828,7 +828,7 @@ export default async function ProductPage({
               <p>
                 {product.is_free
                   ? 'أضف البرنامج للسلة ثم أكمل الطلب المجاني بخطوات سريعة.'
-                  : 'زر الإضافة ينقلك إلى رحلة شراء مختصرة وواضحة حتى الدفع ثم التحميل.'}
+                  : 'أضف البرنامج إلى السلة ثم أكمل الدفع، وبعدها يصلك الوصول مباشرة.'}
               </p>
             </div>
 
@@ -859,8 +859,7 @@ export default async function ProductPage({
             />
 
             <p className="product-purchase-note">
-              إذا أضفت أكثر من برنامج يمكنك إكمالها كلها من السلة ضمن نفس الرحلة
-              المختصرة والواضحة.
+              إذا أضفت أكثر من برنامج يمكنك إتمامها كلها من السلة في طلب واحد.
             </p>
           </aside>
         </section>
@@ -878,12 +877,12 @@ export default async function ProductPage({
           <article className="product-detail-card">
             <h2>مناسب لك إذا</h2>
             <ul className="product-fit-list">
-              <li>تبحث عن تجربة شراء عربية واضحة وسريعة على الجوال بدون ازدحام بصري.</li>
+              <li>تريد شراء البرنامج والوصول إليه بسهولة من أي جهاز.</li>
               <li>
                 تريد برنامجًا من فئة <strong>{categoryName}</strong> بمستوى{' '}
                 <strong>{levelLabels[product.level] ?? product.level}</strong>.
               </li>
-              <li>تفضّل الوصول الفوري بعد الإتمام مع تنظيم واضح في السلة وcheckout.</li>
+              <li>تفضّل الوصول الفوري بعد الإتمام مع ظهور الطلب وروابط الوصول بشكل منظم.</li>
             </ul>
 
             {!!product.tags?.length && (
@@ -954,7 +953,7 @@ export default async function ProductPage({
         </section>
       </main>
 
-      <StorefrontFooter note="صفحة منتج تركز على القرار: قيمة واضحة، ثقة أعلى، وCTA مباشر." />
+      <StorefrontFooter note="اطلع على تفاصيل البرنامج قبل إضافته إلى السلة." />
     </div>
   )
 }

@@ -836,7 +836,7 @@ export default function AccountLoginClient() {
         <section className="account-login-card">
           <span className="account-login-eyebrow">حساب العميل</span>
           <h1>تسجيل الدخول إلى حسابك</h1>
-          <p>دخول سريع وآمن عبر البريد الإلكتروني ضمن واجهة أوضح وأكثر احترافية.</p>
+          <p>ادخل ببريدك الإلكتروني للوصول إلى طلباتك وملفاتك بسهولة.</p>
 
           {!showOtpStep ? (
             <div className="account-login-panel">

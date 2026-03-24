@@ -485,8 +485,7 @@ export default function CartPage() {
             <span className="cart-eyebrow">السلة</span>
             <h1>راجع طلبك قبل الإتمام</h1>
             <p>
-              ملخص أنظف، CTA أوضح، وتسلسل يبرز المنتجات والإجمالي بثقة أعلى قبل
-              الانتقال للدفع.
+              تأكد من البرامج المختارة والمجموع النهائي قبل الانتقال إلى الدفع.
             </p>
           </div>
 
@@ -521,7 +520,7 @@ export default function CartPage() {
               <div className="cart-list-head">
                 <div>
                   <h2>المنتجات المختارة</h2>
-                  <p>بطاقات أوضح بصريًا مع تركيز على السعر والإجراء وسهولة اللمس.</p>
+                  <p>راجع البرامج المختارة وتأكد من الأسعار قبل إتمام الطلب.</p>
                 </div>
                 <p>{cart.length} عناصر</p>
               </div>
@@ -561,7 +560,7 @@ export default function CartPage() {
 
             <aside className="cart-summary">
               <h2>ملخص الطلب</h2>
-              <p>واجهة مختصرة تبقي عين العميل على الإجمالي والخطوة التالية فقط.</p>
+              <p>المجموع النهائي ووسيلة الدفع والوصول بعد الإتمام موضحة هنا.</p>
 
               <div className="cart-summary-total">
                 <span>المجموع النهائي</span>
@@ -596,7 +595,7 @@ export default function CartPage() {
         )}
       </main>
 
-      <StorefrontFooter note="السلة مصممة لتقليل التشتت وإبراز الخطوة التالية بوضوح وثقة." />
+      <StorefrontFooter note="راجع طلبك ثم انتقل إلى الدفع عندما تكون جاهزًا." />
     </div>
   )
 }

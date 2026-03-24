@@ -24,9 +24,24 @@ type EmailDownloadRow = {
   product_files: { file_name: string } | { file_name: string }[] | null
 }
 
+type CaptureOrderBody = {
+  orderId?: string
+}
+
 const PAYPAL_BASE = process.env.PAYPAL_MODE === 'live'
   ? 'https://api-m.paypal.com'
   : 'https://api-m.sandbox.paypal.com'
+
+const routeErrorMessages = {
+  missing_order: 'تعذر العثور على الطلب المطلوب لإكمال الدفع.',
+  invalid_order: 'تعذر التحقق من الطلب الحالي. حاول إنشاء طلب جديد.',
+  payment_failed: 'لم يكتمل الدفع بنجاح. يمكنك المحاولة مرة أخرى.',
+  unknown: 'حدث خطأ غير متوقع أثناء تأكيد الطلب. حاول مرة أخرى.',
+} as const
+
+type CaptureResult =
+  | { ok: true; redirectTo: string }
+  | { ok: false; errorCode: keyof typeof routeErrorMessages }
 
 async function getPayPalToken() {
   const res = await fetch(`${PAYPAL_BASE}/v1/oauth2/token`, {
@@ -43,16 +58,12 @@ async function getPayPalToken() {
   return data.access_token
 }
 
-export async function GET(req: NextRequest) {
+async function finalizePaidOrder(orderId: string | undefined, origin: string): Promise<CaptureResult> {
+  if (!orderId) {
+    return { ok: false, errorCode: 'missing_order' }
+  }
+
   try {
-    const { searchParams } = req.nextUrl
-    const orderId = searchParams.get('orderId')
-
-    if (!orderId) {
-      return NextResponse.redirect(new URL('/checkout?error=missing_order', req.url))
-    }
-
-    // 1. جلب الطلب
     const { data: order } = await supabase
       .from('orders')
       .select('*')
@@ -60,10 +71,9 @@ export async function GET(req: NextRequest) {
       .single()
 
     if (!order || !order.paypal_id) {
-      return NextResponse.redirect(new URL('/checkout?error=invalid_order', req.url))
+      return { ok: false, errorCode: 'invalid_order' }
     }
 
-    // 2. Capture الدفع
     const token = await getPayPalToken()
     const captureRes = await fetch(
       `${PAYPAL_BASE}/v2/checkout/orders/${order.paypal_id}/capture`,
@@ -79,13 +89,11 @@ export async function GET(req: NextRequest) {
 
     if (captureData.status !== 'COMPLETED') {
       await supabase.from('orders').update({ status: 'failed' }).eq('id', orderId)
-      return NextResponse.redirect(new URL('/checkout?error=payment_failed', req.url))
+      return { ok: false, errorCode: 'payment_failed' }
     }
 
-    // 3. حدّث حالة الطلب
     await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId)
 
-    // 4. تجهيز حساب العميل في Auth بعد نجاح الدفع
     try {
       if (order.customer_email) {
         await ensureCustomerAuthUser({
@@ -98,22 +106,19 @@ export async function GET(req: NextRequest) {
       console.error('Customer auth ensure error (capture order):', authErr)
     }
 
-    // 5. جلب order_items
     const { data: orderItems } = await supabase
       .from('order_items')
       .select('id, product_id')
       .eq('order_id', orderId)
 
     if (!orderItems || orderItems.length === 0) {
-      return NextResponse.redirect(new URL(`/success?order=${orderId}`, req.url))
+      return { ok: true, redirectTo: `/success?order=${orderId}` }
     }
 
-    // 6. حذف downloads قديمة
     const safeOrderItems = (orderItems as OrderItem[] | null) ?? []
     const itemIds = safeOrderItems.map(item => item.id)
     await supabase.from('downloads').delete().in('order_item_id', itemIds)
 
-    // 7. إنشاء download لكل ملف
     for (const item of safeOrderItems) {
       const { data: files } = await supabase
         .from('product_files')
@@ -134,16 +139,13 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 8. إرسال الإيميل
     try {
       const { data: allDownloads } = await supabase
         .from('downloads')
         .select('id, token, product_files(file_name), order_item_id')
         .in('order_item_id', itemIds)
 
-      const baseUrl =
-        (process.env.NEXT_PUBLIC_SITE_URL || req.nextUrl.origin).replace(/\/$/, '')
-
+      const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || origin).replace(/\/$/, '')
       const safeDownloads = (allDownloads as EmailDownloadRow[] | null) ?? []
 
       const downloadLinks = safeDownloads.map((download: EmailDownloadRow) => {
@@ -176,11 +178,48 @@ export async function GET(req: NextRequest) {
       console.error('Email error:', emailErr)
     }
 
-    // 9. وجّه لصفحة النجاح
-    return NextResponse.redirect(new URL(`/success?order=${orderId}`, req.url))
-
+    return { ok: true, redirectTo: `/success?order=${orderId}` }
   } catch (err) {
     console.error('Capture order error:', err)
-    return NextResponse.redirect(new URL('/checkout?error=unknown', req.url))
+    return { ok: false, errorCode: 'unknown' }
   }
+}
+
+export async function GET(req: NextRequest) {
+  const orderId = req.nextUrl.searchParams.get('orderId') || undefined
+  const result = await finalizePaidOrder(orderId, req.nextUrl.origin)
+
+  if (result.ok) {
+    return NextResponse.redirect(new URL(result.redirectTo, req.url))
+  }
+
+  return NextResponse.redirect(new URL(`/checkout?error=${result.errorCode}`, req.url))
+}
+
+export async function POST(req: NextRequest) {
+  let body: CaptureOrderBody = {}
+
+  try {
+    body = (await req.json()) as CaptureOrderBody
+  } catch {
+    body = {}
+  }
+
+  const result = await finalizePaidOrder(body.orderId, req.nextUrl.origin)
+
+  if (result.ok) {
+    return NextResponse.json({ redirectTo: result.redirectTo, success: true })
+  }
+
+  const status =
+    result.errorCode === 'payment_failed'
+      ? 402
+      : result.errorCode === 'unknown'
+        ? 500
+        : 400
+
+  return NextResponse.json(
+    { code: result.errorCode, error: routeErrorMessages[result.errorCode] },
+    { status }
+  )
 }
