@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-export const ADMIN_USERNAME = 'admin'
+export const ADMIN_USERNAME = 'binzain'
 export const ADMIN_LOGIN_PATH = '/admin/login'
 export const ADMIN_SESSION_COOKIE_NAME = 'almu3dl_admin_session'
 export const ADMIN_SESSION_MAX_AGE = 60 * 60 * 24 * 14

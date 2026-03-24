@@ -93,7 +93,7 @@ export default async function AdminLoginPage({
               id="username"
               name="username"
               type="text"
-              defaultValue="admin"
+              defaultValue="binzain"
               autoComplete="username"
               style={inputStyle}
             />
