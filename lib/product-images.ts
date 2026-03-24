@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-const legacyProductImageSlugs = new Set([
+const storageLegacyProductImageSlugs = new Set([
   'back-therapy',
   'beginner-workout-4days',
   'busy-program',
@@ -15,6 +15,12 @@ const legacyProductImageSlugs = new Set([
   'knee-therapy',
   'toning-program',
   'workout-cutter',
+])
+
+const localLegacyProductImages = new Map([
+  ['nutrition-bundle', '/store-legacy-images/nutrition-bundle.svg'],
+  ['rehab-bundle', '/store-legacy-images/rehab-bundle.svg'],
+  ['workout-bundle', '/store-legacy-images/workout-bundle.svg'],
 ])
 
 const PRODUCT_IMAGE_BUCKET = 'product-images'
@@ -108,7 +114,22 @@ async function getFolderProductImages(productId: string) {
 }
 
 async function getLegacyProductImage(slug: string | null | undefined) {
-  if (!slug || !legacyProductImageSlugs.has(slug)) {
+  if (!slug) {
+    return null
+  }
+
+  const localImageUrl = localLegacyProductImages.get(slug)
+
+  if (localImageUrl) {
+    return {
+      path: localImageUrl,
+      url: localImageUrl,
+      fileName: localImageUrl.split('/').pop() ?? `${slug}.svg`,
+      isLegacy: true,
+    } satisfies ProductImageAsset
+  }
+
+  if (!storageLegacyProductImageSlugs.has(slug)) {
     return null
   }
 
@@ -187,9 +208,18 @@ export async function deleteProductImage(
   imagePath: string,
 ) {
   const allowedLegacyPath = slug ? `${slug}.png` : null
+  const allowedLocalLegacyPath = slug ? localLegacyProductImages.get(slug) ?? null : null
 
-  if (!imagePath.startsWith(`${productId}/`) && imagePath !== allowedLegacyPath) {
+  if (
+    !imagePath.startsWith(`${productId}/`) &&
+    imagePath !== allowedLegacyPath &&
+    imagePath !== allowedLocalLegacyPath
+  ) {
     throw new Error('INVALID_IMAGE_PATH')
+  }
+
+  if (imagePath === allowedLocalLegacyPath) {
+    throw new Error('READ_ONLY_LEGACY_IMAGE')
   }
 
   const { error } = await supabaseAdmin.storage.from(PRODUCT_IMAGE_BUCKET).remove([imagePath])

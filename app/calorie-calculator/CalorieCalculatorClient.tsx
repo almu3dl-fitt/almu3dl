@@ -294,16 +294,11 @@ export default function CalorieCalculatorClient({
 
         .calculator-trust-card strong {
           display: block;
-          margin-bottom: 0.35rem;
+          margin-bottom: 0;
           color: var(--store-text);
           font-size: 0.96rem;
           font-weight: 900;
-        }
-
-        .calculator-trust-card span {
-          color: var(--store-text-muted);
-          font-size: 0.82rem;
-          line-height: 1.75;
+          line-height: 1.65;
         }
 
         .calculator-layout {
@@ -639,24 +634,12 @@ export default function CalorieCalculatorClient({
           <div className="calculator-trust-list">
             <div className="calculator-trust-card">
               <strong>نتيجة تقديرية واضحة</strong>
-              <span>
-                نعتمد معادلة شائعة لحساب الاحتياج اليومي بشكل تقريبي اعتمادًا على
-                العمر والطول والوزن والنشاط.
-              </span>
             </div>
             <div className="calculator-trust-card">
               <strong>ترشيح من منتجات المتجر الفعلية</strong>
-              <span>
-                بعد ظهور النتيجة سنربطك بأقرب نظام غذائي متاح داخل المتجر حسب
-                السعرات والهدف.
-              </span>
             </div>
             <div className="calculator-trust-card">
               <strong>بداية عملية بدون تعقيد</strong>
-              <span>
-                الهدف هنا أن تحصل على نقطة بداية أوضح، وليس استبدال التقييم
-                الصحي الفردي عند الحاجة.
-              </span>
             </div>
           </div>
         </div>

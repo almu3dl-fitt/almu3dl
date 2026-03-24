@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import HomeFeaturedProductCard from '@/app/components/HomeFeaturedProductCard'
 import StorefrontFooter from '@/app/components/StorefrontFooter'
@@ -86,7 +87,7 @@ export default async function Home() {
 
   const categoryContent: Record<
     string,
-    { icon: string; title: string; description: string; href: string }
+    { icon: string; title: string; description: string; href: string; imageUrl?: string }
   > = {
     nutrition: {
       icon: '🥗',
@@ -116,6 +117,7 @@ export default async function Home() {
       description:
         'اختيارات موفرة لمن يريد مسارًا أوفر بين التغذية والتمارين أو التأهيل في شراء واحد.',
       href: '/store',
+      imageUrl: '/store-legacy-images/bundles-mark.svg',
     },
   }
 
@@ -207,26 +209,30 @@ export default async function Home() {
 
   const trustItems = [
     {
+      eyebrow: 'اختيار أسهل',
       title: 'منتجات رقمية مرتبة',
       description:
-        'الكتالوج واضح ومقسّم بين التغذية والتمارين والعلاجية والباقات، حتى يصل العميل للخيار المناسب أسرع.',
+        'تصفح أنظمة التغذية والتمارين والباقات ضمن أقسام واضحة تساعدك على الوصول إلى البرنامج الأنسب لهدفك بسرعة.',
     },
     {
-      title: 'خطوات شراء مباشرة',
+      eyebrow: 'خطوات واضحة',
+      title: 'شراء سريع وواضح',
       description:
-        'السلة والدفع والحساب مبنية لتكون مختصرة وواضحة، مع إبراز الخطوة التالية بدل تشتيت العميل.',
+        'رحلة شراء مباشرة ومنظمة من اختيار البرنامج حتى إتمام الطلب، مع عرض واضح للتفاصيل في كل خطوة.',
     },
     {
-      title: 'وصول بعد الإتمام',
+      eyebrow: 'وصول منظم',
+      title: 'استلام رقمي بعد الطلب',
       description:
-        'المنتجات الرقمية وروابط الوصول تُرسل بعد الطلب، وتبقى كذلك ضمن حساب العميل للمراجعة والتنزيل.',
+        'بعد إتمام الشراء يظهر طلبك بشكل منظم وتبقى روابط الوصول محفوظة داخل حسابك للرجوع إليها وقت الحاجة.',
     },
     {
-      title: 'خيارات تبدأ من سعر واضح',
+      eyebrow: 'قيمة مناسبة',
+      title: 'خيارات تناسب ميزانيتك',
       description:
         startingPrice > 0
-          ? `تبدأ بعض البرامج من ${startingPrice} ريال، مع وجود محتوى مجاني لمن يريد التعرف على الأسلوب أولًا.`
-          : 'يوجد محتوى مجاني ومدفوع بأسعار واضحة لتسهيل قرار الشراء.',
+          ? `تبدأ بعض البرامج من ${startingPrice} ريال، مع خيارات متعددة تساعدك على البدء بما يناسب احتياجك وميزانيتك.`
+          : 'تتوفر خيارات متنوعة بأسعار واضحة لتسهيل اختيار البرنامج المناسب.',
     },
   ]
 
@@ -520,6 +526,17 @@ export default async function Home() {
           background: linear-gradient(135deg, rgba(255, 240, 191, 0.16), rgba(224, 180, 72, 0.08));
           color: var(--store-accent-strong);
           font-size: 1.9rem;
+        }
+
+        .home-category-icon.has-image {
+          overflow: hidden;
+          padding: 0.35rem;
+        }
+
+        .home-category-icon-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
 
         .home-category-card h3,
@@ -906,7 +923,19 @@ export default async function Home() {
 
                 return (
                   <Link key={category.id} href={content.href} className="home-category-card">
-                    <div className="home-category-icon">{content.icon}</div>
+                    <div className={`home-category-icon ${content.imageUrl ? 'has-image' : ''}`}>
+                      {content.imageUrl ? (
+                        <Image
+                          src={content.imageUrl}
+                          alt={content.title}
+                          width={64}
+                          height={64}
+                          className="home-category-icon-image"
+                        />
+                      ) : (
+                        content.icon
+                      )}
+                    </div>
                     <h3>{category.name}</h3>
                     <p>{content.description}</p>
                     <div className="home-category-footer">
@@ -978,15 +1007,15 @@ export default async function Home() {
         <section className="home-section">
           <div className="home-surface-panel">
             <StorefrontSectionHeading
-              eyebrow="لماذا المعضل"
-              title="تجربة شراء أوضح وهوية أقوى"
-              description="الهدف ليس فقط عرض المنتجات، بل تسهيل الاختيار ورفع الثقة من أول زيارة حتى الوصول إلى الطلب داخل الحساب."
+              eyebrow="لماذا يختارون المعضل"
+              title="تجربة أوضح من اختيار البرنامج حتى الوصول إليه"
+              description="واجهة مرتبة، خيارات واضحة، وتجربة شراء مريحة تساعدك على البدء بثقة وبخطوات مفهومة من أول زيارة."
             />
 
             <div className="home-trust-grid">
               {trustItems.map(item => (
                 <article key={item.title} className="home-trust-card">
-                  <span>{item.title}</span>
+                  <span>{item.eyebrow}</span>
                   <h3>{item.title}</h3>
                   <p>{item.description}</p>
                 </article>

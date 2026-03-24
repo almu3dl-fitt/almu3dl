@@ -516,22 +516,35 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                     <div style={{ color: '#666', fontSize: '0.78rem', fontWeight: 700 }}>
                       {index === 0 ? 'الصورة المصغّرة الحالية' : `صورة إضافية ${index + 1}`}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteImage(image.path)}
-                      style={{
-                        background: 'none',
-                        border: '1px solid #fecaca',
-                        color: '#dc2626',
+                    {image.isLegacy ? (
+                      <div style={{
+                        border: '1px solid #e5e7eb',
+                        color: '#6b7280',
                         borderRadius: '6px',
                         padding: '0.35rem 0.55rem',
-                        cursor: 'pointer',
                         fontSize: '0.78rem',
-                        fontFamily: "'Tajawal', Arial",
-                      }}
-                    >
-                      حذف الصورة
-                    </button>
+                        lineHeight: 1.7,
+                      }}>
+                        صورة افتراضية مرتبطة بالواجهة ويمكن استبدالها برفع صورة جديدة.
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteImage(image.path)}
+                        style={{
+                          background: 'none',
+                          border: '1px solid #fecaca',
+                          color: '#dc2626',
+                          borderRadius: '6px',
+                          padding: '0.35rem 0.55rem',
+                          cursor: 'pointer',
+                          fontSize: '0.78rem',
+                          fontFamily: "'Tajawal', Arial",
+                        }}
+                      >
+                        حذف الصورة
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

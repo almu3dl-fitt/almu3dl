@@ -1,0 +1,61 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg-nutrition" x1="112" y1="88" x2="1080" y2="1112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1D201B"/>
+      <stop offset="1" stop-color="#0A0C0A"/>
+    </linearGradient>
+    <radialGradient id="glow-nutrition" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(876 248) rotate(123.615) scale(530.914)">
+      <stop stop-color="#E9C46A" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#E9C46A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="card-nutrition" x1="230" y1="210" x2="974" y2="962" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#292B26"/>
+      <stop offset="1" stop-color="#161713"/>
+    </linearGradient>
+    <linearGradient id="accent-nutrition" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F6D67B"/>
+      <stop offset="1" stop-color="#CE9F37"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" rx="72" fill="url(#bg-nutrition)"/>
+  <rect width="1200" height="1200" rx="72" fill="url(#glow-nutrition)"/>
+  <g opacity="0.08">
+    <path d="M0 120H1200" stroke="#FFF3C6"/>
+    <path d="M0 300H1200" stroke="#FFF3C6"/>
+    <path d="M0 480H1200" stroke="#FFF3C6"/>
+    <path d="M0 660H1200" stroke="#FFF3C6"/>
+    <path d="M0 840H1200" stroke="#FFF3C6"/>
+    <path d="M0 1020H1200" stroke="#FFF3C6"/>
+    <path d="M120 0V1200" stroke="#FFF3C6"/>
+    <path d="M300 0V1200" stroke="#FFF3C6"/>
+    <path d="M480 0V1200" stroke="#FFF3C6"/>
+    <path d="M660 0V1200" stroke="#FFF3C6"/>
+    <path d="M840 0V1200" stroke="#FFF3C6"/>
+    <path d="M1020 0V1200" stroke="#FFF3C6"/>
+  </g>
+  <rect x="160" y="160" width="880" height="880" rx="56" fill="url(#card-nutrition)" stroke="#5E4A22" stroke-width="2"/>
+  <rect x="220" y="220" width="760" height="760" rx="44" stroke="rgba(255,243,198,0.12)" stroke-width="2"/>
+  <rect x="244" y="282" width="332" height="540" rx="34" fill="#121310" stroke="#5A4620" stroke-width="2"/>
+  <rect x="298" y="336" width="226" height="24" rx="12" fill="url(#accent-nutrition)"/>
+  <rect x="298" y="394" width="166" height="18" rx="9" fill="#9A7B3E" opacity="0.88"/>
+  <rect x="298" y="458" width="218" height="20" rx="10" fill="#FFFFFF" opacity="0.12"/>
+  <rect x="298" y="514" width="190" height="20" rx="10" fill="#FFFFFF" opacity="0.12"/>
+  <rect x="298" y="570" width="204" height="20" rx="10" fill="#FFFFFF" opacity="0.12"/>
+  <rect x="298" y="626" width="152" height="20" rx="10" fill="#FFFFFF" opacity="0.12"/>
+  <rect x="298" y="706" width="220" height="58" rx="22" fill="#171915" stroke="#725A28" stroke-width="2"/>
+  <rect x="670" y="322" width="246" height="246" rx="123" fill="#171915" stroke="#6F5727" stroke-width="2"/>
+  <circle cx="793" cy="445" r="78" fill="#233126"/>
+  <circle cx="744" cy="418" r="28" fill="#9CCB5C"/>
+  <circle cx="836" cy="411" r="24" fill="#C94E46"/>
+  <circle cx="811" cy="484" r="30" fill="#E8BE53"/>
+  <circle cx="736" cy="485" r="18" fill="#7DBB78"/>
+  <path d="M792 362C804 333 833 326 852 344" stroke="#7DBB78" stroke-width="10" stroke-linecap="round"/>
+  <rect x="636" y="640" width="312" height="182" rx="34" fill="#131410" stroke="#5A4620" stroke-width="2"/>
+  <rect x="684" y="688" width="216" height="18" rx="9" fill="url(#accent-nutrition)"/>
+  <rect x="684" y="732" width="138" height="18" rx="9" fill="#FFFFFF" opacity="0.12"/>
+  <rect x="684" y="776" width="186" height="18" rx="9" fill="#FFFFFF" opacity="0.12"/>
+  <path d="M924 256L964 296" stroke="#F1C75E" stroke-width="10" stroke-linecap="round"/>
+  <path d="M964 256L924 296" stroke="#F1C75E" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="250" cy="930" r="16" fill="#F1C75E"/>
+  <circle cx="290" cy="930" r="8" fill="#FFF3C6"/>
+</svg>
