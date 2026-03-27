@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { siteConfig } from '@/lib/site'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -31,7 +32,8 @@ export async function sendOrderEmail({
   ).join('')
 
   await resend.emails.send({
-   from: 'المعضل <orders@send.almu3dl.store>',
+    from: 'المعضل <orders@send.almu3dl.store>',
+    replyTo: siteConfig.supportEmail,
     to,
     subject: `تم الطلب بنجاح — المعضل #${orderId.slice(0, 8)}`,
     html: `

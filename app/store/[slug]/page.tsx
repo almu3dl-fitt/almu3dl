@@ -97,7 +97,7 @@ export async function generateMetadata({
   const categoryName = product.categories?.name ?? 'برنامج رقمي'
   const description = truncateText(
     product.description?.trim() ||
-      `${product.title} من ${siteConfig.name} برنامج رقمي عربي مع وصول فوري وتجربة شراء واضحة على الجوال.`,
+      `${product.title} من ${siteConfig.name} برنامج رقمي مع وصول فوري وتجربة شراء واضحة على الجوال.`,
     160,
   )
 

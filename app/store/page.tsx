@@ -58,7 +58,7 @@ const categoryThemes: Record<string, { icon: string; gradient: string }> = {
 export const metadata: Metadata = {
   title: 'المتجر',
   description:
-    'تصفّح برامج التغذية والتمارين والباقات الرقمية في متجر المعضل مع فلترة سريعة وتجربة شراء عربية واضحة.',
+    'تصفّح برامج التغذية والتمارين والباقات الرقمية في متجر المعضل مع فلترة سريعة وتجربة شراء واضحة.',
   alternates: {
     canonical: '/store',
   },

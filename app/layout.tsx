@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { getMetadataBase, siteConfig } from '@/lib/site'
+import { THEME_STORAGE_KEY } from '@/lib/theme'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -54,13 +55,29 @@ export const metadata: Metadata = {
   },
 }
 
+const themeInitScript = `
+  (function () {
+    try {
+      var storedTheme = window.localStorage.getItem('${THEME_STORAGE_KEY}');
+      var systemTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      var theme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : systemTheme;
+      document.documentElement.dataset.theme = theme;
+    } catch (error) {
+      document.documentElement.dataset.theme = 'dark';
+    }
+  })();
+`
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

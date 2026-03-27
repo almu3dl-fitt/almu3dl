@@ -4,6 +4,7 @@ import Link from 'next/link'
 import AccountNavLink from '@/app/components/AccountNavLink'
 import BrandMark from '@/app/components/BrandMark'
 import CartIcon from '@/app/components/CartIcon'
+import ThemeToggle from '@/app/components/ThemeToggle'
 import { siteConfig } from '@/lib/site'
 
 type HeaderAction = {
@@ -36,6 +37,7 @@ export default function StorefrontHeader({
         </Link>
 
         <div className="storefront-header-actions">
+          <ThemeToggle />
           {showCart && <CartIcon />}
           {showAccount && <AccountNavLink className="storefront-action" />}
           {headerActions.map(action => {

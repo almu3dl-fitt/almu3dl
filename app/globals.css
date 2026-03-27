@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
-:root {
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
   --background: #070806;
   --foreground: #f5f2e8;
   --store-bg: #070806;
@@ -24,11 +26,118 @@
   --store-danger: #ff6b6b;
   --store-shadow: 0 28px 70px rgba(0, 0, 0, 0.45);
   --store-card-shadow: 0 20px 42px rgba(0, 0, 0, 0.34);
+  --store-body-glow-top: rgba(224, 180, 72, 0.14);
+  --store-body-glow-side: rgba(224, 180, 72, 0.08);
+  --store-body-start: #090907;
+  --store-body-mid: #070806;
+  --store-body-end: #060705;
+  --store-selection: rgba(224, 180, 72, 0.28);
+  --store-shell-top-wash: rgba(255, 255, 255, 0.015);
+  --store-shell-glow-top: rgba(224, 180, 72, 0.12);
+  --store-shell-glow-side: rgba(224, 180, 72, 0.08);
+  --store-header-top: rgba(7, 8, 6, 0.96);
+  --store-header-bottom: rgba(7, 8, 6, 0.88);
+  --store-header-solid: rgba(7, 8, 6, 0.9);
+  --store-brand-top-wash: rgba(255, 255, 255, 0.02);
+  --store-brand-glow: rgba(224, 180, 72, 0.12);
+  --store-brand-highlight: rgba(255, 255, 255, 0.04);
+  --store-action-bg: rgba(255, 255, 255, 0.02);
+  --store-action-bg-hover: rgba(255, 255, 255, 0.04);
+  --store-action-shadow: 0 16px 28px rgba(0, 0, 0, 0.24);
+  --store-accent-contrast: #111;
+  --store-accent-hover: #ffd56f;
+  --store-footer-top: rgba(255, 255, 255, 0.02);
+  --store-footer-bottom: rgba(255, 255, 255, 0);
+  --store-footer-solid: rgba(9, 10, 8, 0.92);
+  --store-link-hover: #ffe29c;
+  --store-grid-line: rgba(255, 255, 255, 0.03);
+  --store-grid-mask: rgba(0, 0, 0, 0.65);
+  --store-input-bg: rgba(255, 255, 255, 0.03);
+  --store-input-focus-bg: rgba(255, 255, 255, 0.05);
+  --store-focus-ring: rgba(224, 180, 72, 0.14);
+  --store-soft-panel-bg: rgba(255, 255, 255, 0.02);
+  --store-empty-top: rgba(224, 180, 72, 0.08);
+  --store-empty-bottom: rgba(255, 255, 255, 0.01);
+  --store-cart-bg: rgba(255, 255, 255, 0.03);
+  --store-cart-hover-bg: rgba(255, 255, 255, 0.05);
+  --store-cart-count-shadow: 0 10px 18px rgba(224, 180, 72, 0.24);
+  --store-menu-top: rgba(255, 255, 255, 0.04);
+  --store-menu-bottom: rgba(255, 255, 255, 0.02);
+  --store-menu-solid: rgba(12, 14, 12, 0.96);
+  --store-menu-hover-bg: rgba(255, 255, 255, 0.04);
+  --store-menu-shadow: 0 24px 40px rgba(0, 0, 0, 0.36);
   --store-radius-xl: 30px;
   --store-radius-lg: 24px;
   --store-radius-md: 18px;
   --store-radius-sm: 14px;
   --store-content-width: 1180px;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --background: #f6f1e6;
+  --foreground: #1c1710;
+  --store-bg: #f7f1e5;
+  --store-bg-soft: #efe7d8;
+  --store-surface: rgba(255, 252, 246, 0.92);
+  --store-surface-strong: #fff8ef;
+  --store-surface-muted: #f0e7d7;
+  --store-surface-soft: #f6eddf;
+  --store-border: rgba(84, 62, 18, 0.14);
+  --store-border-strong: rgba(176, 123, 20, 0.28);
+  --store-divider: rgba(84, 62, 18, 0.1);
+  --store-text: #1a150d;
+  --store-text-muted: #5d5646;
+  --store-text-soft: #857b69;
+  --store-accent: #d6a12b;
+  --store-accent-strong: #eabd52;
+  --store-accent-deep: #8f6410;
+  --store-accent-wash: rgba(214, 161, 43, 0.14);
+  --store-success: #239254;
+  --store-success-wash: rgba(35, 146, 84, 0.16);
+  --store-danger: #cf5b5b;
+  --store-shadow: 0 26px 60px rgba(96, 74, 27, 0.14);
+  --store-card-shadow: 0 14px 30px rgba(96, 74, 27, 0.1);
+  --store-body-glow-top: rgba(214, 161, 43, 0.18);
+  --store-body-glow-side: rgba(214, 161, 43, 0.1);
+  --store-body-start: #fffaf1;
+  --store-body-mid: #f7f1e5;
+  --store-body-end: #efe6d7;
+  --store-selection: rgba(214, 161, 43, 0.22);
+  --store-shell-top-wash: rgba(255, 255, 255, 0.42);
+  --store-shell-glow-top: rgba(214, 161, 43, 0.13);
+  --store-shell-glow-side: rgba(214, 161, 43, 0.08);
+  --store-header-top: rgba(250, 245, 237, 0.96);
+  --store-header-bottom: rgba(247, 240, 228, 0.9);
+  --store-header-solid: rgba(247, 240, 228, 0.92);
+  --store-brand-top-wash: rgba(255, 255, 255, 0.65);
+  --store-brand-glow: rgba(214, 161, 43, 0.12);
+  --store-brand-highlight: rgba(255, 255, 255, 0.8);
+  --store-action-bg: rgba(255, 255, 255, 0.68);
+  --store-action-bg-hover: rgba(255, 255, 255, 0.92);
+  --store-action-shadow: 0 12px 24px rgba(96, 74, 27, 0.08);
+  --store-accent-contrast: #241b06;
+  --store-accent-hover: #f3c76a;
+  --store-footer-top: rgba(255, 255, 255, 0.5);
+  --store-footer-bottom: rgba(255, 255, 255, 0);
+  --store-footer-solid: rgba(244, 236, 223, 0.92);
+  --store-link-hover: #8a6410;
+  --store-grid-line: rgba(84, 62, 18, 0.07);
+  --store-grid-mask: rgba(0, 0, 0, 0.42);
+  --store-input-bg: rgba(255, 255, 255, 0.72);
+  --store-input-focus-bg: rgba(255, 255, 255, 0.95);
+  --store-focus-ring: rgba(214, 161, 43, 0.18);
+  --store-soft-panel-bg: rgba(255, 255, 255, 0.45);
+  --store-empty-top: rgba(214, 161, 43, 0.11);
+  --store-empty-bottom: rgba(255, 255, 255, 0.36);
+  --store-cart-bg: rgba(255, 255, 255, 0.7);
+  --store-cart-hover-bg: rgba(255, 255, 255, 0.94);
+  --store-cart-count-shadow: 0 10px 18px rgba(214, 161, 43, 0.18);
+  --store-menu-top: rgba(255, 255, 255, 0.8);
+  --store-menu-bottom: rgba(255, 255, 255, 0.55);
+  --store-menu-solid: rgba(255, 250, 242, 0.96);
+  --store-menu-hover-bg: rgba(214, 161, 43, 0.1);
+  --store-menu-shadow: 0 18px 34px rgba(96, 74, 27, 0.12);
 }
 
 @theme inline {
@@ -51,9 +160,9 @@ body {
   color: var(--foreground);
   font-family: 'Tajawal', var(--font-geist-sans), Arial, Helvetica, sans-serif;
   background-image:
-    radial-gradient(circle at top right, rgba(224, 180, 72, 0.14), transparent 24%),
-    radial-gradient(circle at left 10%, rgba(224, 180, 72, 0.08), transparent 18%),
-    linear-gradient(180deg, #090907 0%, #070806 35%, #060705 100%);
+    radial-gradient(circle at top right, var(--store-body-glow-top), transparent 24%),
+    radial-gradient(circle at left 10%, var(--store-body-glow-side), transparent 18%),
+    linear-gradient(180deg, var(--store-body-start) 0%, var(--store-body-mid) 35%, var(--store-body-end) 100%);
   min-height: 100vh;
 }
 
@@ -66,7 +175,7 @@ select {
 }
 
 ::selection {
-  background: rgba(224, 180, 72, 0.28);
+  background: var(--store-selection);
   color: var(--store-text);
 }
 
@@ -74,9 +183,9 @@ select {
   min-height: 100vh;
   color: var(--store-text);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent 28%),
-    radial-gradient(circle at top right, rgba(224, 180, 72, 0.12), transparent 26%),
-    radial-gradient(circle at 20% 18%, rgba(224, 180, 72, 0.08), transparent 16%),
+    linear-gradient(180deg, var(--store-shell-top-wash), transparent 28%),
+    radial-gradient(circle at top right, var(--store-shell-glow-top), transparent 26%),
+    radial-gradient(circle at 20% 18%, var(--store-shell-glow-side), transparent 16%),
     var(--store-bg);
 }
 
@@ -86,8 +195,8 @@ select {
   z-index: 100;
   border-bottom: 1px solid var(--store-divider);
   background:
-    linear-gradient(180deg, rgba(7, 8, 6, 0.96), rgba(7, 8, 6, 0.88)),
-    rgba(7, 8, 6, 0.9);
+    linear-gradient(180deg, var(--store-header-top), var(--store-header-bottom)),
+    var(--store-header-solid);
   backdrop-filter: blur(20px);
 }
 
@@ -127,10 +236,10 @@ select {
   border-radius: 18px;
   border: 1px solid var(--store-border);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
-    linear-gradient(135deg, rgba(224, 180, 72, 0.12), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, var(--store-brand-top-wash), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, var(--store-brand-glow), rgba(255, 255, 255, 0.02)),
     var(--store-surface);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 0 var(--store-brand-highlight);
 }
 
 .storefront-brand-mark img {
@@ -176,7 +285,7 @@ select {
   padding: 0.72rem 1rem;
   border-radius: var(--store-radius-sm);
   border: 1px solid var(--store-border);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--store-action-bg);
   color: var(--store-text);
   text-decoration: none;
   font-size: 0.88rem;
@@ -192,19 +301,19 @@ select {
 .storefront-action:hover {
   transform: translateY(-1px);
   border-color: var(--store-border-strong);
-  background: rgba(255, 255, 255, 0.04);
-  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.24);
+  background: var(--store-action-bg-hover);
+  box-shadow: var(--store-action-shadow);
 }
 
 .storefront-action.is-primary {
   border-color: transparent;
   background: linear-gradient(135deg, var(--store-accent-strong), var(--store-accent));
-  color: #111;
+  color: var(--store-accent-contrast);
   box-shadow: 0 18px 30px rgba(224, 180, 72, 0.22);
 }
 
 .storefront-action.is-primary:hover {
-  background: linear-gradient(135deg, #ffd56f, var(--store-accent-strong));
+  background: linear-gradient(135deg, var(--store-accent-hover), var(--store-accent-strong));
 }
 
 .storefront-action.is-muted {
@@ -215,8 +324,8 @@ select {
   margin-top: 3.5rem;
   border-top: 1px solid var(--store-divider);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
-    rgba(9, 10, 8, 0.92);
+    linear-gradient(180deg, var(--store-footer-top), var(--store-footer-bottom)),
+    var(--store-footer-solid);
 }
 
 .storefront-footer-inner {
@@ -263,7 +372,7 @@ select {
   padding: 0.58rem 0.82rem;
   border-radius: 999px;
   border: 1px solid var(--store-border);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--store-action-bg);
   color: var(--store-text-muted);
   text-decoration: none;
   font-size: 0.8rem;
@@ -279,7 +388,7 @@ select {
   transform: translateY(-1px);
   border-color: var(--store-border-strong);
   color: var(--store-text);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--store-action-bg-hover);
 }
 
 .storefront-footer-link.is-external {
@@ -386,7 +495,7 @@ select {
 }
 
 .content-page-inline-link:hover {
-  color: #ffe29c;
+  color: var(--store-link-hover);
 }
 
 .content-page-sections {
@@ -467,7 +576,7 @@ select {
   border-radius: var(--store-radius-md);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
-    rgba(255, 255, 255, 0.02);
+    var(--store-soft-panel-bg);
 }
 
 .storefront-grid-accent {
@@ -480,10 +589,10 @@ select {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(var(--store-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--store-grid-line) 1px, transparent 1px);
   background-size: 34px 34px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.65), transparent 88%);
+  mask-image: linear-gradient(180deg, var(--store-grid-mask), transparent 88%);
   pointer-events: none;
 }
 
@@ -492,7 +601,7 @@ select {
   padding: 0.92rem 1rem;
   border: 1px solid var(--store-border);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--store-input-bg);
   color: var(--store-text);
   font-size: 0.96rem;
   font-family: 'Tajawal', var(--font-geist-sans), Arial, sans-serif;
@@ -509,8 +618,8 @@ select {
 
 .storefront-input:focus {
   border-color: var(--store-border-strong);
-  box-shadow: 0 0 0 4px rgba(224, 180, 72, 0.14);
-  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 4px var(--store-focus-ring);
+  background: var(--store-input-focus-bg);
 }
 
 .storefront-button-primary,
@@ -536,7 +645,7 @@ select {
 .storefront-button-primary {
   border: none;
   background: linear-gradient(135deg, var(--store-accent-strong), var(--store-accent));
-  color: #111;
+  color: var(--store-accent-contrast);
   box-shadow: 0 18px 30px rgba(224, 180, 72, 0.22);
 }
 
@@ -547,7 +656,7 @@ select {
 
 .storefront-button-secondary {
   border: 1px solid var(--store-border);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--store-action-bg);
   color: var(--store-text);
 }
 
@@ -556,8 +665,8 @@ select {
   border: 1px dashed var(--store-border-strong);
   border-radius: var(--store-radius-lg);
   background:
-    linear-gradient(180deg, rgba(224, 180, 72, 0.08), rgba(255, 255, 255, 0.01)),
-    rgba(255, 255, 255, 0.02);
+    linear-gradient(180deg, var(--store-empty-top), var(--store-empty-bottom)),
+    var(--store-soft-panel-bg);
   text-align: center;
   color: var(--store-text-muted);
   line-height: 1.9;
@@ -572,7 +681,7 @@ select {
   height: 44px;
   border-radius: 14px;
   border: 1px solid var(--store-border);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--store-cart-bg);
   color: var(--store-text);
   text-decoration: none;
   font-size: 1.16rem;
@@ -585,7 +694,7 @@ select {
 .storefront-cart-icon:hover {
   transform: translateY(-1px);
   border-color: var(--store-border-strong);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--store-cart-hover-bg);
 }
 
 .storefront-cart-count {
@@ -597,13 +706,13 @@ select {
   padding-inline: 0.22rem;
   border-radius: 999px;
   background: linear-gradient(135deg, var(--store-accent-strong), var(--store-accent));
-  color: #111;
+  color: var(--store-accent-contrast);
   font-size: 0.66rem;
   font-weight: 900;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 18px rgba(224, 180, 72, 0.24);
+  box-shadow: var(--store-cart-count-shadow);
 }
 
 .storefront-account-menu {
@@ -615,9 +724,9 @@ select {
   border-radius: 18px;
   border: 1px solid var(--store-border);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
-    rgba(12, 14, 12, 0.96);
-  box-shadow: 0 24px 40px rgba(0, 0, 0, 0.36);
+    linear-gradient(180deg, var(--store-menu-top), var(--store-menu-bottom)),
+    var(--store-menu-solid);
+  box-shadow: var(--store-menu-shadow);
   backdrop-filter: blur(20px);
   z-index: 120;
 }
@@ -641,8 +750,18 @@ select {
 }
 
 .storefront-account-menu-item:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--store-menu-hover-bg);
   color: var(--store-accent-strong);
+}
+
+.storefront-theme-toggle {
+  cursor: pointer;
+  font-family: 'Tajawal', var(--font-geist-sans), Arial, sans-serif;
+}
+
+.storefront-theme-toggle-icon {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .storefront-text-muted {
