@@ -4,6 +4,16 @@ export type SocialLink = {
   shortLabel: string
 }
 
+export type FooterLink = {
+  href: string
+  label: string
+}
+
+export type CategoryDefinition = {
+  slug: string
+  name: string
+}
+
 export const siteConfig = {
   name: 'المعضل',
   title: 'المعضل | متجر البرامج الرياضية والغذائية الرقمية',
@@ -47,6 +57,26 @@ export const siteConfig = {
     },
   ] satisfies SocialLink[],
 }
+
+export const SOCIAL_LINKS = siteConfig.socialLinks
+
+export const SITE_DESCRIPTION =
+  'برامج رقمية في التغذية والتمارين والتأهيل مع شراء آمن ووصول مباشر وتجربة واضحة على الجوال والكمبيوتر.'
+
+export const FOOTER_LINKS: FooterLink[] = [
+  { href: '/about', label: 'من نحن' },
+  { href: '/privacy-policy', label: 'سياسة الخصوصية' },
+  { href: '/refund-policy', label: 'سياسة الاسترجاع والاستبدال' },
+  { href: '/contact', label: 'تواصل معنا' },
+  { href: '/faq', label: 'الأسئلة الشائعة' },
+]
+
+export const CATEGORY_DEFINITIONS: CategoryDefinition[] = [
+  { slug: 'nutrition', name: 'التغذية' },
+  { slug: 'workouts', name: 'التمارين' },
+  { slug: 'therapy', name: 'العلاجية' },
+  { slug: 'bundles', name: 'الباقات' },
+]
 
 export function getSiteUrl() {
   return (process.env.NEXT_PUBLIC_SITE_URL || siteConfig.defaultUrl).replace(/\/$/, '')
