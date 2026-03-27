@@ -24,7 +24,7 @@ export default function BrandMark({
       <span className="storefront-brand-copy">
         <span className="storefront-brand-title">Almu3dl - المعضّل</span>
         <span className="storefront-brand-tagline">
-          منصة عربية للّياقة والتغذية والأداء الرياضي
+          منصة للّياقة والتغذية والأداء الرياضي
         </span>
       </span>
     </>
