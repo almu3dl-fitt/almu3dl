@@ -36,43 +36,50 @@ export default function StorefrontHeader({
           <BrandMark />
         </Link>
 
-        <div className="storefront-header-actions">
-          <ThemeToggle />
-          {showCart && <CartIcon />}
-          {showAccount && <AccountNavLink className="storefront-action" />}
-          {headerActions.map(action => {
-            const className = [
-              'storefront-action',
-              action.variant === 'primary' ? 'is-primary' : '',
-              action.variant === 'muted' ? 'is-muted' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')
+        <div className="storefront-header-meta">
+          <div className="storefront-header-utility">
+            <ThemeToggle />
+            {showCart && <CartIcon />}
+            {showAccount && <AccountNavLink className="storefront-action" />}
+          </div>
 
-            if (action.external) {
-              return (
-                <a
-                  key={`${action.href}:${action.label}`}
-                  href={action.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={className}
-                >
-                  {action.label}
-                </a>
-              )
-            }
+          {headerActions.length > 0 && (
+            <nav className="storefront-header-nav" aria-label="روابط سريعة">
+              {headerActions.map(action => {
+                const className = [
+                  'storefront-action',
+                  action.variant === 'primary' ? 'is-primary' : '',
+                  action.variant === 'muted' ? 'is-muted' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')
 
-            return (
-              <Link
-                key={`${action.href}:${action.label}`}
-                href={action.href}
-                className={className}
-              >
-                {action.label}
-              </Link>
-            )
-          })}
+                if (action.external) {
+                  return (
+                    <a
+                      key={`${action.href}:${action.label}`}
+                      href={action.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={className}
+                    >
+                      {action.label}
+                    </a>
+                  )
+                }
+
+                return (
+                  <Link
+                    key={`${action.href}:${action.label}`}
+                    href={action.href}
+                    className={className}
+                  >
+                    {action.label}
+                  </Link>
+                )
+              })}
+            </nav>
+          )}
         </div>
       </div>
     </header>
