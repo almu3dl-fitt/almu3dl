@@ -656,6 +656,7 @@ export default async function StorePage({
       `}</style>
 
       <StorefrontHeader
+        showBlogLink
         actions={[
           { href: '/calorie-calculator', label: 'حاسبة السعرات', variant: 'muted' },
           { href: '/store?free=true', label: 'العروض المجانية', variant: 'primary' },

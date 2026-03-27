@@ -88,6 +88,7 @@ export default async function CalorieCalculatorPage() {
   return (
     <div className="storefront-shell">
       <StorefrontHeader
+        showBlogLink
         actions={[
           { href: '/store?category=nutrition', label: 'أنظمة التغذية', variant: 'muted' },
           { href: '/store', label: 'المتجر', variant: 'primary' },

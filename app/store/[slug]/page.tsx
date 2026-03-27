@@ -735,6 +735,7 @@ export default async function ProductPage({
       `}</style>
 
       <StorefrontHeader
+        showBlogLink
         actions={[
           { href: '/store', label: 'المتجر', variant: 'muted' },
           { href: '/cart', label: 'السلة', variant: 'primary' },

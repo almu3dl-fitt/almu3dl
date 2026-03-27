@@ -812,6 +812,7 @@ export default async function Home() {
       `}</style>
 
       <StorefrontHeader
+        showBlogLink
         actions={[
           { href: '/calorie-calculator', label: 'حاسبة السعرات', variant: 'muted' },
           { href: '/store', label: 'اكتشف البرامج', variant: 'primary' },

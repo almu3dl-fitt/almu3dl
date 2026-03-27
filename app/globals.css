@@ -230,6 +230,11 @@ select {
   flex-wrap: wrap;
 }
 
+.storefront-footer-meta {
+  display: grid;
+  gap: 0.35rem;
+}
+
 .storefront-footer-copy {
   margin: 0;
   color: var(--store-text-soft);
@@ -242,6 +247,168 @@ select {
   color: var(--store-text-muted);
   font-size: 0.78rem;
   font-weight: 700;
+}
+
+.storefront-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.storefront-footer-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0.58rem 0.82rem;
+  border-radius: 999px;
+  border: 1px solid var(--store-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--store-text-muted);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 800;
+  transition:
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.storefront-footer-link:hover {
+  transform: translateY(-1px);
+  border-color: var(--store-border-strong);
+  color: var(--store-text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.storefront-footer-link.is-external {
+  color: var(--store-accent-strong);
+}
+
+.content-page-main {
+  width: min(calc(100% - 2rem), 980px);
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+}
+
+.content-page-hero {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--store-border);
+  border-radius: var(--store-radius-xl);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, rgba(224, 180, 72, 0.1), rgba(255, 255, 255, 0.02)),
+    var(--store-surface);
+  box-shadow: var(--store-card-shadow);
+}
+
+.content-page-eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 32px;
+  padding: 0.34rem 0.72rem;
+  border-radius: 999px;
+  border: 1px solid var(--store-border-strong);
+  background: var(--store-accent-wash);
+  color: var(--store-accent-strong);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.content-page-title {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.1rem);
+  line-height: 1.12;
+  font-weight: 900;
+}
+
+.content-page-description {
+  margin: 0;
+  color: var(--store-text-muted);
+  font-size: 1rem;
+  line-height: 1.85;
+}
+
+.content-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.content-page-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.content-page-card,
+.content-page-section {
+  border: 1px solid var(--store-border);
+  border-radius: var(--store-radius-lg);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+    var(--store-surface);
+  box-shadow: var(--store-card-shadow);
+}
+
+.content-page-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.25rem;
+}
+
+.content-page-card h2,
+.content-page-section h2 {
+  margin: 0;
+  font-size: 1.18rem;
+  font-weight: 900;
+  color: var(--store-text);
+}
+
+.content-page-card p,
+.content-page-section p {
+  margin: 0;
+  color: var(--store-text-muted);
+  line-height: 1.9;
+}
+
+.content-page-inline-link {
+  display: inline-flex;
+  width: fit-content;
+  color: var(--store-accent-strong);
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.content-page-inline-link:hover {
+  color: #ffe29c;
+}
+
+.content-page-sections {
+  display: grid;
+  gap: 1rem;
+}
+
+.content-page-section {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.4rem;
+}
+
+.content-page-section ul {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  color: var(--store-text-muted);
+  line-height: 1.95;
+}
+
+.content-page-section li + li {
+  margin-top: 0.38rem;
 }
 
 .storefront-pill {
@@ -258,6 +425,32 @@ select {
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.03em;
+}
+
+@media (max-width: 860px) {
+  .content-page-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .storefront-footer-links {
+    justify-content: flex-start;
+  }
+
+  .content-page-main {
+    padding: 1.2rem 0 2.4rem;
+  }
+
+  .content-page-hero,
+  .content-page-section,
+  .content-page-card {
+    padding: 1.1rem;
+  }
+
+  .content-page-actions .storefront-action {
+    width: 100%;
+  }
 }
 
 .storefront-panel {

@@ -6,6 +6,8 @@ export const siteConfig = {
   shortDescription:
     'متجر عربي لبرامج التغذية والتمارين والباقات الرقمية مع وصول فوري وتجربة شراء واضحة.',
   defaultUrl: 'http://localhost:3000',
+  blogUrl: process.env.NEXT_PUBLIC_BLOG_URL || 'https://almu3dl-blog.almu3dl.store',
+  supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'orders@send.almu3dl.store',
 }
 
 export function getSiteUrl() {
