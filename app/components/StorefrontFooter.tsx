@@ -41,6 +41,23 @@ export default function StorefrontFooter({
             المدونة
           </a>
         </nav>
+
+        <div className="storefront-footer-socials" aria-label="حسابات التواصل الاجتماعي">
+          {siteConfig.socialLinks.map(link => (
+            <a
+              key={link.href}
+              href={link.href}
+              target="_blank"
+              rel="noreferrer"
+              className="storefront-social-link"
+              aria-label={link.label}
+              title={link.label}
+            >
+              <span className="storefront-social-pill">{link.shortLabel}</span>
+              <span>{link.label}</span>
+            </a>
+          ))}
+        </div>
       </div>
     </footer>
   )

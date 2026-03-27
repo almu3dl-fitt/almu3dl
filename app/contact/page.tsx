@@ -46,6 +46,13 @@ export default function ContactPage() {
           linkLabel: 'زيارة المدونة',
           external: true,
         },
+        ...siteConfig.socialLinks.map(link => ({
+          title: link.label,
+          description: `تابع حساب ${link.label} للحصول على محتوى وتحديثات إضافية.`,
+          href: link.href,
+          linkLabel: `فتح ${link.label}`,
+          external: true,
+        })),
       ]}
       sections={[
         {

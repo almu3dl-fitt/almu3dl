@@ -7,8 +7,10 @@ export default function BrandMark() {
         <Image src="/logo.png" alt="" width={42} height={42} />
       </span>
       <span className="storefront-brand-copy">
-        <span className="storefront-brand-title">المعضل</span>
-        <span className="storefront-brand-tagline">Premium Fitness Store</span>
+        <span className="storefront-brand-title">Almu3dl - المعضّل</span>
+        <span className="storefront-brand-tagline">
+          منصة عربية للّياقة والتغذية والأداء الرياضي
+        </span>
       </span>
     </>
   )
