@@ -19,8 +19,9 @@ export default function CartIcon() {
   }, [])
 
   return (
-    <Link href="/cart" className="storefront-cart-icon" aria-label="عرض السلة">
-      <span aria-hidden="true">🛒</span>
+    <Link href="/cart" className="storefront-cart-icon storefront-theme-pill" aria-label="عرض السلة">
+      <span className="storefront-cart-icon-symbol" aria-hidden="true">🛒</span>
+      <span className="storefront-cart-icon-label">السلة</span>
       {count > 0 && (
         <span className="storefront-cart-count">{count}</span>
       )}
