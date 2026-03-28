@@ -21,7 +21,6 @@ type ResolvedAction = HeaderAction & {
 
 const MAIN_NAV_ITEMS: HeaderAction[] = [
   { href: '/', label: 'الرئيسية' },
-  { href: '/store', label: 'المتجر' },
   { href: siteConfig.blogUrl, label: 'المدونة', external: true },
   { href: '/about', label: 'عن المعضّل' },
   { href: '/contact', label: 'تواصل' },
