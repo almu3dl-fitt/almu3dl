@@ -22,6 +22,7 @@ type ResolvedAction = HeaderAction & {
 const MAIN_NAV_ITEMS: HeaderAction[] = [
   { href: '/', label: 'الرئيسية' },
   { href: '/store', label: 'المتجر' },
+  { href: siteConfig.blogUrl, label: 'المدونة', external: true },
   { href: '/about', label: 'عن المعضّل' },
   { href: '/contact', label: 'تواصل' },
   { href: '/privacy-policy', label: 'الخصوصية' },
@@ -82,23 +83,16 @@ export default function StorefrontHeader({
 }) {
   const pathname = usePathname()
 
-  const optionalActions = [
-    ...actions,
-    ...(showBlogLink
-      ? [{ href: siteConfig.blogUrl, label: 'المدونة', variant: 'muted', external: true } satisfies HeaderAction]
-      : []),
-  ].map(normalizeAction)
+  const navItems = MAIN_NAV_ITEMS.filter(item => showBlogLink || item.href !== siteConfig.blogUrl)
 
-  const primaryAction =
-    optionalActions.find(action => action.variant === 'primary') ??
-    normalizeAction({ href: '/store', label: 'تصفّح البرامج', variant: 'primary' })
+  const optionalActions = actions.map(normalizeAction)
 
   const secondaryActions = optionalActions.filter(action => {
-    if (action.key === primaryAction.key) {
+    if (navItems.some(item => item.href === action.href && item.external === action.external)) {
       return false
     }
 
-    if (!action.external && MAIN_NAV_ITEMS.some(item => item.href === action.href)) {
+    if (showCart && !action.external && action.href === '/cart') {
       return false
     }
 
@@ -132,21 +126,21 @@ export default function StorefrontHeader({
             </span>
           </Link>
 
-          <HeaderLink
-            action={primaryAction}
-            className="theme-button-primary storefront-theme-primary-action storefront-theme-mobile-action"
-          />
         </div>
 
         <div className="storefront-theme-main">
           <nav className="storefront-theme-nav" aria-label="التنقل الرئيسي">
-            {MAIN_NAV_ITEMS.map(item => (
+            {navItems.map(item => (
               <HeaderLink
                 key={item.href}
                 action={item}
                 className={[
                   'storefront-theme-nav-link',
-                  isActivePath(pathname, item.href) ? 'theme-pill-active is-active' : 'theme-pill',
+                  item.external
+                    ? 'theme-pill'
+                    : isActivePath(pathname, item.href)
+                      ? 'theme-pill-active is-active'
+                      : 'theme-pill',
                 ].join(' ')}
               />
             ))}
@@ -172,10 +166,6 @@ export default function StorefrontHeader({
               <AccountNavLink className="theme-pill storefront-theme-pill storefront-theme-account-link" />
             )}
             {showCart && <CartIcon />}
-            <HeaderLink
-              action={primaryAction}
-              className="theme-button-primary storefront-theme-primary-action storefront-theme-desktop-action"
-            />
           </div>
         </div>
       </div>
