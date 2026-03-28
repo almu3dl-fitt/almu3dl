@@ -261,10 +261,10 @@ export default async function Home() {
   ]
 
   const spotlightResult = {
-    eyebrow: 'رحلة موثقة',
-    title: 'صور وقياسات شاركنا بها أحد العملاء قبل وبعد الالتزام',
+    eyebrow: 'فاطمة',
+    title: 'صور فاطمة وقياسات جهاز التحليل قبل وبعد الالتزام',
     description:
-      'مقارنة بصرية مدعومة بقياسات جهاز التحليل لتوضيح أثر الاستمرار على الشكل العام ومؤشرات الجسم.',
+      'هذه البطاقة تخص فاطمة، وتشمل صور التحول وقياسات جهاز التحليل المرتبطة برحلتها، مع نزول الوزن من 74 إلى 64 كجم خلال شهرين من الالتزام.',
     metrics: [
       { label: 'الوزن', value: '72.7 → 55.6 كجم' },
       { label: 'دهون الجسم', value: '36.3% → 22.5%' },
@@ -273,14 +273,14 @@ export default async function Home() {
     compareImages: [
       {
         src: '/success-stories/story-3-before-front.JPG',
-        alt: 'صورة أمامية لعميل قبل الالتزام',
+        alt: 'صورة أمامية لفاطمة قبل الالتزام',
         label: 'قبل',
         tone: 'before',
         frame: 'portrait',
       },
       {
         src: '/success-stories/story-3-after-front.JPG',
-        alt: 'صورة أمامية لعميل بعد الالتزام',
+        alt: 'صورة أمامية لفاطمة بعد الالتزام',
         label: 'بعد',
         tone: 'after',
         frame: 'portrait',
@@ -289,29 +289,29 @@ export default async function Home() {
     supportImages: [
       {
         src: '/success-stories/story-3-after-back.JPG',
-        alt: 'صورة خلفية لعميل بعد الالتزام',
+        alt: 'صورة خلفية لفاطمة بعد الالتزام',
         label: 'نتيجة إضافية',
         tone: 'after',
         frame: 'back',
       },
       {
         src: '/success-stories/story-3-after-back-alt.JPG',
-        alt: 'صورة خلفية إضافية لعميل بعد الالتزام',
+        alt: 'صورة خلفية إضافية لفاطمة بعد الالتزام',
         label: 'تفصيل الظهر',
         tone: 'after',
         frame: 'back',
       },
       {
         src: '/success-stories/story-3-scan-before.jpg',
-        alt: 'قياسات جسم قبل الالتزام',
-        label: 'قياسات البداية',
+        alt: 'قياسات جهاز التحليل لفاطمة قبل الالتزام',
+        label: 'قياسات فاطمة قبل',
         tone: 'before',
         frame: 'scan',
       },
       {
         src: '/success-stories/story-3-scan-after.JPG',
-        alt: 'قياسات جسم بعد الالتزام',
-        label: 'قياسات النتيجة',
+        alt: 'قياسات جهاز التحليل لفاطمة بعد الالتزام',
+        label: 'قياسات فاطمة بعد',
         tone: 'after',
         frame: 'scan',
       },
