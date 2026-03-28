@@ -11,7 +11,7 @@ import { getCustomerUser } from '@/lib/account-auth'
 import { getApprovedProductReviews, getProductReviewAccess } from '@/lib/customer-reviews'
 import { getProductImages } from '@/lib/product-images'
 import { supabase } from '@/lib/supabase'
-import { siteConfig, truncateText } from '@/lib/site'
+import { buildAbsoluteUrl, siteConfig, truncateText } from '@/lib/site'
 
 type ProductPageParams = {
   slug: string
@@ -164,6 +164,99 @@ export default async function ProductPage({
     : null
   const productImages = await getProductImages(product.id, product.slug)
   const productImageUrl = productImages[0]?.url ?? null
+  const productUrl = buildAbsoluteUrl(`/store/${product.slug}`)
+
+  const toAbsoluteUrl = (value: string) =>
+    value.startsWith('http://') || value.startsWith('https://') ? value : buildAbsoluteUrl(value)
+
+  const productImageUrls = productImages.map(image => toAbsoluteUrl(image.url))
+  const productStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    description: productDescription,
+    sku: product.id,
+    category: categoryName,
+    url: productUrl,
+    image: productImageUrls.length > 0 ? productImageUrls : undefined,
+    brand: {
+      '@type': 'Brand',
+      name: siteConfig.name,
+    },
+    offers: {
+      '@type': 'Offer',
+      url: productUrl,
+      priceCurrency: 'SAR',
+      price: product.is_free ? '0.00' : Number(product.price).toFixed(2),
+      availability: 'https://schema.org/InStock',
+      seller: {
+        '@type': 'Organization',
+        name: siteConfig.name,
+        url: buildAbsoluteUrl('/'),
+      },
+    },
+    aggregateRating:
+      reviewSummary.reviewsCount > 0
+        ? {
+            '@type': 'AggregateRating',
+            ratingValue: reviewSummary.averageRating.toFixed(1),
+            reviewCount: String(reviewSummary.reviewsCount),
+          }
+        : undefined,
+    review:
+      reviewSummary.reviewsCount > 0
+        ? reviewSummary.reviews.slice(0, 4).map(review => ({
+            '@type': 'Review',
+            author: {
+              '@type': 'Person',
+              name: review.customerName,
+            },
+            reviewRating: {
+              '@type': 'Rating',
+              ratingValue: String(review.rating),
+              bestRating: '5',
+            },
+            reviewBody: review.comment || 'تجربة موثقة من مشترٍ حقيقي.',
+            datePublished: review.createdAt,
+          }))
+        : undefined,
+  }
+
+  const purchaseFacts = [
+    {
+      label: 'طريقة الوصول',
+      value: product.is_free ? 'مجاني وفوري' : 'فوري بعد الدفع',
+    },
+    {
+      label: 'نوع المنتج',
+      value: 'رقمي بالكامل',
+    },
+    {
+      label: 'التشغيل',
+      value: 'جوال وكمبيوتر',
+    },
+    {
+      label: 'آراء المشترين',
+      value:
+        reviewSummary.reviewsCount > 0
+          ? `${reviewSummary.averageRating.toFixed(1)} من 5`
+          : 'تظهر بعد أول تقييم',
+    },
+  ] as const
+
+  const purchaseLinks = [
+    {
+      href: '#product-reviews',
+      label:
+        reviewSummary.reviewsCount > 0
+          ? `عرض ${reviewSummary.reviewsCount} تقييمات`
+          : 'اعرف كيف تظهر التقييمات',
+    },
+    {
+      href: '/refund-policy',
+      label: 'سياسة الاسترجاع والاستبدال',
+    },
+  ] as const
 
   const trustItems = [
     { icon: '⚡', title: 'وصول فوري', text: 'تنتقل مباشرة إلى السلة ثم صفحة الإتمام بدون خطوات إضافية.' },
@@ -181,6 +274,11 @@ export default async function ProductPage({
 
   return (
     <div className="product-page-shell storefront-shell">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productStructuredData) }}
+      />
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 
@@ -460,6 +558,34 @@ export default async function ProductPage({
           list-style: none;
         }
 
+        .product-purchase-facts {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 0.7rem;
+        }
+
+        .product-purchase-fact {
+          padding: 0.85rem 0.9rem;
+          border-radius: 18px;
+          border: 1px solid var(--store-border);
+          background: rgba(255, 255, 255, 0.03);
+        }
+
+        .product-purchase-fact strong {
+          display: block;
+          margin-bottom: 0.3rem;
+          color: var(--store-text);
+          font-size: 0.82rem;
+          font-weight: 900;
+        }
+
+        .product-purchase-fact span {
+          color: var(--store-accent-strong);
+          font-size: 0.84rem;
+          font-weight: 800;
+          line-height: 1.6;
+        }
+
         .product-purchase-points li {
           display: flex;
           align-items: center;
@@ -467,6 +593,30 @@ export default async function ProductPage({
           color: var(--store-text-muted);
           font-size: 0.86rem;
           font-weight: 700;
+        }
+
+        .product-purchase-links {
+          display: grid;
+          gap: 0.65rem;
+        }
+
+        .product-purchase-link {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.7rem;
+          padding: 0.82rem 0.9rem;
+          border: 1px solid var(--store-border);
+          border-radius: 16px;
+          background: rgba(255, 255, 255, 0.025);
+          color: var(--store-text);
+          font-size: 0.84rem;
+          font-weight: 800;
+          text-decoration: none;
+        }
+
+        .product-purchase-link span:last-child {
+          color: var(--store-accent-strong);
         }
 
         .product-purchase-note {
@@ -724,6 +874,10 @@ export default async function ProductPage({
             gap: 0.6rem;
           }
 
+          .product-purchase-facts {
+            grid-template-columns: 1fr;
+          }
+
           .product-price-block strong {
             font-size: 1.72rem;
           }
@@ -833,10 +987,19 @@ export default async function ProductPage({
               </p>
             </div>
 
+            <div className="product-purchase-facts">
+              {purchaseFacts.map(fact => (
+                <div key={fact.label} className="product-purchase-fact">
+                  <strong>{fact.label}</strong>
+                  <span>{fact.value}</span>
+                </div>
+              ))}
+            </div>
+
             <ul className="product-purchase-points">
               <li>
                 <span>✓</span>
-                <span>{product.is_free ? 'بدون رسوم لهذا المنتج' : 'دفع آمن عبر PayPal'}</span>
+                <span>{product.is_free ? 'بدون رسوم لهذا المنتج' : 'دفع آمن بدون اشتراك شهري'}</span>
               </li>
               <li>
                 <span>✓</span>
@@ -844,7 +1007,7 @@ export default async function ProductPage({
               </li>
               <li>
                 <span>✓</span>
-                <span>الفاتورة والوصول يرسلان مباشرة إلى بريدك</span>
+                <span>الفاتورة والوصول يرسلان مباشرة إلى بريدك ويظهران في حسابك</span>
               </li>
             </ul>
 
@@ -858,6 +1021,15 @@ export default async function ProductPage({
                 categorySlug: categorySlug ?? '',
               }}
             />
+
+            <div className="product-purchase-links">
+              {purchaseLinks.map(link => (
+                <Link key={link.href} href={link.href} className="product-purchase-link">
+                  <span>{link.label}</span>
+                  <span>←</span>
+                </Link>
+              ))}
+            </div>
 
             <p className="product-purchase-note">
               إذا أضفت أكثر من برنامج يمكنك إتمامها كلها من السلة في طلب واحد.
@@ -896,7 +1068,7 @@ export default async function ProductPage({
           </article>
         </section>
 
-        <section className="product-reviews-section">
+        <section id="product-reviews" className="product-reviews-section">
           <article className="product-review-summary">
             <div className="product-review-score">
               <span>آراء المشترين</span>
