@@ -18,6 +18,18 @@ type StoreSearchParams = {
   free?: string
 }
 
+type QuickGuideCard = {
+  key: string
+  eyebrow: string
+  title: string
+  description: string
+  product: StoreProduct | null
+  fallbackHref: string
+  fallbackLabel: string
+  secondaryHref?: string
+  secondaryLabel?: string
+}
+
 const levelLabels: Record<string, string> = {
   beginner: 'مبتدئ',
   intermediate: 'متوسط',
@@ -73,6 +85,21 @@ function buildStoreHref(
   return search ? `/store?${search}` : '/store'
 }
 
+function pickRecommendedProduct(
+  products: StoreProduct[],
+  preferredSlugs: string[],
+  fallback?: (product: StoreProduct) => boolean,
+) {
+  for (const slug of preferredSlugs) {
+    const match = products.find(product => product.slug === slug)
+    if (match) {
+      return match
+    }
+  }
+
+  return fallback ? products.find(fallback) ?? null : null
+}
+
 export default async function StorePage({
   searchParams,
 }: {
@@ -113,11 +140,127 @@ export default async function StorePage({
   if (normalizedParams.free === 'true') {
     products = products.filter(product => product.is_free)
   }
+
+  const nutritionStarter = pickRecommendedProduct(
+    activeProducts,
+    ['flexible-diet-1500', 'flexible-diet-1300', 'nutrition-bundle'],
+    product => product.categories?.slug === 'nutrition',
+  )
+  const beginnerWorkout = pickRecommendedProduct(
+    activeProducts,
+    ['beginner-workout-4days', 'busy-program', 'toning-program'],
+    product => product.categories?.slug === 'workouts' && product.level === 'beginner',
+  )
+  const busyWorkout = pickRecommendedProduct(
+    activeProducts,
+    ['busy-program', 'workout-cutter', 'gym-challenge'],
+    product => product.categories?.slug === 'workouts',
+  )
+  const transformationProgram = pickRecommendedProduct(
+    activeProducts,
+    ['total-transformation', 'workout-bundle', 'nutrition-bundle'],
+    product => product.categories?.slug === 'workouts' || product.categories?.slug === 'bundles',
+  )
+  const rehabProgram = pickRecommendedProduct(
+    activeProducts,
+    ['rehab-bundle', 'back-therapy', 'knee-therapy'],
+    product => product.categories?.slug === 'therapy' || product.categories?.slug === 'bundles',
+  )
+  const freeStarter = pickRecommendedProduct(
+    activeProducts,
+    ['healthy-recipes-book'],
+    product => product.is_free,
+  )
+
+  const quickGuideCards: QuickGuideCard[] = [
+    {
+      key: 'nutrition',
+      eyebrow: 'تنظيم الأكل',
+      title: 'أبغى نظام واضح أبدأ به اليوم',
+      description:
+        'إذا كان هدفك ترتيب أكلك بدون حرمان ولا تعقيد، هذا المسار يعطيك بداية مباشرة وقريبة من الواقع.',
+      product: nutritionStarter,
+      fallbackHref: '/calorie-calculator',
+      fallbackLabel: 'احسب سعراتك',
+      secondaryHref: '/programs/flexible-diet-plans',
+      secondaryLabel: 'دليل الأنظمة المرنة',
+    },
+    {
+      key: 'beginner',
+      eyebrow: 'بداية واضحة',
+      title: 'أنا مبتدئ وأحتاج برنامجًا مفهومًا',
+      description:
+        'لمن يريد خطة أولى مرتبة بدل التشتت بين التمارين والمقاطع العشوائية.',
+      product: beginnerWorkout,
+      fallbackHref: '/programs/beginner-workout-programs',
+      fallbackLabel: 'دليل المبتدئين',
+      secondaryHref: '/store?category=workouts',
+      secondaryLabel: 'كل برامج التمرين',
+    },
+    {
+      key: 'busy',
+      eyebrow: 'وقت محدود',
+      title: 'وقتي ضيق وأبغى برنامجًا عمليًا',
+      description:
+        'هذا الخيار أنسب لمن يريد الاستمرار حتى مع ضغط الدوام وتغيّر أوقات اليوم.',
+      product: busyWorkout,
+      fallbackHref: '/store?category=workouts',
+      fallbackLabel: 'استعرض برامج التمرين',
+      secondaryHref: '/store?category=workouts&level=beginner',
+      secondaryLabel: 'خيارات أسهل',
+    },
+    {
+      key: 'transformation',
+      eyebrow: 'نتيجة أشمل',
+      title: 'أبحث عن خيار أقوى وأشمل',
+      description:
+        'إذا كان هدفك التزام أكبر وتحول أوضح، فهذا هو أقرب ترشيح داخل المتجر حاليًا.',
+      product: transformationProgram,
+      fallbackHref: '/store?category=workouts',
+      fallbackLabel: 'خيارات رياضية أكثر',
+      secondaryHref: '/#home-results',
+      secondaryLabel: 'شاهد النتائج',
+    },
+    {
+      key: 'rehab',
+      eyebrow: 'تأهيل وحركة',
+      title: 'عندي ألم ظهر أو ركبة وأحتاج حلًا منظمًا',
+      description:
+        'هذه التوصية موجهة لمن يريد مسارًا علاجيًا أو تأهيليًا عمليًا بدل التجربة العشوائية.',
+      product: rehabProgram,
+      fallbackHref: '/programs/back-therapy-programs',
+      fallbackLabel: 'دليل الحلول العلاجية',
+      secondaryHref: '/contact',
+      secondaryLabel: 'اسأل قبل الشراء',
+    },
+    {
+      key: 'free',
+      eyebrow: 'ابدأ مجانًا',
+      title: 'أبغى أول خطوة بدون تكلفة',
+      description:
+        'ابدأ بمنتج مجاني، تعرّف على أسلوب المتجر، ثم انتقل لاحقًا إلى البرنامج الأنسب لك.',
+      product: freeStarter,
+      fallbackHref: '/store?free=true',
+      fallbackLabel: 'العروض المجانية',
+      secondaryHref: '/store',
+      secondaryLabel: 'تصفح المتجر كاملًا',
+    },
+  ]
+
   const productImageUrls = await getProductImageUrls(
     products.map(product => ({
       id: product.id,
       slug: product.slug,
     })),
+  )
+  const quickGuideImageUrls = await getProductImageUrls(
+    quickGuideCards
+      .map(card => card.product)
+      .filter((product): product is StoreProduct => Boolean(product))
+      .map(product => ({
+        id: product.id,
+        slug: product.slug,
+      })),
   )
 
   const activeFilterCount = [
@@ -281,6 +424,195 @@ export default async function StorePage({
             linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
             rgba(255, 255, 255, 0.02);
           box-shadow: var(--store-card-shadow);
+        }
+
+        .store-guide-panel {
+          display: grid;
+          gap: 1rem;
+          padding: 1.15rem;
+          margin-bottom: 1.3rem;
+          border: 1px solid var(--store-border);
+          border-radius: var(--store-radius-lg);
+          background:
+            linear-gradient(135deg, rgba(224, 180, 72, 0.08), rgba(255, 255, 255, 0.02) 48%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+            rgba(255, 255, 255, 0.02);
+          box-shadow: var(--store-card-shadow);
+        }
+
+        .store-guide-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .store-guide-head h2 {
+          margin: 0;
+          color: var(--store-text);
+          font-size: 1.08rem;
+          font-weight: 900;
+        }
+
+        .store-guide-head p {
+          margin: 0.3rem 0 0;
+          color: var(--store-text-soft);
+          font-size: 0.86rem;
+          line-height: 1.8;
+        }
+
+        .store-guide-pill {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 34px;
+          padding: 0.35rem 0.75rem;
+          border-radius: 999px;
+          border: 1px solid var(--store-border-strong);
+          background: var(--store-accent-wash);
+          color: var(--store-accent-strong);
+          font-size: 0.76rem;
+          font-weight: 800;
+          white-space: nowrap;
+        }
+
+        .store-guide-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 0.9rem;
+        }
+
+        .store-guide-card {
+          display: grid;
+          gap: 0.9rem;
+          padding: 0.95rem;
+          border-radius: 22px;
+          border: 1px solid var(--store-border);
+          background: rgba(255, 255, 255, 0.03);
+        }
+
+        .store-guide-card-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 0.85rem;
+        }
+
+        .store-guide-copy {
+          display: grid;
+          gap: 0.45rem;
+        }
+
+        .store-guide-eyebrow {
+          color: var(--store-accent-strong);
+          font-size: 0.75rem;
+          font-weight: 900;
+        }
+
+        .store-guide-card h3 {
+          margin: 0;
+          color: var(--store-text);
+          font-size: 1rem;
+          font-weight: 900;
+          line-height: 1.55;
+        }
+
+        .store-guide-card p {
+          margin: 0;
+          color: var(--store-text-muted);
+          font-size: 0.84rem;
+          line-height: 1.8;
+        }
+
+        .store-guide-product {
+          display: grid;
+          grid-template-columns: 68px minmax(0, 1fr);
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.72rem;
+          border-radius: 18px;
+          border: 1px solid var(--store-border);
+          background: rgba(255, 255, 255, 0.03);
+          text-decoration: none;
+        }
+
+        .store-guide-product-media {
+          position: relative;
+          width: 68px;
+          height: 68px;
+          overflow: hidden;
+          border-radius: 16px;
+          background:
+            linear-gradient(135deg, rgba(224, 180, 72, 0.16), rgba(255, 255, 255, 0.03)),
+            rgba(255, 255, 255, 0.02);
+        }
+
+        .store-guide-product-media img {
+          object-fit: cover;
+        }
+
+        .store-guide-product-fallback {
+          display: grid;
+          place-items: center;
+          width: 100%;
+          height: 100%;
+          color: var(--store-accent-strong);
+          font-size: 1.3rem;
+          font-weight: 900;
+        }
+
+        .store-guide-product-copy {
+          display: grid;
+          gap: 0.25rem;
+        }
+
+        .store-guide-product-copy strong {
+          color: var(--store-text);
+          font-size: 0.88rem;
+          font-weight: 900;
+          line-height: 1.55;
+        }
+
+        .store-guide-product-copy span {
+          color: var(--store-text-soft);
+          font-size: 0.76rem;
+          font-weight: 800;
+        }
+
+        .store-guide-product-copy b {
+          color: var(--store-accent-strong);
+          font-size: 0.88rem;
+          font-weight: 900;
+        }
+
+        .store-guide-actions {
+          display: flex;
+          gap: 0.55rem;
+          flex-wrap: wrap;
+        }
+
+        .store-guide-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 40px;
+          padding: 0.68rem 0.88rem;
+          border-radius: 999px;
+          border: 1px solid var(--store-border);
+          background: rgba(255, 255, 255, 0.03);
+          color: var(--store-text);
+          text-decoration: none;
+          font-size: 0.8rem;
+          font-weight: 800;
+          white-space: nowrap;
+        }
+
+        .store-guide-link.is-primary {
+          background: linear-gradient(135deg, #fff0bf, var(--store-accent));
+          border-color: transparent;
+          color: #111;
+          box-shadow: 0 12px 22px rgba(224, 180, 72, 0.16);
         }
 
         .store-filter-head {
@@ -630,6 +962,30 @@ export default async function StorePage({
             border-radius: 16px;
           }
 
+          .store-guide-panel {
+            gap: 0.8rem;
+            padding: 0.95rem 0.85rem;
+            border-radius: 16px;
+          }
+
+          .store-guide-head {
+            align-items: stretch;
+          }
+
+          .store-guide-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+          }
+
+          .store-guide-product {
+            grid-template-columns: 58px minmax(0, 1fr);
+          }
+
+          .store-guide-product-media {
+            width: 58px;
+            height: 58px;
+          }
+
           .store-filter-row {
             flex-wrap: nowrap;
             overflow-x: auto;
@@ -707,6 +1063,81 @@ export default async function StorePage({
                 ? `${activeFilterCount} فلتر مفعّل الآن`
                 : 'تصفح كامل للمتجر بدون قيود'}
             </p>
+          </div>
+        </section>
+
+        <section className="store-guide-panel">
+          <div className="store-guide-head">
+            <div>
+              <h2>مساعد الاختيار السريع</h2>
+              <p>
+                إذا كنت محتارًا من أين تبدأ، اختر السيناريو الأقرب لك وستجد أمامك
+                أفضل ترشيح حالي داخل المتجر.
+              </p>
+            </div>
+            <span className="store-guide-pill">ابدأ بدون حيرة</span>
+          </div>
+
+          <div className="store-guide-grid">
+            {quickGuideCards.map(card => {
+              const product = card.product
+              const productImageUrl = product ? quickGuideImageUrls.get(product.id) ?? null : null
+              const primaryHref = product ? `/store/${product.slug}` : card.fallbackHref
+              const primaryLabel = product ? 'عرض الترشيح' : card.fallbackLabel
+              const productCategory = product?.categories?.name ?? 'مسار مقترح'
+              const productPrice = product
+                ? product.is_free
+                  ? 'مجاني'
+                  : `${product.price} ريال`
+                : null
+
+              return (
+                <article key={card.key} className="store-guide-card">
+                  <div className="store-guide-card-top">
+                    <div className="store-guide-copy">
+                      <span className="store-guide-eyebrow">{card.eyebrow}</span>
+                      <h3>{card.title}</h3>
+                    </div>
+                  </div>
+
+                  <p>{card.description}</p>
+
+                  {product && (
+                    <Link href={`/store/${product.slug}`} className="store-guide-product">
+                      <div className="store-guide-product-media">
+                        {productImageUrl ? (
+                          <Image
+                            src={productImageUrl}
+                            alt={product.title}
+                            fill
+                            sizes="68px"
+                          />
+                        ) : (
+                          <span className="store-guide-product-fallback">◌</span>
+                        )}
+                      </div>
+
+                      <div className="store-guide-product-copy">
+                        <span>{productCategory}</span>
+                        <strong>{product.title}</strong>
+                        {productPrice && <b>{productPrice}</b>}
+                      </div>
+                    </Link>
+                  )}
+
+                  <div className="store-guide-actions">
+                    <Link href={primaryHref} className="store-guide-link is-primary">
+                      {primaryLabel}
+                    </Link>
+                    {card.secondaryHref && card.secondaryLabel && (
+                      <Link href={card.secondaryHref} className="store-guide-link">
+                        {card.secondaryLabel}
+                      </Link>
+                    )}
+                  </div>
+                </article>
+              )
+            })}
           </div>
         </section>
 

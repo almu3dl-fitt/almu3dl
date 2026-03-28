@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { supabase } from '@/lib/supabase'
 import { getSiteUrl } from '@/lib/site'
+import { storeLandingPages } from '@/lib/store-landing-pages'
 
 type SitemapProduct = {
   slug: string
@@ -77,5 +78,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   )
 
-  return [...staticRoutes, ...productRoutes]
+  const landingRoutes: MetadataRoute.Sitemap = storeLandingPages.map(page => ({
+    url: `${siteUrl}/programs/${page.slug}`,
+    lastModified: now,
+    changeFrequency: 'weekly',
+    priority: 0.72,
+  }))
+
+  return [...staticRoutes, ...landingRoutes, ...productRoutes]
 }

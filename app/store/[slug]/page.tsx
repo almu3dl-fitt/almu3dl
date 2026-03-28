@@ -815,6 +815,7 @@ export default async function ProductPage({
             linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
             var(--store-surface);
           box-shadow: var(--store-card-shadow);
+          overflow: hidden;
         }
 
         .product-related-header {
@@ -842,25 +843,66 @@ export default async function ProductPage({
           line-height: 1.8;
         }
 
-        .product-related-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 0.85rem;
+        .product-related-marquee {
+          position: relative;
+          overflow: hidden;
+          margin-inline: -0.2rem;
+          padding-inline: 0.2rem;
+          mask-image: linear-gradient(
+            90deg,
+            transparent,
+            rgba(0, 0, 0, 1) 8%,
+            rgba(0, 0, 0, 1) 92%,
+            transparent
+          );
+        }
+
+        .product-related-track {
+          --marquee-gap: 0.85rem;
+          display: flex;
+          align-items: stretch;
+          gap: var(--marquee-gap);
+          width: max-content;
+          will-change: transform;
+          animation: product-related-marquee 24s linear infinite;
+        }
+
+        .product-related-marquee:hover .product-related-track,
+        .product-related-marquee:focus-within .product-related-track {
+          animation-play-state: paused;
+        }
+
+        .product-related-group {
+          display: flex;
+          align-items: stretch;
+          gap: var(--marquee-gap);
         }
 
         .product-related-card {
           display: grid;
+          grid-template-rows: 180px 1fr;
+          flex: 0 0 clamp(250px, 28vw, 320px);
           overflow: hidden;
           border-radius: 20px;
           border: 1px solid var(--store-border);
           background: rgba(255, 255, 255, 0.03);
           color: inherit;
           text-decoration: none;
+          transition:
+            transform 180ms ease,
+            border-color 180ms ease,
+            background-color 180ms ease;
+        }
+
+        .product-related-card:hover,
+        .product-related-card:focus-visible {
+          transform: translateY(-4px);
+          border-color: var(--store-border-strong);
+          background: rgba(255, 255, 255, 0.05);
         }
 
         .product-related-media {
           position: relative;
-          min-height: 180px;
           background:
             linear-gradient(135deg, rgba(224, 180, 72, 0.14), rgba(255, 255, 255, 0.03)),
             rgba(255, 255, 255, 0.02);
@@ -919,6 +961,20 @@ export default async function ProductPage({
           color: var(--store-accent-strong);
           font-size: 0.82rem;
           font-weight: 900;
+        }
+
+        .product-related-group.is-duplicate {
+          pointer-events: none;
+        }
+
+        @keyframes product-related-marquee {
+          from {
+            transform: translate3d(0, 0, 0);
+          }
+
+          to {
+            transform: translate3d(calc(-50% - (var(--marquee-gap) / 2)), 0, 0);
+          }
         }
 
         .product-proof-section {
@@ -1248,8 +1304,32 @@ export default async function ProductPage({
             grid-template-columns: 1fr;
           }
 
-          .product-related-grid {
-            grid-template-columns: 1fr;
+          .product-related-marquee {
+            mask-image: none;
+          }
+
+          .product-related-track {
+            --marquee-gap: 0.75rem;
+          }
+
+          .product-related-card {
+            flex-basis: min(84vw, 290px);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .product-related-marquee {
+            overflow-x: auto;
+            padding-bottom: 0.2rem;
+            mask-image: none;
+          }
+
+          .product-related-track {
+            animation: none;
+          }
+
+          .product-related-group.is-duplicate {
+            display: none;
           }
         }
       `}</style>
@@ -1548,49 +1628,60 @@ export default async function ProductPage({
               </p>
             </div>
 
-            <div className="product-related-grid">
-              {relatedProducts.map(item => {
-                const imageUrl = relatedProductImages.get(item.id) ?? null
-                const itemCategoryName = item.categories?.name ?? 'برنامج رقمي'
-                const itemPriceLabel = item.is_free ? 'مجاني' : `${item.price} ريال`
-                const itemDescription =
-                  item.description?.trim() ||
-                  'برنامج رقمي جاهز مع وصول واضح وتجربة شراء مباشرة.'
-
-                return (
-                  <Link
-                    key={item.id}
-                    href={`/store/${item.slug}`}
-                    className="product-related-card"
+            <div className="product-related-marquee">
+              <div className="product-related-track">
+                {[false, true].map(isDuplicate => (
+                  <div
+                    key={isDuplicate ? 'duplicate' : 'original'}
+                    className={`product-related-group ${isDuplicate ? 'is-duplicate' : ''}`}
+                    aria-hidden={isDuplicate}
                   >
-                    <div className="product-related-media">
-                      {imageUrl ? (
-                        <Image
-                          src={imageUrl}
-                          alt={item.title}
-                          fill
-                          sizes="(max-width: 960px) 100vw, 30vw"
-                        />
-                      ) : (
-                        <span className="product-related-fallback">◌</span>
-                      )}
-                    </div>
+                    {relatedProducts.map(item => {
+                      const imageUrl = relatedProductImages.get(item.id) ?? null
+                      const itemCategoryName = item.categories?.name ?? 'برنامج رقمي'
+                      const itemPriceLabel = item.is_free ? 'مجاني' : `${item.price} ريال`
+                      const itemDescription =
+                        item.description?.trim() ||
+                        'برنامج رقمي جاهز مع وصول واضح وتجربة شراء مباشرة.'
 
-                    <div className="product-related-body">
-                      <div className="product-related-meta">
-                        <span>{itemCategoryName}</span>
-                        <span>{itemPriceLabel}</span>
-                      </div>
-                      <h3>{item.title}</h3>
-                      <p>{truncateText(itemDescription, 110)}</p>
-                      <div className="product-related-footer">
-                        <span>عرض التفاصيل</span>
-                        <span>←</span>
-                      </div>
-                    </div>
-                  </Link>
-                )
-              })}
+                      return (
+                        <Link
+                          key={`${isDuplicate ? 'copy' : 'item'}-${item.id}`}
+                          href={`/store/${item.slug}`}
+                          className="product-related-card"
+                          tabIndex={isDuplicate ? -1 : undefined}
+                        >
+                          <div className="product-related-media">
+                            {imageUrl ? (
+                              <Image
+                                src={imageUrl}
+                                alt={item.title}
+                                fill
+                                sizes="(max-width: 960px) 84vw, 30vw"
+                              />
+                            ) : (
+                              <span className="product-related-fallback">◌</span>
+                            )}
+                          </div>
+
+                          <div className="product-related-body">
+                            <div className="product-related-meta">
+                              <span>{itemCategoryName}</span>
+                              <span>{itemPriceLabel}</span>
+                            </div>
+                            <h3>{item.title}</h3>
+                            <p>{truncateText(itemDescription, 110)}</p>
+                            <div className="product-related-footer">
+                              <span>عرض التفاصيل</span>
+                              <span>←</span>
+                            </div>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
         )}
