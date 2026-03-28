@@ -1,7 +1,7 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
-import BrandMark from '@/app/components/BrandMark'
 import BrandName from '@/app/components/BrandName'
 import {
   CATEGORY_DEFINITIONS,
@@ -69,7 +69,15 @@ export default function StorefrontFooter({
         <div className="grid gap-8 md:grid-cols-[1.15fr_0.85fr_1fr]">
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <BrandMark size="lg" showCopy={false} />
+              <span className="storefront-theme-brand-mark" aria-hidden="true">
+                <Image
+                  src="/logo.png"
+                  alt=""
+                  width={48}
+                  height={48}
+                  className="storefront-theme-brand-image"
+                />
+              </span>
               <div>
                 <BrandName className="display-heading brand-gradient-text text-lg font-black" />
                 <p className="theme-text-soft mt-2 max-w-xl text-sm leading-7">
