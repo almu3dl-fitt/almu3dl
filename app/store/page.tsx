@@ -10,7 +10,7 @@ import {
   type StoreCategory,
   type StoreProduct,
 } from '@/lib/store-catalog'
-import { siteConfig } from '@/lib/site'
+import { buildAbsoluteUrl, siteConfig } from '@/lib/site'
 
 type StoreSearchParams = {
   category?: string
@@ -126,8 +126,55 @@ export default async function StorePage({
     normalizedParams.free === 'true',
   ].filter(Boolean).length
 
+  const storeBreadcrumbStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'الرئيسية',
+        item: buildAbsoluteUrl('/'),
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'المتجر',
+        item: buildAbsoluteUrl('/store'),
+      },
+    ],
+  }
+
+  const collectionStructuredData = activeFilterCount === 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: `المتجر | ${siteConfig.name}`,
+        url: buildAbsoluteUrl('/store'),
+        description: metadata.description,
+        mainEntity: {
+          '@type': 'ItemList',
+          itemListElement: products.slice(0, 12).map((product, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            url: buildAbsoluteUrl(`/store/${product.slug}`),
+            name: product.title,
+          })),
+        },
+      }
+    : null
+
+  const storeStructuredData = collectionStructuredData
+    ? [storeBreadcrumbStructuredData, collectionStructuredData]
+    : [storeBreadcrumbStructuredData]
+
   return (
     <div className="store-page-shell storefront-shell">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(storeStructuredData) }}
+      />
+
       <style>{`
         .store-page-shell {
           font-family: var(--font-tajawal), 'Arial', sans-serif;

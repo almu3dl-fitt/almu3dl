@@ -6,6 +6,7 @@ import StorefrontHeader from '@/app/components/StorefrontHeader'
 import StorefrontSectionHeading from '@/app/components/StorefrontSectionHeading'
 import { getProductImageUrls } from '@/lib/product-images'
 import { getActiveStoreProducts, getStoreCategories, type StoreProduct } from '@/lib/store-catalog'
+import { buildAbsoluteUrl, siteConfig } from '@/lib/site'
 
 export const revalidate = 3600
 
@@ -227,6 +228,30 @@ export default async function Home() {
     },
   ]
 
+  const homeStructuredData = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'OnlineStore',
+      name: siteConfig.name,
+      url: buildAbsoluteUrl('/'),
+      image: buildAbsoluteUrl('/logo.png'),
+      description: siteConfig.description,
+      sameAs: siteConfig.socialLinks.map(link => link.href),
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map(item => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer,
+        },
+      })),
+    },
+  ]
+
   const spotlightResult = {
     eyebrow: 'حالة مشاركة',
     title: 'صور قبل وبعد من حالة مشاركة موثقة',
@@ -366,6 +391,11 @@ export default async function Home() {
 
   return (
     <div className="home-shell storefront-shell">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeStructuredData) }}
+      />
+
       <style>{`
         .home-shell {
           font-family: var(--font-tajawal), 'Arial', sans-serif;

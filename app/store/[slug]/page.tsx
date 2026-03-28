@@ -9,8 +9,8 @@ import StorefrontFooter from '@/app/components/StorefrontFooter'
 import StorefrontHeader from '@/app/components/StorefrontHeader'
 import { getCustomerUser } from '@/lib/account-auth'
 import { getApprovedProductReviews, getProductReviewAccess } from '@/lib/customer-reviews'
-import { getProductImages } from '@/lib/product-images'
-import { getActiveProductBySlug } from '@/lib/store-catalog'
+import { getProductImages, getProductImageUrls } from '@/lib/product-images'
+import { getActiveProductBySlug, getActiveStoreProducts } from '@/lib/store-catalog'
 import { buildAbsoluteUrl, siteConfig, truncateText } from '@/lib/site'
 
 type ProductPageParams = {
@@ -223,12 +223,55 @@ export default async function ProductPage({
     : null
   const productImages = await getProductImages(product.id, product.slug)
   const productImageUrl = productImages[0]?.url ?? null
+  const relatedProductsPool = (await getActiveStoreProducts()).filter(item => item.id !== product.id)
+  const relatedProducts = [
+    ...relatedProductsPool.filter(item => item.categories?.slug === categorySlug),
+    ...relatedProductsPool.filter(item => item.categories?.slug !== categorySlug),
+  ].slice(0, 3)
+  const relatedProductImages = await getProductImageUrls(
+    relatedProducts.map(item => ({
+      id: item.id,
+      slug: item.slug,
+    })),
+  )
   const productUrl = buildAbsoluteUrl(`/store/${product.slug}`)
 
   const toAbsoluteUrl = (value: string) =>
     value.startsWith('http://') || value.startsWith('https://') ? value : buildAbsoluteUrl(value)
 
   const productImageUrls = productImages.map(image => toAbsoluteUrl(image.url))
+  const productBreadcrumbStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'الرئيسية',
+        item: buildAbsoluteUrl('/'),
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'المتجر',
+        item: buildAbsoluteUrl('/store'),
+      },
+      ...(categorySlug
+        ? [{
+            '@type': 'ListItem',
+            position: 3,
+            name: categoryName,
+            item: buildAbsoluteUrl(`/store?category=${categorySlug}`),
+          }]
+        : []),
+      {
+        '@type': 'ListItem',
+        position: categorySlug ? 4 : 3,
+        name: product.title,
+        item: productUrl,
+      },
+    ],
+  }
   const productStructuredData = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -338,7 +381,9 @@ export default async function ProductPage({
     <div className="product-page-shell storefront-shell">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productStructuredData) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([productBreadcrumbStructuredData, productStructuredData]),
+        }}
       />
 
       <style>{`
@@ -759,6 +804,123 @@ export default async function ProductPage({
           margin-top: 1rem;
         }
 
+        .product-related-section {
+          display: grid;
+          gap: 1rem;
+          margin-top: 1rem;
+          padding: 1rem;
+          border: 1px solid var(--store-border);
+          border-radius: 24px;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+            var(--store-surface);
+          box-shadow: var(--store-card-shadow);
+        }
+
+        .product-related-header {
+          display: grid;
+          gap: 0.4rem;
+        }
+
+        .product-related-header span {
+          color: var(--store-accent-strong);
+          font-size: 0.76rem;
+          font-weight: 900;
+        }
+
+        .product-related-header h2 {
+          margin: 0;
+          color: var(--store-text);
+          font-size: 1.18rem;
+          font-weight: 900;
+        }
+
+        .product-related-header p {
+          margin: 0;
+          color: var(--store-text-muted);
+          font-size: 0.9rem;
+          line-height: 1.8;
+        }
+
+        .product-related-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 0.85rem;
+        }
+
+        .product-related-card {
+          display: grid;
+          overflow: hidden;
+          border-radius: 20px;
+          border: 1px solid var(--store-border);
+          background: rgba(255, 255, 255, 0.03);
+          color: inherit;
+          text-decoration: none;
+        }
+
+        .product-related-media {
+          position: relative;
+          min-height: 180px;
+          background:
+            linear-gradient(135deg, rgba(224, 180, 72, 0.14), rgba(255, 255, 255, 0.03)),
+            rgba(255, 255, 255, 0.02);
+        }
+
+        .product-related-media img {
+          object-fit: cover;
+        }
+
+        .product-related-fallback {
+          display: grid;
+          place-items: center;
+          width: 100%;
+          height: 100%;
+          color: var(--store-accent-strong);
+          font-size: 2.2rem;
+        }
+
+        .product-related-body {
+          display: grid;
+          gap: 0.65rem;
+          padding: 0.95rem;
+        }
+
+        .product-related-meta {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.6rem;
+          flex-wrap: wrap;
+          color: var(--store-text-soft);
+          font-size: 0.75rem;
+          font-weight: 800;
+        }
+
+        .product-related-body h3 {
+          margin: 0;
+          color: var(--store-text);
+          font-size: 0.98rem;
+          font-weight: 900;
+          line-height: 1.5;
+        }
+
+        .product-related-body p {
+          margin: 0;
+          color: var(--store-text-muted);
+          font-size: 0.84rem;
+          line-height: 1.8;
+        }
+
+        .product-related-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.6rem;
+          color: var(--store-accent-strong);
+          font-size: 0.82rem;
+          font-weight: 900;
+        }
+
         .product-proof-section {
           display: grid;
           gap: 1rem;
@@ -1085,6 +1247,10 @@ export default async function ProductPage({
           .product-proof-grid {
             grid-template-columns: 1fr;
           }
+
+          .product-related-grid {
+            grid-template-columns: 1fr;
+          }
         }
       `}</style>
 
@@ -1370,6 +1536,64 @@ export default async function ProductPage({
             </article>
           )}
         </section>
+
+        {relatedProducts.length > 0 && (
+          <section className="product-related-section">
+            <div className="product-related-header">
+              <span>اقتراحات إضافية</span>
+              <h2>قد يناسبك أيضًا</h2>
+              <p>
+                منتجات قريبة من هذا المسار لمساعدتك على استكشاف خيارات إضافية داخل
+                المتجر قبل العودة للسلة أو إتمام الشراء.
+              </p>
+            </div>
+
+            <div className="product-related-grid">
+              {relatedProducts.map(item => {
+                const imageUrl = relatedProductImages.get(item.id) ?? null
+                const itemCategoryName = item.categories?.name ?? 'برنامج رقمي'
+                const itemPriceLabel = item.is_free ? 'مجاني' : `${item.price} ريال`
+                const itemDescription =
+                  item.description?.trim() ||
+                  'برنامج رقمي جاهز مع وصول واضح وتجربة شراء مباشرة.'
+
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/store/${item.slug}`}
+                    className="product-related-card"
+                  >
+                    <div className="product-related-media">
+                      {imageUrl ? (
+                        <Image
+                          src={imageUrl}
+                          alt={item.title}
+                          fill
+                          sizes="(max-width: 960px) 100vw, 30vw"
+                        />
+                      ) : (
+                        <span className="product-related-fallback">◌</span>
+                      )}
+                    </div>
+
+                    <div className="product-related-body">
+                      <div className="product-related-meta">
+                        <span>{itemCategoryName}</span>
+                        <span>{itemPriceLabel}</span>
+                      </div>
+                      <h3>{item.title}</h3>
+                      <p>{truncateText(itemDescription, 110)}</p>
+                      <div className="product-related-footer">
+                        <span>عرض التفاصيل</span>
+                        <span>←</span>
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )}
       </main>
 
       <StorefrontFooter note="اطلع على تفاصيل البرنامج قبل إضافته إلى السلة." />
