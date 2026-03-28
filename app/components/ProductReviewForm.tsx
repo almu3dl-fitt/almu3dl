@@ -123,7 +123,7 @@ export default function ProductReviewForm({
           padding: '0.85rem 0.95rem',
           borderRadius: '14px',
           border: '1px solid #ddd',
-          fontFamily: "'Tajawal', Arial, sans-serif",
+          fontFamily: "var(--font-tajawal), Arial, sans-serif",
           fontSize: '0.92rem',
           direction: 'rtl',
           outline: 'none',
@@ -174,7 +174,7 @@ export default function ProductReviewForm({
           color: '#fff',
           fontWeight: 900,
           fontSize: '0.92rem',
-          fontFamily: "'Tajawal', Arial, sans-serif",
+          fontFamily: "var(--font-tajawal), Arial, sans-serif",
           cursor: loading ? 'not-allowed' : 'pointer',
           opacity: loading ? 0.7 : 1,
         }}

@@ -59,7 +59,7 @@ export default function AuthPage() {
     fontSize: '1rem',
     border: '1px solid #ddd',
     borderRadius: '8px',
-    fontFamily: "'Tajawal', Arial, sans-serif",
+    fontFamily: "var(--font-tajawal), Arial, sans-serif",
     direction: 'rtl' as const,
     outline: 'none',
     backgroundColor: '#fff',
@@ -69,15 +69,11 @@ export default function AuthPage() {
     <div style={{
       minHeight: '100vh',
       backgroundColor: '#FAFAFA',
-      fontFamily: "'Tajawal', 'Arial', sans-serif",
+      fontFamily: "var(--font-tajawal), 'Arial', sans-serif",
       direction: 'rtl',
       display: 'flex',
       flexDirection: 'column',
     }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
-      `}</style>
-
       {/* Navbar */}
       <nav style={{
         display: 'flex',
@@ -203,7 +199,7 @@ export default function AuthPage() {
               fontWeight: 700,
               cursor: loading ? 'not-allowed' : 'pointer',
               opacity: loading ? 0.7 : 1,
-              fontFamily: "'Tajawal', Arial, sans-serif",
+              fontFamily: "var(--font-tajawal), Arial, sans-serif",
               marginTop: '0.5rem',
             }}>
               {loading
@@ -228,7 +224,7 @@ export default function AuthPage() {
                 fontWeight: 700,
                 cursor: 'pointer',
                 fontSize: '0.9rem',
-                fontFamily: "'Tajawal', Arial, sans-serif",
+                fontFamily: "var(--font-tajawal), Arial, sans-serif",
                 textDecoration: 'underline',
               }}
             >

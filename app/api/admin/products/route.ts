@@ -1,7 +1,8 @@
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminApiSession } from '@/lib/admin-auth'
 import { uploadProductImages } from '@/lib/product-images'
+import { PRODUCT_IMAGE_CACHE_TAG, STORE_CATALOG_CACHE_TAG } from '@/lib/storefront-cache'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const PRODUCT_DOWNLOAD_BUCKET = 'products'
@@ -169,8 +170,11 @@ export async function POST(req: NextRequest) {
 
     revalidatePath('/admin')
     revalidatePath('/admin/products')
+    revalidatePath('/')
     revalidatePath('/store')
     revalidatePath(`/store/${product.slug}`)
+    revalidateTag(STORE_CATALOG_CACHE_TAG, 'max')
+    revalidateTag(PRODUCT_IMAGE_CACHE_TAG, 'max')
 
     return NextResponse.json({
       id: product.id,

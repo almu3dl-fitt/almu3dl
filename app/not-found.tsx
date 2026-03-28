@@ -14,8 +14,6 @@ export default function NotFound() {
   return (
     <div className="not-found-shell">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
-
         .not-found-shell {
           min-height: 100vh;
           display: flex;
@@ -25,7 +23,7 @@ export default function NotFound() {
           background:
             radial-gradient(circle at top right, rgba(212, 168, 67, 0.1), transparent 28%),
             #fafafa;
-          font-family: 'Tajawal', 'Arial', sans-serif;
+          font-family: var(--font-tajawal), 'Arial', sans-serif;
           direction: rtl;
         }
 

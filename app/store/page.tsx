@@ -4,30 +4,18 @@ import Link from 'next/link'
 import StorefrontFooter from '@/app/components/StorefrontFooter'
 import StorefrontHeader from '@/app/components/StorefrontHeader'
 import { getProductImageUrls } from '@/lib/product-images'
-import { supabase } from '@/lib/supabase'
+import {
+  getActiveStoreProducts,
+  getStoreCategories,
+  type StoreCategory,
+  type StoreProduct,
+} from '@/lib/store-catalog'
 import { siteConfig } from '@/lib/site'
 
 type StoreSearchParams = {
   category?: string
   level?: string
   free?: string
-}
-
-type StoreCategory = {
-  id: string
-  name: string
-  slug: string
-}
-
-type StoreProduct = {
-  id: string
-  slug: string
-  title: string
-  description: string | null
-  price: number
-  is_free: boolean
-  level: string
-  categories: { name: string; slug: string } | null
 }
 
 const levelLabels: Record<string, string> = {
@@ -92,12 +80,12 @@ export default async function StorePage({
 }) {
   const params = await searchParams
 
-  const { data: categoryData } = await supabase
-    .from('categories')
-    .select('*')
-    .order('name')
+  const [categoryData, activeProducts] = await Promise.all([
+    getStoreCategories(),
+    getActiveStoreProducts(),
+  ])
 
-  const categories = ((categoryData ?? []) as StoreCategory[]).filter(
+  const categories = categoryData.filter(
     category => category.slug !== 'bundles',
   )
   const normalizedParams: StoreSearchParams = {
@@ -110,29 +98,21 @@ export default async function StorePage({
     free: params.free === 'true' ? 'true' : undefined,
   }
 
-  let query = supabase
-    .from('products')
-    .select('*, categories(name, slug)')
-    .eq('is_active', true)
-    .order('created_at', { ascending: false })
-
+  let products = activeProducts.filter(product => product.categories?.slug !== 'bundles')
   if (normalizedParams.category) {
     const selectedCategory = categories.find(category => category.slug === normalizedParams.category)
-    if (selectedCategory) query = query.eq('category_id', selectedCategory.id)
+    if (selectedCategory) {
+      products = products.filter(product => product.category_id === selectedCategory.id)
+    }
   }
 
   if (normalizedParams.level) {
-    query = query.eq('level', normalizedParams.level)
+    products = products.filter(product => product.level === normalizedParams.level)
   }
 
   if (normalizedParams.free === 'true') {
-    query = query.eq('is_free', true)
+    products = products.filter(product => product.is_free)
   }
-
-  const { data: productData } = await query
-  const products = ((productData ?? []) as StoreProduct[]).filter(
-    product => product.categories?.slug !== 'bundles',
-  )
   const productImageUrls = await getProductImageUrls(
     products.map(product => ({
       id: product.id,
@@ -149,10 +129,8 @@ export default async function StorePage({
   return (
     <div className="store-page-shell storefront-shell">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
-
         .store-page-shell {
-          font-family: 'Tajawal', 'Arial', sans-serif;
+          font-family: var(--font-tajawal), 'Arial', sans-serif;
           direction: rtl;
         }
 

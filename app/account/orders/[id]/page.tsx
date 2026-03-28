@@ -52,12 +52,10 @@ export default async function AccountOrderPage({
         background:
           'radial-gradient(circle at top right, rgba(212, 168, 67, 0.08), transparent 28%), #fafafa',
         color: '#1a1a1a',
-        fontFamily: "'Tajawal', 'Arial', sans-serif",
+        fontFamily: "var(--font-tajawal), 'Arial', sans-serif",
         direction: 'rtl',
       }}
     >
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');`}</style>
-
       <nav
         style={{
           position: 'sticky',

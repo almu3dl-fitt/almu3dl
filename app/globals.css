@@ -169,7 +169,7 @@
 }
 
 .display-heading {
-  font-family: 'Tajawal', var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-tajawal), var(--font-geist-sans), Arial, Helvetica, sans-serif;
   letter-spacing: 0.01em;
 }
 
@@ -298,7 +298,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Tajawal', var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-tajawal), var(--font-geist-sans), Arial, Helvetica, sans-serif;
   background-image:
     radial-gradient(circle at top right, var(--store-body-glow-top), transparent 24%),
     radial-gradient(circle at left 10%, var(--store-body-glow-side), transparent 18%),
@@ -977,7 +977,7 @@ select {
   background: var(--store-input-bg);
   color: var(--store-text);
   font-size: 0.96rem;
-  font-family: 'Tajawal', var(--font-geist-sans), Arial, sans-serif;
+  font-family: var(--font-tajawal), var(--font-geist-sans), Arial, sans-serif;
   outline: none;
   transition:
     border-color 0.18s ease,
@@ -1005,7 +1005,7 @@ select {
   border-radius: 16px;
   font-size: 0.96rem;
   font-weight: 900;
-  font-family: 'Tajawal', var(--font-geist-sans), Arial, sans-serif;
+  font-family: var(--font-tajawal), var(--font-geist-sans), Arial, sans-serif;
   text-decoration: none;
   cursor: pointer;
   transition:
@@ -1120,7 +1120,7 @@ select {
   text-decoration: none;
   font-size: 0.88rem;
   font-weight: 800;
-  font-family: 'Tajawal', var(--font-geist-sans), Arial, sans-serif;
+  font-family: var(--font-tajawal), var(--font-geist-sans), Arial, sans-serif;
   text-align: right;
   cursor: pointer;
 }
@@ -1132,7 +1132,7 @@ select {
 
 .storefront-theme-toggle {
   cursor: pointer;
-  font-family: 'Tajawal', var(--font-geist-sans), Arial, sans-serif;
+  font-family: var(--font-tajawal), var(--font-geist-sans), Arial, sans-serif;
 }
 
 .storefront-theme-toggle-icon {

@@ -1,4 +1,9 @@
+import { unstable_cache } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import {
+  PRODUCT_IMAGE_CACHE_TAG,
+  STORE_DATA_REVALIDATE_SECONDS,
+} from '@/lib/storefront-cache'
 
 const storageLegacyProductImageSlugs = new Set([
   'back-therapy',
@@ -148,8 +153,7 @@ export async function getProductImages(productId: string, slug: string | null | 
 }
 
 export async function getProductImageUrl(productId: string, slug: string | null | undefined) {
-  const images = await getProductImages(productId, slug)
-  return images[0]?.url ?? null
+  return getCachedProductImageUrl(productId, slug ?? null)
 }
 
 export async function getProductImageUrls(products: ProductImageLookup[]) {
@@ -159,6 +163,18 @@ export async function getProductImageUrls(products: ProductImageLookup[]) {
 
   return new Map(imageUrlEntries)
 }
+
+const getCachedProductImageUrl = unstable_cache(
+  async (productId: string, slug: string | null) => {
+    const images = await getProductImages(productId, slug)
+    return images[0]?.url ?? null
+  },
+  ['product-card-image'],
+  {
+    revalidate: STORE_DATA_REVALIDATE_SECONDS,
+    tags: [PRODUCT_IMAGE_CACHE_TAG],
+  },
+)
 
 export async function getAdminProductImages(productId: string, slug: string | null | undefined) {
   return getProductImages(productId, slug)

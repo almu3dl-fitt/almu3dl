@@ -572,10 +572,8 @@ export default function AccountLoginClient() {
   return (
     <div className="account-login-shell storefront-shell">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
-
         .account-login-shell {
-          font-family: 'Tajawal', 'Arial', sans-serif;
+          font-family: var(--font-tajawal), 'Arial', sans-serif;
           direction: rtl;
         }
 
@@ -695,7 +693,7 @@ export default function AccountLoginClient() {
           background: rgba(255, 255, 255, 0.03);
           color: var(--store-text);
           font-size: 0.98rem;
-          font-family: 'Tajawal', Arial, sans-serif;
+          font-family: var(--font-tajawal), Arial, sans-serif;
           direction: rtl;
           outline: none;
           transition: border-color 0.18s ease, box-shadow 0.18s ease;
@@ -774,7 +772,7 @@ export default function AccountLoginClient() {
           border-radius: 16px;
           font-size: 1rem;
           font-weight: 900;
-          font-family: 'Tajawal', Arial, sans-serif;
+          font-family: var(--font-tajawal), Arial, sans-serif;
           cursor: pointer;
         }
 

@@ -55,10 +55,8 @@ export default function CartPage() {
   return (
     <div className="cart-page-shell storefront-shell">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
-
         .cart-page-shell {
-          font-family: 'Tajawal', 'Arial', sans-serif;
+          font-family: var(--font-tajawal), 'Arial', sans-serif;
           direction: rtl;
         }
 
@@ -331,7 +329,7 @@ export default function CartPage() {
           cursor: pointer;
           font-size: 0.78rem;
           font-weight: 800;
-          font-family: 'Tajawal', Arial, sans-serif;
+          font-family: var(--font-tajawal), Arial, sans-serif;
         }
 
         .cart-summary {

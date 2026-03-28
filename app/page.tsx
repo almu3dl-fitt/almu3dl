@@ -5,35 +5,11 @@ import StorefrontFooter from '@/app/components/StorefrontFooter'
 import StorefrontHeader from '@/app/components/StorefrontHeader'
 import StorefrontSectionHeading from '@/app/components/StorefrontSectionHeading'
 import { getProductImageUrls } from '@/lib/product-images'
-import { supabase } from '@/lib/supabase'
+import { getActiveStoreProducts, getStoreCategories, type StoreProduct } from '@/lib/store-catalog'
 
-type HomeCategory = {
-  id: string
-  name: string
-  slug: string
-}
+export const revalidate = 3600
 
-type HomeProductRow = {
-  id: string
-  slug: string
-  title: string
-  description: string | null
-  price: number
-  is_free: boolean
-  level: string
-  category_id: string | null
-  categories: { name: string; slug: string } | { name: string; slug: string }[] | null
-}
-
-type HomeProduct = Omit<HomeProductRow, 'categories'> & {
-  categories: { name: string; slug: string } | null
-}
-
-function normalizeRelation<T>(value: T | T[] | null) {
-  return Array.isArray(value) ? value[0] : value
-}
-
-function extractCalories(products: HomeProduct[]) {
+function extractCalories(products: StoreProduct[]) {
   return products
     .map(product => {
       const match = product.title.match(/(\d{4})/)
@@ -44,23 +20,14 @@ function extractCalories(products: HomeProduct[]) {
 }
 
 export default async function Home() {
-  const [{ data: categoryData }, { data: productRows }] = await Promise.all([
-    supabase.from('categories').select('id, name, slug').order('name'),
-    supabase
-      .from('products')
-      .select('id, slug, title, description, price, is_free, level, category_id, categories(name, slug)')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false }),
+  const [categoryData, products] = await Promise.all([
+    getStoreCategories(),
+    getActiveStoreProducts(),
   ])
 
-  const categories = ((categoryData ?? []) as HomeCategory[]).filter(category =>
+  const categories = categoryData.filter(category =>
     ['nutrition', 'workouts', 'therapy', 'bundles'].includes(category.slug),
   )
-
-  const products = ((productRows ?? []) as HomeProductRow[]).map(product => ({
-    ...product,
-    categories: normalizeRelation(product.categories),
-  })) as HomeProduct[]
 
   const paidProducts = products.filter(product => !product.is_free)
   const productsCount = products.length
@@ -130,7 +97,7 @@ export default async function Home() {
   ]
   const featuredProducts = featuredSlugs
     .map(slug => productBySlug.get(slug))
-    .filter((product): product is HomeProduct => Boolean(product))
+    .filter((product): product is StoreProduct => Boolean(product))
 
   const fallbackProducts = products.filter(
     product => !featuredProducts.some(featured => featured.id === product.id),
@@ -400,10 +367,8 @@ export default async function Home() {
   return (
     <div className="home-shell storefront-shell">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
-
         .home-shell {
-          font-family: 'Tajawal', 'Arial', sans-serif;
+          font-family: var(--font-tajawal), 'Arial', sans-serif;
           direction: rtl;
         }
 
@@ -1328,7 +1293,7 @@ export default async function Home() {
           والركبة • باقات تغذية وتمارين وتأهيل • شراء سريع وواضح
         </div>
 
-        <section className="home-section">
+        <section id="home-results" className="home-section">
           <div className="home-surface-panel">
             <StorefrontSectionHeading
               eyebrow="الأقسام الرئيسية"
@@ -1372,7 +1337,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="home-section">
+        <section id="home-testimonials" className="home-section">
           <div className="home-surface-panel">
             <StorefrontSectionHeading
               eyebrow="ابدأ من هنا"

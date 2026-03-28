@@ -1,7 +1,8 @@
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminApiSession } from '@/lib/admin-auth'
 import { deleteProductImage } from '@/lib/product-images'
+import { PRODUCT_IMAGE_CACHE_TAG } from '@/lib/storefront-cache'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 type DeleteImageBody = {
@@ -61,8 +62,10 @@ export async function DELETE(req: NextRequest) {
 
   revalidatePath('/admin')
   revalidatePath('/admin/products')
+  revalidatePath('/')
   revalidatePath('/store')
   revalidatePath(`/store/${product.slug}`)
+  revalidateTag(PRODUCT_IMAGE_CACHE_TAG, 'max')
 
   return NextResponse.json({ ok: true, productId: product.id })
 }

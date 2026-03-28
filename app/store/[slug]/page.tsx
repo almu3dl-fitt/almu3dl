@@ -10,23 +10,11 @@ import StorefrontHeader from '@/app/components/StorefrontHeader'
 import { getCustomerUser } from '@/lib/account-auth'
 import { getApprovedProductReviews, getProductReviewAccess } from '@/lib/customer-reviews'
 import { getProductImages } from '@/lib/product-images'
-import { supabase } from '@/lib/supabase'
+import { getActiveProductBySlug } from '@/lib/store-catalog'
 import { buildAbsoluteUrl, siteConfig, truncateText } from '@/lib/site'
 
 type ProductPageParams = {
   slug: string
-}
-
-type Product = {
-  id: string
-  slug: string
-  title: string
-  description: string | null
-  price: number
-  is_free: boolean
-  level: string
-  tags: string[] | null
-  categories: { name: string; slug: string } | null
 }
 
 const levelLabels: Record<string, string> = {
@@ -65,15 +53,86 @@ const categoryThemes: Record<
   },
 }
 
-const getProductBySlug = cache(async (slug: string) => {
-  const { data } = await supabase
-    .from('products')
-    .select('id, slug, title, description, price, is_free, level, tags, categories(name, slug)')
-    .eq('slug', slug)
-    .eq('is_active', true)
-    .single()
+type ProductSocialProof = {
+  name: string
+  headline: string
+  quote: string
+  metrics?: Array<{ label: string; value: string }>
+}
 
-  return (data as Product | null) ?? null
+const socialProofByCategory: Record<string, ProductSocialProof[]> = {
+  nutrition: [
+    {
+      name: 'فاطمة',
+      headline: 'نزول 10 كجم خلال شهرين',
+      quote:
+        'اتبعت نظام أكل متوازن وتمارين مدروسة، ووصلت لنتيجة واضحة بدون حرمان أو دايت قاسٍ.',
+      metrics: [
+        { label: 'البداية', value: '74 كجم' },
+        { label: 'النتيجة', value: '64 كجم' },
+      ],
+    },
+    {
+      name: 'سليم',
+      headline: 'تنظيم الأكل بدون تعقيد',
+      quote:
+        'الفكرة لم تكن حرمانًا، بل فهم ما يدخل الجسم وما الذي يفيده في هذه المرحلة.',
+    },
+  ],
+  workouts: [
+    {
+      name: 'عبدالله',
+      headline: 'زيادة 5 كجم في أقل من شهر',
+      quote:
+        'الخطة كانت مفصلة من التدريب إلى التغذية، ومع الالتزام ظهر التطور بسرعة وبشكل ملحوظ.',
+      metrics: [
+        { label: 'الزيادة', value: '+5 كجم' },
+        { label: 'المدة', value: 'أقل من شهر' },
+      ],
+    },
+    {
+      name: 'سليم',
+      headline: 'تمارين مشروحة بوضوح',
+      quote:
+        'شرح التمارين والمقاطع المرسلة سهّلت التنفيذ الصحيح وخلتني أتقدم بثقة أكبر.',
+    },
+  ],
+  therapy: [
+    {
+      name: 'سليم',
+      headline: 'شرح واضح ومتابعة عملية',
+      quote:
+        'وجود شرح واضح ومقاطع مساعدة خفف الحيرة في التطبيق وخلّى الالتزام أسهل.',
+    },
+    {
+      name: 'عبدالله',
+      headline: 'خطة مفصلة تناسب الحالة',
+      quote:
+        'الفرق كان في أن الخطة بدأت من احتياجي الفعلي، وليس من برنامج عام لا يراعي وضعي.',
+    },
+  ],
+  bundles: [
+    {
+      name: 'فاطمة',
+      headline: 'تجربة شاملة بنتيجة واضحة',
+      quote:
+        'باقة شاملة مع الالتزام بالنظام والتمارين ساعدت على نزول واضح واستمرار بدون ارتباك.',
+      metrics: [
+        { label: 'البداية', value: '74 كجم' },
+        { label: 'النتيجة', value: '64 كجم' },
+      ],
+    },
+    {
+      name: 'عبدالله',
+      headline: 'تنظيم كامل للمسار',
+      quote:
+        'وجود خطة متكاملة من الأكل والتمرين جعل التطور أسرع وأوضح من المحاولات الفردية السابقة.',
+    },
+  ],
+}
+
+const getProductBySlug = cache(async (slug: string) => {
+  return getActiveProductBySlug(slug)
 })
 
 export async function generateMetadata({
@@ -272,6 +331,9 @@ export default async function ProductPage({
     },
   ]
 
+  const productSocialProof =
+    socialProofByCategory[categorySlug ?? ''] ?? socialProofByCategory.bundles
+
   return (
     <div className="product-page-shell storefront-shell">
       <script
@@ -280,10 +342,8 @@ export default async function ProductPage({
       />
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
-
         .product-page-shell {
-          font-family: 'Tajawal', 'Arial', sans-serif;
+          font-family: var(--font-tajawal), 'Arial', sans-serif;
           direction: rtl;
         }
 
@@ -699,6 +759,142 @@ export default async function ProductPage({
           margin-top: 1rem;
         }
 
+        .product-proof-section {
+          display: grid;
+          gap: 1rem;
+          margin-top: 1rem;
+          padding: 1rem;
+          border: 1px solid var(--store-border);
+          border-radius: 24px;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+            var(--store-surface);
+          box-shadow: var(--store-card-shadow);
+        }
+
+        .product-proof-header {
+          display: grid;
+          gap: 0.45rem;
+        }
+
+        .product-proof-eyebrow {
+          color: var(--store-accent-strong);
+          font-size: 0.76rem;
+          font-weight: 900;
+          letter-spacing: 0.04em;
+        }
+
+        .product-proof-header h2 {
+          margin: 0;
+          color: var(--store-text);
+          font-size: 1.2rem;
+          font-weight: 900;
+        }
+
+        .product-proof-header p {
+          margin: 0;
+          color: var(--store-text-muted);
+          font-size: 0.9rem;
+          line-height: 1.9;
+        }
+
+        .product-proof-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 0.85rem;
+        }
+
+        .product-proof-card {
+          display: grid;
+          gap: 0.8rem;
+          padding: 0.95rem;
+          border-radius: 20px;
+          border: 1px solid var(--store-border);
+          background: rgba(255, 255, 255, 0.03);
+        }
+
+        .product-proof-card h3 {
+          margin: 0;
+          color: var(--store-text);
+          font-size: 0.98rem;
+          font-weight: 900;
+        }
+
+        .product-proof-card p {
+          margin: 0;
+          color: var(--store-text-muted);
+          font-size: 0.86rem;
+          line-height: 1.9;
+        }
+
+        .product-proof-meta {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.65rem;
+          flex-wrap: wrap;
+        }
+
+        .product-proof-name {
+          color: var(--store-accent-strong);
+          font-size: 0.76rem;
+          font-weight: 900;
+        }
+
+        .product-proof-headline {
+          color: var(--store-text);
+          font-size: 0.84rem;
+          font-weight: 800;
+        }
+
+        .product-proof-metrics {
+          display: flex;
+          gap: 0.55rem;
+          flex-wrap: wrap;
+        }
+
+        .product-proof-metrics span {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.3rem;
+          min-height: 30px;
+          padding: 0.35rem 0.65rem;
+          border-radius: 999px;
+          background: var(--store-accent-wash);
+          color: var(--store-accent-strong);
+          font-size: 0.75rem;
+          font-weight: 900;
+        }
+
+        .product-proof-metrics strong,
+        .product-proof-metrics small {
+          font-size: inherit;
+          font-weight: inherit;
+          line-height: 1;
+        }
+
+        .product-proof-actions {
+          display: flex;
+          gap: 0.7rem;
+          flex-wrap: wrap;
+        }
+
+        .product-proof-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.45rem;
+          min-height: 42px;
+          padding: 0.7rem 1rem;
+          border-radius: 999px;
+          border: 1px solid var(--store-border);
+          background: rgba(255, 255, 255, 0.02);
+          color: var(--store-text);
+          font-size: 0.84rem;
+          font-weight: 800;
+          text-decoration: none;
+        }
+
         .product-review-summary {
           display: grid;
           grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
@@ -885,6 +1081,10 @@ export default async function ProductPage({
           .product-review-summary {
             grid-template-columns: 1fr;
           }
+
+          .product-proof-grid {
+            grid-template-columns: 1fr;
+          }
         }
       `}</style>
 
@@ -1066,6 +1266,52 @@ export default async function ProductPage({
               </div>
             )}
           </article>
+        </section>
+
+        <section className="product-proof-section">
+          <div className="product-proof-header">
+            <span className="product-proof-eyebrow">إثبات اجتماعي</span>
+            <h2>تجارب قريبة من هذا المسار داخل المتجر</h2>
+            <p>
+              هذه أمثلة من عملاء المتجر في نفس المسار أو ضمن باقات قريبة منه، لتوضيح
+              طبيعة التجربة والالتزام المتوقع قبل الشراء.
+            </p>
+          </div>
+
+          <div className="product-proof-grid">
+            {productSocialProof.map(item => (
+              <article key={`${item.name}-${item.headline}`} className="product-proof-card">
+                <div className="product-proof-meta">
+                  <span className="product-proof-name">{item.name}</span>
+                  <span className="product-proof-headline">{item.headline}</span>
+                </div>
+
+                {item.metrics?.length ? (
+                  <div className="product-proof-metrics">
+                    {item.metrics.map(metric => (
+                      <span key={`${item.name}-${metric.label}`}>
+                        <strong>{metric.value}</strong>
+                        <small>{metric.label}</small>
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+
+                <p>{item.quote}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="product-proof-actions">
+            <Link href="/#home-results" className="product-proof-link">
+              <span>شاهد صور النتائج</span>
+              <span>←</span>
+            </Link>
+            <Link href="/#home-testimonials" className="product-proof-link">
+              <span>اقرأ آراء المشتركين</span>
+              <span>←</span>
+            </Link>
+          </div>
         </section>
 
         <section id="product-reviews" className="product-reviews-section">

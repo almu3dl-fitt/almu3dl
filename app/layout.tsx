@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Geist, Geist_Mono, Tajawal } from 'next/font/google'
 import './globals.css'
 import { getMetadataBase, siteConfig } from '@/lib/site'
 import { THEME_STORAGE_KEY } from '@/lib/theme'
@@ -12,6 +12,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+})
+
+const tajawal = Tajawal({
+  variable: '--font-tajawal',
+  subsets: ['arabic', 'latin'],
+  weight: ['400', '500', '700', '800', '900'],
 })
 
 export const metadata: Metadata = {
@@ -79,7 +85,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${tajawal.variable} antialiased`}
       >
         {children}
       </body>

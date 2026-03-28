@@ -5,22 +5,25 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
   : undefined
 
 const nextConfig: NextConfig = {
-  images: supabaseHost
-    ? {
-        remotePatterns: [
-          {
-            protocol: 'https',
-            hostname: supabaseHost,
-            pathname: '/storage/v1/object/public/product-images/**',
-          },
-          {
-            protocol: 'https',
-            hostname: supabaseHost,
-            pathname: '/storage/v1/object/sign/product-images/**',
-          },
-        ],
-      }
-    : undefined,
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    ...(supabaseHost
+      ? {
+          remotePatterns: [
+            {
+              protocol: 'https',
+              hostname: supabaseHost,
+              pathname: '/storage/v1/object/public/product-images/**',
+            },
+            {
+              protocol: 'https',
+              hostname: supabaseHost,
+              pathname: '/storage/v1/object/sign/product-images/**',
+            },
+          ],
+        }
+      : {}),
+  },
 }
 
 export default nextConfig

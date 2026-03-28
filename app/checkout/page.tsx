@@ -548,7 +548,7 @@ export default function CheckoutPage() {
     fontSize: '0.98rem',
     border: '1px solid var(--store-border)',
     borderRadius: '16px',
-    fontFamily: "'Tajawal', Arial, sans-serif",
+    fontFamily: "var(--font-tajawal), Arial, sans-serif",
     direction: 'rtl' as const,
     outline: 'none',
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
@@ -561,10 +561,8 @@ export default function CheckoutPage() {
     return (
       <div className="checkout-page-shell checkout-empty-state">
         <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
-
           .checkout-page-shell {
-            font-family: 'Tajawal', 'Arial', sans-serif;
+            font-family: var(--font-tajawal), 'Arial', sans-serif;
             direction: rtl;
           }
 
@@ -640,10 +638,8 @@ export default function CheckoutPage() {
     return (
       <div className="checkout-page-shell checkout-empty-state">
         <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
-
           .checkout-page-shell {
-            font-family: 'Tajawal', 'Arial', sans-serif;
+            font-family: var(--font-tajawal), 'Arial', sans-serif;
             direction: rtl;
           }
 
@@ -716,10 +712,8 @@ export default function CheckoutPage() {
   return (
     <div className="checkout-page-shell storefront-shell">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
-
         .checkout-page-shell {
-          font-family: 'Tajawal', 'Arial', sans-serif;
+          font-family: var(--font-tajawal), 'Arial', sans-serif;
           direction: rtl;
         }
 
@@ -890,7 +884,7 @@ export default function CheckoutPage() {
           border: none;
           border-radius: 14px;
           color: #fff;
-          font-family: 'Tajawal', Arial, sans-serif;
+          font-family: var(--font-tajawal), Arial, sans-serif;
           font-size: 0.96rem;
           font-weight: 900;
           line-height: 1.4;

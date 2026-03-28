@@ -210,7 +210,7 @@ export default function CalorieCalculatorClient({
           width: min(calc(100% - 2rem), var(--store-content-width));
           margin: 0 auto;
           padding: 1.4rem 0 0;
-          font-family: 'Tajawal', 'Arial', sans-serif;
+          font-family: var(--font-tajawal), 'Arial', sans-serif;
           direction: rtl;
         }
 
@@ -372,7 +372,7 @@ export default function CalorieCalculatorClient({
           background: rgba(255, 255, 255, 0.03);
           color: var(--store-text);
           font-size: 0.95rem;
-          font-family: 'Tajawal', Arial, sans-serif;
+          font-family: var(--font-tajawal), Arial, sans-serif;
           outline: none;
           transition:
             border-color 0.18s ease,

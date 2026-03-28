@@ -39,7 +39,7 @@ export default function AddToCartButton({ product }: { product: CartItem }) {
             borderRadius: '16px',
             fontSize: '0.92rem',
             fontWeight: 800,
-            fontFamily: "'Tajawal', Arial, sans-serif",
+            fontFamily: "var(--font-tajawal), Arial, sans-serif",
             textAlign: 'center',
             border: '1px solid rgba(61, 194, 108, 0.22)',
           }}

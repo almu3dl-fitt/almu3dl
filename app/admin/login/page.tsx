@@ -39,12 +39,10 @@ export default async function AdminLoginPage({
         padding: '1.2rem',
         background:
           'radial-gradient(circle at top right, rgba(212, 168, 67, 0.08), transparent 30%), #fafafa',
-        fontFamily: "'Tajawal', Arial, sans-serif",
+        fontFamily: "var(--font-tajawal), Arial, sans-serif",
         direction: 'rtl',
       }}
     >
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');`}</style>
-
       <section
         style={{
           width: 'min(100%, 460px)',
@@ -139,7 +137,7 @@ export default async function AdminLoginPage({
               color: '#fff',
               fontSize: '0.96rem',
               fontWeight: 900,
-              fontFamily: "'Tajawal', Arial, sans-serif",
+              fontFamily: "var(--font-tajawal), Arial, sans-serif",
               cursor: 'pointer',
             }}
           >
@@ -177,7 +175,7 @@ const inputStyle = {
   border: '1px solid #ddd',
   background: '#fff',
   fontSize: '0.95rem',
-  fontFamily: "'Tajawal', Arial, sans-serif",
+  fontFamily: "var(--font-tajawal), Arial, sans-serif",
   direction: 'rtl' as const,
   outline: 'none',
 }

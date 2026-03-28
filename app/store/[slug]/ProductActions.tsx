@@ -111,7 +111,7 @@ export default function ProductActions({
             fontWeight: 700,
             fontSize: '1.05rem',
             display: 'inline-block',
-            fontFamily: "'Tajawal', Arial, sans-serif",
+            fontFamily: "var(--font-tajawal), Arial, sans-serif",
           }}>⬇️ حمّل الآن</a>
         )}
       </div>
@@ -152,7 +152,7 @@ export default function ProductActions({
             fontSize: '1rem',
             border: error ? '1px solid #ef4444' : '1px solid #ddd',
             borderRadius: '8px',
-            fontFamily: "'Tajawal', Arial, sans-serif",
+            fontFamily: "var(--font-tajawal), Arial, sans-serif",
             direction: 'rtl',
             outline: 'none',
             textAlign: 'center',
@@ -180,7 +180,7 @@ export default function ProductActions({
           fontWeight: 700,
           cursor: loading ? 'not-allowed' : 'pointer',
           opacity: loading ? 0.7 : 1,
-          fontFamily: "'Tajawal', Arial, sans-serif",
+          fontFamily: "var(--font-tajawal), Arial, sans-serif",
           width: '100%',
           maxWidth: '350px',
         }}

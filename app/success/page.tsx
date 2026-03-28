@@ -40,7 +40,7 @@ export default async function SuccessPage({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontFamily: "'Tajawal', Arial, sans-serif",
+          fontFamily: "var(--font-tajawal), Arial, sans-serif",
           direction: 'rtl',
         }}
       >
@@ -92,12 +92,10 @@ export default async function SuccessPage({
       style={{
         minHeight: '100vh',
         backgroundColor: '#FAFAFA',
-        fontFamily: "'Tajawal', 'Arial', sans-serif",
+        fontFamily: "var(--font-tajawal), 'Arial', sans-serif",
         direction: 'rtl',
       }}
     >
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');`}</style>
-
       {isPaid && <SuccessCartCleanup />}
 
       <nav
