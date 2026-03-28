@@ -260,6 +260,137 @@ export default async function Home() {
     },
   ]
 
+  const spotlightResult = {
+    eyebrow: 'رحلة موثقة',
+    title: 'صور وقياسات شاركنا بها أحد العملاء قبل وبعد الالتزام',
+    description:
+      'مقارنة بصرية مدعومة بقياسات جهاز التحليل لتوضيح أثر الاستمرار على الشكل العام ومؤشرات الجسم.',
+    metrics: [
+      { label: 'الوزن', value: '72.7 → 55.6 كجم' },
+      { label: 'دهون الجسم', value: '36.3% → 22.5%' },
+      { label: 'BMI', value: '29.9 → 22.8' },
+    ],
+    compareImages: [
+      {
+        src: '/success-stories/story-3-before-front.JPG',
+        alt: 'صورة أمامية لعميل قبل الالتزام',
+        label: 'قبل',
+        tone: 'before',
+        frame: 'portrait',
+      },
+      {
+        src: '/success-stories/story-3-after-front.JPG',
+        alt: 'صورة أمامية لعميل بعد الالتزام',
+        label: 'بعد',
+        tone: 'after',
+        frame: 'portrait',
+      },
+    ],
+    supportImages: [
+      {
+        src: '/success-stories/story-3-after-back.JPG',
+        alt: 'صورة خلفية لعميل بعد الالتزام',
+        label: 'نتيجة إضافية',
+        tone: 'after',
+        frame: 'back',
+      },
+      {
+        src: '/success-stories/story-3-after-back-alt.JPG',
+        alt: 'صورة خلفية إضافية لعميل بعد الالتزام',
+        label: 'تفصيل الظهر',
+        tone: 'after',
+        frame: 'back',
+      },
+      {
+        src: '/success-stories/story-3-scan-before.jpg',
+        alt: 'قياسات جسم قبل الالتزام',
+        label: 'قياسات البداية',
+        tone: 'before',
+        frame: 'scan',
+      },
+      {
+        src: '/success-stories/story-3-scan-after.JPG',
+        alt: 'قياسات جسم بعد الالتزام',
+        label: 'قياسات النتيجة',
+        tone: 'after',
+        frame: 'scan',
+      },
+    ],
+  } as const
+
+  const successStories = [
+    {
+      title: 'نتيجة مباشرة في مقارنة واحدة',
+      description:
+        'صورة موحدة قبل وبعد تعطي انطباعًا سريعًا عن الفرق الذي شاركنا به أحد المشتركين في الجزء العلوي من الجسم.',
+      images: [
+        {
+          src: '/success-stories/story-1-comparison.JPG',
+          alt: 'مقارنة قبل وبعد لعميل في صورة واحدة',
+          label: 'قبل وبعد',
+          tone: 'after',
+          frame: 'comparison',
+        },
+      ],
+    },
+    {
+      title: 'تغيّر واضح في الزاوية الجانبية',
+      description:
+        'مقارنة جانبية قبل وبعد توضّح فرق محيط الخصر وشكل الجسم مع الالتزام على مدى الفترة.',
+      images: [
+        {
+          src: '/success-stories/story-2-before.JPG',
+          alt: 'صورة جانبية لعميل قبل الالتزام',
+          label: 'قبل',
+          tone: 'before',
+          frame: 'portrait',
+        },
+        {
+          src: '/success-stories/story-2-after.JPG',
+          alt: 'صورة جانبية لعميل بعد الالتزام',
+          label: 'بعد',
+          tone: 'after',
+          frame: 'portrait',
+        },
+      ],
+    },
+    {
+      title: 'قصة إضافية شاركنا بها عميل آخر',
+      description:
+        'مقارنة من نفس الزاوية تساعد على إظهار الفارق في شكل الجسم بطريقة مباشرة وواضحة.',
+      images: [
+        {
+          src: '/success-stories/story-4-comparison.jpg',
+          alt: 'مقارنة قبل وبعد لعميل آخر في صورة واحدة',
+          label: 'قبل وبعد',
+          tone: 'after',
+          frame: 'comparison',
+        },
+      ],
+    },
+  ] as const
+
+  const testimonials = [
+    {
+      name: 'فاطمة',
+      headline: 'نزول 10 كجم خلال شهرين بدون حرمان',
+      quote:
+        'بعد تجربة دايت قاسٍ رجع معها الوزن، كانت تحتاج إلى نظام متوازن وتمارين مدروسة. ومع باقة التغيير الشامل نزل وزنها من 74 إلى 64 كجم خلال شهرين، وما زالت مستمرة حتى تصل لهدفها.',
+    },
+    {
+      name: 'سليم',
+      headline: 'خطة واضحة في الأكل والتمارين والمتابعة',
+      quote:
+        'أكثر ما ميّز التجربة بالنسبة له هو وضوح التوجيه: ماذا يأكل، ماذا يتمرن، وكيف يراجع هدفه كل فترة. لا يوجد حرمان، والشرح والمقاطع والمتابعة صنعت فرقًا واضحًا في التنفيذ الصحيح.',
+    },
+    {
+      name: 'عبدالله',
+      headline: '+5 كجم في أقل من شهر ضمن خطة زيادة عضلية',
+      quote:
+        'كان مترددًا في البداية تجاه الاشتراك مع مدرب شخصي، لكن الخطة المفصلة في التدريب والأكل والاهتمام غيّرت قناعته. وبعد الالتزام بالخطة حقق زيادة تقارب 5 كجم في أقل من شهر مع تطور ملحوظ في الشكل العام.',
+    },
+  ] as const
+
   return (
     <div className="home-shell storefront-shell">
       <style>{`
@@ -701,6 +832,275 @@ export default async function Home() {
           grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         }
 
+        .home-results-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 1rem;
+        }
+
+        .home-result-card {
+          position: relative;
+          z-index: 1;
+          display: grid;
+          gap: 1rem;
+          padding: 1.2rem;
+          border: 1px solid var(--store-border);
+          border-radius: 26px;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02)),
+            rgba(255, 255, 255, 0.02);
+        }
+
+        .home-result-card.is-featured {
+          grid-column: 1 / -1;
+          grid-template-columns: minmax(0, 0.78fr) minmax(0, 1fr);
+          gap: 1rem;
+          background:
+            linear-gradient(135deg, rgba(224, 180, 72, 0.14), rgba(255, 255, 255, 0.025) 48%),
+            rgba(255, 255, 255, 0.02);
+        }
+
+        .home-result-copy {
+          display: grid;
+          align-content: start;
+          gap: 0.8rem;
+        }
+
+        .home-result-copy h3 {
+          margin: 0;
+          color: var(--store-text);
+          font-size: 1.15rem;
+          font-weight: 900;
+          line-height: 1.45;
+        }
+
+        .home-result-copy p {
+          margin: 0;
+          color: var(--store-text-muted);
+          font-size: 0.88rem;
+          line-height: 1.9;
+        }
+
+        .home-result-eyebrow {
+          display: inline-flex;
+          width: fit-content;
+          padding: 0.34rem 0.78rem;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.06);
+          color: var(--store-accent-strong);
+          font-size: 0.75rem;
+          font-weight: 800;
+        }
+
+        .home-result-metrics {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 0.75rem;
+        }
+
+        .home-result-metric {
+          padding: 0.85rem 0.9rem;
+          border: 1px solid var(--store-border);
+          border-radius: 18px;
+          background: rgba(255, 255, 255, 0.04);
+        }
+
+        .home-result-metric strong {
+          display: block;
+          margin-bottom: 0.3rem;
+          color: var(--store-accent-strong);
+          font-size: 1rem;
+          font-weight: 900;
+        }
+
+        .home-result-metric span {
+          color: var(--store-text-soft);
+          font-size: 0.74rem;
+          font-weight: 800;
+        }
+
+        .home-result-featured-media {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(220px, 0.78fr);
+          gap: 0.85rem;
+        }
+
+        .home-result-compare-grid,
+        .home-result-story-grid,
+        .home-result-scan-grid {
+          display: grid;
+          gap: 0.85rem;
+        }
+
+        .home-result-compare-grid,
+        .home-result-story-grid.is-pair,
+        .home-result-scan-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .home-result-story-grid.is-single {
+          grid-template-columns: 1fr;
+        }
+
+        .home-result-support-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 0.85rem;
+          align-content: start;
+        }
+
+        .home-result-media-frame {
+          position: relative;
+          overflow: hidden;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 22px;
+          background: #111211;
+          box-shadow: 0 18px 28px rgba(0, 0, 0, 0.22);
+        }
+
+        .home-result-media-frame::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.28));
+          pointer-events: none;
+        }
+
+        .home-result-media-frame.is-comparison {
+          aspect-ratio: 1 / 1;
+        }
+
+        .home-result-media-frame.is-portrait {
+          aspect-ratio: 3 / 4.6;
+        }
+
+        .home-result-media-frame.is-back {
+          aspect-ratio: 4 / 5;
+        }
+
+        .home-result-media-frame.is-scan {
+          aspect-ratio: 10 / 16;
+        }
+
+        .home-result-media-image {
+          object-fit: cover;
+        }
+
+        .home-result-frame-label {
+          position: absolute;
+          top: 0.85rem;
+          inset-inline-start: 0.85rem;
+          z-index: 1;
+          display: inline-flex;
+          align-items: center;
+          min-height: 32px;
+          padding: 0.28rem 0.72rem;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(8, 8, 8, 0.55);
+          color: #fff;
+          font-size: 0.72rem;
+          font-weight: 800;
+          backdrop-filter: blur(12px);
+        }
+
+        .home-result-frame-label.is-after {
+          background: rgba(176, 132, 35, 0.84);
+        }
+
+        .home-results-note {
+          display: grid;
+          gap: 0.25rem;
+          margin-top: 1rem;
+          padding: 1rem 1.05rem;
+          border: 1px solid var(--store-border);
+          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.03);
+        }
+
+        .home-results-note strong {
+          color: var(--store-text);
+          font-size: 0.9rem;
+          font-weight: 900;
+        }
+
+        .home-results-note p {
+          margin: 0;
+          color: var(--store-text-muted);
+          font-size: 0.82rem;
+          line-height: 1.85;
+        }
+
+        .home-testimonial-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1rem;
+        }
+
+        .home-testimonial-card {
+          position: relative;
+          z-index: 1;
+          display: grid;
+          gap: 0.9rem;
+          padding: 1.25rem;
+          border: 1px solid var(--store-border);
+          border-radius: 24px;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+            rgba(255, 255, 255, 0.02);
+        }
+
+        .home-testimonial-card::before {
+          content: '“';
+          position: absolute;
+          top: 0.7rem;
+          inset-inline-end: 1rem;
+          color: rgba(224, 180, 72, 0.24);
+          font-size: 4.2rem;
+          font-weight: 900;
+          line-height: 1;
+          pointer-events: none;
+        }
+
+        .home-testimonial-meta {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+        }
+
+        .home-testimonial-name,
+        .home-testimonial-headline {
+          display: inline-flex;
+          width: fit-content;
+          border-radius: 999px;
+          font-weight: 800;
+        }
+
+        .home-testimonial-name {
+          padding: 0.36rem 0.8rem;
+          background: rgba(255, 255, 255, 0.06);
+          color: var(--store-text);
+          font-size: 0.82rem;
+        }
+
+        .home-testimonial-headline {
+          padding: 0.34rem 0.76rem;
+          background: var(--store-accent-wash);
+          color: var(--store-accent-strong);
+          font-size: 0.74rem;
+        }
+
+        .home-testimonial-card p {
+          position: relative;
+          margin: 0;
+          color: var(--store-text-muted);
+          font-size: 0.9rem;
+          line-height: 1.95;
+        }
+
         .home-goal-card {
           display: block;
           text-decoration: none;
@@ -763,6 +1163,12 @@ export default async function Home() {
             grid-template-columns: 1fr;
           }
 
+          .home-results-grid,
+          .home-result-card.is-featured,
+          .home-result-featured-media {
+            grid-template-columns: 1fr;
+          }
+
           .home-final-cta {
             flex-direction: column;
             align-items: stretch;
@@ -797,7 +1203,10 @@ export default async function Home() {
           }
 
           .home-hero-stats,
-          .home-faq-grid {
+          .home-faq-grid,
+          .home-result-metrics,
+          .home-result-compare-grid,
+          .home-result-story-grid.is-pair {
             grid-template-columns: 1fr;
           }
 
@@ -1019,6 +1428,138 @@ export default async function Home() {
                   <span>{item.eyebrow}</span>
                   <h3>{item.title}</h3>
                   <p>{item.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="home-section">
+          <div className="home-surface-panel">
+            <StorefrontSectionHeading
+              eyebrow="نتائج من العملاء"
+              title="صور قبل وبعد شاركنا بها المشتركون من المتجر"
+              description="قسم مخصص لعرض صور وقياسات حقيقية شاركنا بها العملاء لتوضيح أثر الالتزام. الهدف هنا إعطاء صورة أقرب للواقع، مع بقاء النتائج مختلفة من شخص لآخر."
+            />
+
+            <div className="home-results-grid">
+              <article className="home-result-card is-featured">
+                <div className="home-result-copy">
+                  <span className="home-result-eyebrow">{spotlightResult.eyebrow}</span>
+                  <h3>{spotlightResult.title}</h3>
+                  <p>{spotlightResult.description}</p>
+
+                  <div className="home-result-metrics">
+                    {spotlightResult.metrics.map(metric => (
+                      <div key={metric.label} className="home-result-metric">
+                        <strong>{metric.value}</strong>
+                        <span>{metric.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="home-result-featured-media">
+                  <div className="home-result-compare-grid">
+                    {spotlightResult.compareImages.map(image => (
+                      <div
+                        key={image.src}
+                        className={`home-result-media-frame is-${image.frame}`}
+                      >
+                        <span className={`home-result-frame-label ${image.tone === 'after' ? 'is-after' : ''}`}>
+                          {image.label}
+                        </span>
+                        <Image
+                          src={image.src}
+                          alt={image.alt}
+                          fill
+                          sizes="(max-width: 980px) 100vw, 28vw"
+                          className="home-result-media-image"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="home-result-support-grid">
+                    {spotlightResult.supportImages.map(image => (
+                      <div
+                        key={image.src}
+                        className={`home-result-media-frame is-${image.frame}`}
+                      >
+                        <span className={`home-result-frame-label ${image.tone === 'after' ? 'is-after' : ''}`}>
+                          {image.label}
+                        </span>
+                        <Image
+                          src={image.src}
+                          alt={image.alt}
+                          fill
+                          sizes="(max-width: 980px) 100vw, 14vw"
+                          className="home-result-media-image"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </article>
+
+              {successStories.map(story => (
+                <article key={story.title} className="home-result-card">
+                  <div className="home-result-copy">
+                    <span className="home-result-eyebrow">حالة مشاركة</span>
+                    <h3>{story.title}</h3>
+                    <p>{story.description}</p>
+                  </div>
+
+                  <div className={`home-result-story-grid ${story.images.length > 1 ? 'is-pair' : 'is-single'}`}>
+                    {story.images.map(image => (
+                      <div
+                        key={image.src}
+                        className={`home-result-media-frame is-${image.frame}`}
+                      >
+                        <span className={`home-result-frame-label ${image.tone === 'after' ? 'is-after' : ''}`}>
+                          {image.label}
+                        </span>
+                        <Image
+                          src={image.src}
+                          alt={image.alt}
+                          fill
+                          sizes="(max-width: 980px) 100vw, 24vw"
+                          className="home-result-media-image"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <div className="home-results-note">
+              <strong>تنبيه مهم</strong>
+              <p>
+                الصور والقياسات هنا هي مشاركات من العملاء لعرض أمثلة واقعية،
+                والنتائج تختلف بحسب الالتزام، نقطة البداية، وطبيعة الجسم لكل شخص.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="home-section">
+          <div className="home-surface-panel">
+            <StorefrontSectionHeading
+              eyebrow="آراء المشتركين"
+              title="تجارب مختصرة من عملاء شاركونا انطباعهم"
+              description="هذه خلاصة آراء من اشتركوا في البرامج أو الباقات وشاركوا أثر التجربة عليهم من ناحية التنظيم، التوجيه، والنتيجة."
+            />
+
+            <div className="home-testimonial-grid">
+              {testimonials.map(testimonial => (
+                <article key={testimonial.name} className="home-testimonial-card">
+                  <div className="home-testimonial-meta">
+                    <span className="home-testimonial-name">{testimonial.name}</span>
+                    <span className="home-testimonial-headline">{testimonial.headline}</span>
+                  </div>
+
+                  <p>{testimonial.quote}</p>
                 </article>
               ))}
             </div>
