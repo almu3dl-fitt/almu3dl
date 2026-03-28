@@ -261,26 +261,21 @@ export default async function Home() {
   ]
 
   const spotlightResult = {
-    eyebrow: 'فاطمة',
-    title: 'صور فاطمة وقياسات جهاز التحليل قبل وبعد الالتزام',
+    eyebrow: 'حالة مشاركة',
+    title: 'صور قبل وبعد من حالة مشاركة موثقة',
     description:
-      'هذه البطاقة تخص فاطمة، وتشمل صور التحول وقياسات جهاز التحليل المرتبطة برحلتها، مع نزول الوزن من 74 إلى 64 كجم خلال شهرين من الالتزام.',
-    metrics: [
-      { label: 'الوزن', value: '72.7 → 55.6 كجم' },
-      { label: 'دهون الجسم', value: '36.3% → 22.5%' },
-      { label: 'BMI', value: '29.9 → 22.8' },
-    ],
+      'هذه البطاقة تخص صاحب الصور قبل وبعد فقط، وتعرض الفرق البصري الناتج عن الالتزام والاستمرار على الخطة.',
     compareImages: [
       {
         src: '/success-stories/story-3-before-front.JPG',
-        alt: 'صورة أمامية لفاطمة قبل الالتزام',
+        alt: 'صورة أمامية لعميل قبل الالتزام',
         label: 'قبل',
         tone: 'before',
         frame: 'portrait',
       },
       {
         src: '/success-stories/story-3-after-front.JPG',
-        alt: 'صورة أمامية لفاطمة بعد الالتزام',
+        alt: 'صورة أمامية لعميل بعد الالتزام',
         label: 'بعد',
         tone: 'after',
         frame: 'portrait',
@@ -289,31 +284,17 @@ export default async function Home() {
     supportImages: [
       {
         src: '/success-stories/story-3-after-back.JPG',
-        alt: 'صورة خلفية لفاطمة بعد الالتزام',
+        alt: 'صورة خلفية لعميل بعد الالتزام',
         label: 'نتيجة إضافية',
         tone: 'after',
         frame: 'back',
       },
       {
         src: '/success-stories/story-3-after-back-alt.JPG',
-        alt: 'صورة خلفية إضافية لفاطمة بعد الالتزام',
+        alt: 'صورة خلفية إضافية لعميل بعد الالتزام',
         label: 'تفصيل الظهر',
         tone: 'after',
         frame: 'back',
-      },
-      {
-        src: '/success-stories/story-3-scan-before.jpg',
-        alt: 'قياسات جهاز التحليل لفاطمة قبل الالتزام',
-        label: 'قياسات فاطمة قبل',
-        tone: 'before',
-        frame: 'scan',
-      },
-      {
-        src: '/success-stories/story-3-scan-after.JPG',
-        alt: 'قياسات جهاز التحليل لفاطمة بعد الالتزام',
-        label: 'قياسات فاطمة بعد',
-        tone: 'after',
-        frame: 'scan',
       },
     ],
   } as const
@@ -376,18 +357,43 @@ export default async function Home() {
       headline: 'نزول 10 كجم خلال شهرين بدون حرمان',
       quote:
         'بعد تجربة دايت قاسٍ رجع معها الوزن، كانت تحتاج إلى نظام متوازن وتمارين مدروسة. ومع باقة التغيير الشامل نزل وزنها من 74 إلى 64 كجم خلال شهرين، وما زالت مستمرة حتى تصل لهدفها.',
+      metrics: [
+        { label: 'الوزن', value: '72.7 → 55.6 كجم' },
+        { label: 'دهون الجسم', value: '36.3% → 22.5%' },
+        { label: 'BMI', value: '29.9 → 22.8' },
+      ],
+      images: [
+        {
+          src: '/success-stories/story-3-scan-before.jpg',
+          alt: 'قياسات جهاز التحليل لفاطمة قبل الالتزام',
+          label: 'قياسات فاطمة قبل',
+          tone: 'before',
+          frame: 'scan',
+        },
+        {
+          src: '/success-stories/story-3-scan-after.JPG',
+          alt: 'قياسات جهاز التحليل لفاطمة بعد الالتزام',
+          label: 'قياسات فاطمة بعد',
+          tone: 'after',
+          frame: 'scan',
+        },
+      ],
     },
     {
       name: 'سليم',
       headline: 'خطة واضحة في الأكل والتمارين والمتابعة',
       quote:
         'أكثر ما ميّز التجربة بالنسبة له هو وضوح التوجيه: ماذا يأكل، ماذا يتمرن، وكيف يراجع هدفه كل فترة. لا يوجد حرمان، والشرح والمقاطع والمتابعة صنعت فرقًا واضحًا في التنفيذ الصحيح.',
+      metrics: [],
+      images: [],
     },
     {
       name: 'عبدالله',
       headline: '+5 كجم في أقل من شهر ضمن خطة زيادة عضلية',
       quote:
         'كان مترددًا في البداية تجاه الاشتراك مع مدرب شخصي، لكن الخطة المفصلة في التدريب والأكل والاهتمام غيّرت قناعته. وبعد الالتزام بالخطة حقق زيادة تقارب 5 كجم في أقل من شهر مع تطور ملحوظ في الشكل العام.',
+      metrics: [],
+      images: [],
     },
   ] as const
 
@@ -1101,6 +1107,12 @@ export default async function Home() {
           line-height: 1.95;
         }
 
+        .home-testimonial-media-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 0.8rem;
+        }
+
         .home-goal-card {
           display: block;
           text-decoration: none;
@@ -1206,7 +1218,8 @@ export default async function Home() {
           .home-faq-grid,
           .home-result-metrics,
           .home-result-compare-grid,
-          .home-result-story-grid.is-pair {
+          .home-result-story-grid.is-pair,
+          .home-testimonial-media-grid {
             grid-template-columns: 1fr;
           }
 
@@ -1449,14 +1462,6 @@ export default async function Home() {
                   <h3>{spotlightResult.title}</h3>
                   <p>{spotlightResult.description}</p>
 
-                  <div className="home-result-metrics">
-                    {spotlightResult.metrics.map(metric => (
-                      <div key={metric.label} className="home-result-metric">
-                        <strong>{metric.value}</strong>
-                        <span>{metric.label}</span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
 
                 <div className="home-result-featured-media">
@@ -1558,6 +1563,39 @@ export default async function Home() {
                     <span className="home-testimonial-name">{testimonial.name}</span>
                     <span className="home-testimonial-headline">{testimonial.headline}</span>
                   </div>
+
+                  {testimonial.metrics.length > 0 && (
+                    <div className="home-result-metrics">
+                      {testimonial.metrics.map(metric => (
+                        <div key={metric.label} className="home-result-metric">
+                          <strong>{metric.value}</strong>
+                          <span>{metric.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {testimonial.images.length > 0 && (
+                    <div className="home-testimonial-media-grid">
+                      {testimonial.images.map(image => (
+                        <div
+                          key={image.src}
+                          className={`home-result-media-frame is-${image.frame}`}
+                        >
+                          <span className={`home-result-frame-label ${image.tone === 'after' ? 'is-after' : ''}`}>
+                            {image.label}
+                          </span>
+                          <Image
+                            src={image.src}
+                            alt={image.alt}
+                            fill
+                            sizes="(max-width: 640px) 100vw, 18vw"
+                            className="home-result-media-image"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   <p>{testimonial.quote}</p>
                 </article>
